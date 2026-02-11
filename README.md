@@ -1,6 +1,8 @@
 # Symbolic MLIR Debugger
 
-![Symbolic MLIR Debugger in VS Code](vscode_debug_symbolic.png)
+<div align="center">
+  <img src="vscode/images/mlir-debug-icon.jpg" alt="MLIR Debug Logo" width="100" height="100">
+</div>
 
 A symbolic and concolic execution engine for MLIR (Multi-Level Intermediate Representation) programs with full Debug Adapter Protocol (DAP) support for Visual Studio Code integration.
 
@@ -86,6 +88,8 @@ pip install -r requirements.txt
 # Install VS Code extension dependencies
 cd ../vscode
 npm install
+
+# Note: See "Building and Installing the VS Code Extension" section below for build instructions
 ```
 
 ### Running Tests
@@ -97,13 +101,57 @@ python -m pytest tests/test_parser.py    # Run parser tests
 python -m pytest -m interpreter          # Run interpreter tests
 ```
 
+### Building and Installing the VS Code Extension
+
+The VS Code extension provides a complete debugging interface for MLIR programs. Follow these steps to build and install it:
+
+#### Building the Extension
+
+```bash
+cd vscode
+
+# Install dependencies
+npm install
+
+# Build the extension (compiles TypeScript to JavaScript)
+npm run build
+
+# Package the extension into a .vsix file
+npm run package  # or: vsce package --no-yarn
+```
+
+This generates a `.vsix` file (e.g., `mlir-debug-0.1.0.vsix`) that can be installed in VS Code.
+
+#### Installing the Extension
+
+**Option 1: Install from VSIX file**
+1. In VS Code, go to Extensions (Ctrl+Shift+X)
+2. Click the "..." menu and select "Install from VSIX..."
+3. Navigate to the generated `.vsix` file and install it
+
+**Option 2: Install for development**
+```bash
+# From the vscode/ directory
+npm run watch  # Starts TypeScript compilation in watch mode
+```
+
+Then in VSCode:
+1. First install the [official MLIR extension](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-mlir) for MLIR filetype and language server support.
+2. Configure MLIR debugger extension and specify DAP server location.
+![VS Code Extension Settings](vscode_settings.png)
+
 ### Using the VS Code Extension
 
-1. Open the project in VS Code
-2. Install the extension from `vscode/` directory
-3. Open an MLIR file (`.mlir` extension)
-4. Set breakpoints and start debugging with F5
-5. Use the debug toolbar to step through execution
+1. Open an MLIR file (`.mlir` extension) in VS Code
+2. Set breakpoints by clicking in the gutter next to line numbers
+3. Start debugging with F5 or click the debug icon in the activity bar
+4. Use the debug toolbar to:
+   - Step through execution (F10)
+   - Step into functions (F11)
+   - Continue execution (F5)
+   - Restart debugging (Ctrl+Shift+F5)
+5. Inspect variables in the debug sidebar
+6. View the call stack and navigate between stack frames
 
 ## Extending the Debugger
 

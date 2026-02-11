@@ -138,7 +138,7 @@
           "mlir"
         ],
         "label": "MLIR Debug",
-        "program": "symbolic_mlir_debugger/dap_server.py",
+        "program": "debugger/dap_server.py",
         "runtime": "python3",
         "configurationAttributes": {
           "launch": {
@@ -234,7 +234,7 @@
       "properties": {
         "mlir-debug.dapServerPath": {
           "type": "string",
-          "default": "symbolic_mlir_debugger/dap_server.py",
+          "default": "debugger/dap_server.py",
           "description": "Path to the Python DAP server script (dap_server.py)."
         },
         "mlir-debug.pythonPath": {
