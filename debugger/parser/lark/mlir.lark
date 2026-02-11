@@ -1,0 +1,360 @@
+// Adapted from https://github.com/llvm/llvm-project/blob/5b4a01d4a63cb66ab981e52548f940813393bf42/mlir/docs/LangRef.md
+
+// ----------------------------------------------------------------------
+// Low-level literal syntax
+digit      : /[0-9]/
+digits     : /[0-9]+/
+hex_digit  : /[0-9a-fA-F]/
+hex_digits : /[0-9a-fA-F]+/
+letter     : /[a-zA-Z]/
+letters    : /[a-zA-Z]+/
+id_punct   : /[$._-]/
+underscore : /[_]/
+true       : "true"
+false      : "false"
+
+id_chars: /[$.]/
+
+bool_literal : true | false
+decimal_literal : digits
+hexadecimal_literal : "0x" hex_digits
+integer_literal : decimal_literal | hexadecimal_literal
+negated_integer_literal : "-" integer_literal
+?posneg_integer_literal : integer_literal | negated_integer_literal
+float_literal : /[-+]?[0-9]+[.][0-9]*([eE][-+]?[0-9]+)?/
+string_literal  : ESCAPED_STRING
+constant_literal : bool_literal | posneg_integer_literal | float_literal | string_literal
+
+// Identifier syntax
+bare_id : (letter| underscore) (letter|digit|underscore|id_chars)*
+suffix_id : digits | ((letter | id_punct) (letter | id_punct | digits)*)
+
+// Dimensions
+dimension : "?" | decimal_literal
+static_dimension_list   : (decimal_literal "x")+
+dimension_list_ranked   : (dimension "x")*
+dimension_list_unranked : "*" "x"
+dimension_list : dimension_list_ranked | dimension_list_unranked
+
+// ----------------------------------------------------------------------
+// Identifiers
+
+ssa_id        : "%" suffix_id ("#" digits)?
+symbol_ref_id : "@" (suffix_id | string_literal)
+block_id      : "^" suffix_id
+type_alias     : "!" (string_literal | bare_id)
+map_or_set_id : "#" suffix_id
+attribute_alias : "#" (string_literal | bare_id)
+
+ssa_id_list : ssa_id ("," ssa_id)*
+
+// Uses of an SSA value, e.g., in an operand list to an operation.
+ssa_use : ssa_id | constant_literal
+ssa_use_list : ssa_use ("," ssa_use)*
+
+// ----------------------------------------------------------------------
+// Types
+
+// Standard types
+none_type : "none"
+!float_type : "f16" | "bf16" | "f32" | "f64"
+index_type : "index"
+inttype_width: /[1-9][0-9]*/  // Sized integers like i1, i4, i8, i16, i32.
+signed_integer_type : "si" inttype_width
+unsigned_integer_type : "ui" inttype_width
+signless_integer_type : "i" inttype_width
+integer_type : signed_integer_type | unsigned_integer_type | signless_integer_type
+complex_type : "complex" "<" type ">"
+tuple_type : "tuple" "<" type_list_no_parens ">"
+
+// Vector types
+vector_element_type : float_type | integer_type
+vector_type : "vector" "<" static_dimension_list vector_element_type ">"
+
+// Tensor type
+tensor_memref_element_type : vector_element_type | vector_type | complex_type | type_alias
+ranked_tensor_type : "tensor" "<" dimension_list_ranked tensor_memref_element_type ">"
+unranked_tensor_type : "tensor" "<" dimension_list_unranked tensor_memref_element_type ">"
+tensor_type : ranked_tensor_type | unranked_tensor_type
+
+// Memref type
+stride_list : "[" (dimension ("," dimension)*)? "]"
+strided_layout : "strided" "<" stride_list ("," "offset:" dimension)? ">"
+?layout_specification : semi_affine_map | strided_layout
+?memory_space : integer_literal // | TODO(mlir): address_space_id
+ranked_memref_type : "memref" "<" dimension_list_ranked tensor_memref_element_type  optional_layout_specification optional_memory_space ">"
+unranked_memref_type : "memref" "<*x" tensor_memref_element_type optional_memory_space ">"
+memref_type : ranked_memref_type | unranked_memref_type
+
+// Dialect types - these can be opaque, pretty, or using custom dialects
+opaque_dialect_item : bare_id "<" string_literal ">"
+pretty_dialect_item : bare_id "." bare_id pretty_dialect_item_body?
+pretty_dialect_item_body : "<" pretty_dialect_item_contents ("," pretty_dialect_item_contents)* ">"
+?pretty_dialect_item_contents : ("(" pretty_dialect_item_contents ")")
+                              | ("[" pretty_dialect_item_contents "]")
+                              | ("{" pretty_dialect_item_contents "}")
+                              | bare_id
+                              | constant_literal
+                              | type
+
+// NOTE: "pymlir_dialect_types" is defined externally by pyMLIR
+dialect_type : "!" (pymlir_dialect_types | opaque_dialect_item | pretty_dialect_item)
+
+// Final type definition
+standard_type     : complex_type | float_type | function_type | llvm_function_type | index_type | integer_type | memref_type | none_type | tensor_type | tuple_type | vector_type
+non_function_type : type_alias | complex_type | float_type | index_type | integer_type | memref_type | none_type | tensor_type | tuple_type | vector_type | dialect_type
+type              : type_alias | dialect_type | standard_type
+
+// Uses of types
+type_list_no_parens :  type ("," type)*
+type_list_parens : ("(" ")") | ("(" type_list_no_parens ")")
+function_result_type : type_list_parens | type_list_no_parens | non_function_type
+function_type : function_result_type ("->" | "to" | "into") function_result_type
+llvm_function_type : type type_list_parens
+ssa_use_and_type : ssa_use ":" type
+ssa_use_and_type_list : ssa_use_and_type ("," ssa_use_and_type)*
+
+// ----------------------------------------------------------------------
+// Attributes
+
+// Simple attribute types
+array_attribute : "[" (attribute_value ("," attribute_value)*)? "]"
+bool_attribute : bool_literal
+dictionary_attribute : "{" (attribute_entry ("," attribute_entry)*)? "}"
+?elements_attribute : dense_elements_attribute | opaque_elements_attribute | sparse_elements_attribute
+float_attribute : (float_literal optional_float_type) | (hexadecimal_literal ":" float_type)
+integer_attribute : posneg_integer_literal optional_int_type
+integer_set_attribute : affine_map
+string_attribute : string_literal optional_type
+symbol_ref_attribute : (symbol_ref_id ("::" symbol_ref_id)*)
+type_attribute : type
+unit_attribute : "unit"
+
+
+// Elements attribute types
+dense_elements_attribute : "dense" "<" attribute_value ">" ":" ( tensor_type | vector_type )
+opaque_elements_attribute : "opaque" "<" bare_id  "," hexadecimal_literal ">" ":" ( tensor_type | vector_type )
+sparse_elements_attribute : "sparse" "<" attribute_value "," attribute_value ">" ":" ( tensor_type | vector_type )
+
+// Standard attributes
+standard_attribute : array_attribute | bool_attribute | dictionary_attribute | elements_attribute | float_attribute | integer_attribute | integer_set_attribute | string_attribute | symbol_ref_attribute | type_attribute | unit_attribute
+
+// Attribute values
+attribute_value : attribute_alias | dialect_attribute | standard_attribute
+dependent_attribute_entry : bare_id "=" attribute_value
+dialect_attribute_entry : (bare_id "." bare_id) | (bare_id "." bare_id "=" attribute_value)
+
+// Dialect attributes
+// NOTE: "pymlir_dialect_types" is defined externally by pyMLIR
+dialect_attribute : "#" (pymlir_dialect_types | opaque_dialect_item | pretty_dialect_item)
+
+// Attribute dictionaries
+attribute_entry : dialect_attribute_entry | dependent_attribute_entry
+attribute_dict : ("{" "}") | ("{" attribute_entry ("," attribute_entry)* "}")
+
+// ----------------------------------------------------------------------
+// Operations
+
+// Types that appear after the operation, indicating return types
+trailing_type     : ":" (function_type | function_result_type)
+
+// Operation results
+op_result         : ssa_id optional_int_literal
+op_result_list    : op_result ("," op_result)* "="
+
+// Trailing location (for debug information)
+// Basic file:line:col location (with optional range)
+filelinecol_location : string_literal ":" decimal_literal ":" decimal_literal ("to" decimal_literal ":" decimal_literal)?
+
+// Callsite location: callsite(callee at caller)
+callsite_location : "callsite" "(" location "at" location ")"
+
+// Fusion metadata for fused locations
+fusion_metadata : "<" attribute_value ">"
+
+// Fused location: fused[loc1, loc2, ...] or fused<metadata>[loc1, loc2, ...]
+fused_location : "fused" fusion_metadata? "[" (location ("," location)*)? "]"
+
+// Named location: "name" or "name"(child_location)
+name_location : string_literal ("(" location ")")?
+
+// Unknown location: ? (spec) or unknown (LSP accepts)
+unknown_location : "?" | "unknown"
+
+// Location can be any of the above forms
+location : filelinecol_location | callsite_location | fused_location 
+         | name_location | unknown_location | string_literal
+
+trailing_location : ("loc" "(" location ")")
+
+// Undefined operations in all dialects
+generic_operation : string_literal "(" optional_ssa_use_list ")" optional_successor_list optional_region_list optional_attr_dict trailing_type
+custom_operation  : bare_id "." bare_id optional_ssa_use_list trailing_type
+
+// Final operation definition
+// NOTE: "pymlir_dialect_ops" is defined externally by pyMLIR
+operation         : optional_op_result_list (pymlir_dialect_ops | custom_operation | generic_operation | module | generic_module | function) optional_trailing_loc
+
+// ----------------------------------------------------------------------
+// Blocks and regions
+
+// Block arguments
+ssa_id_and_type : ssa_id ":" type
+ssa_id_and_type_list : ssa_id_and_type ("," ssa_id_and_type)*
+?block_arg_list : "(" optional_ssa_and_type_list ")"
+operation_list: operation+
+
+block_label     : block_id optional_block_arg_list ":"
+successor_list   : "[" block_id? ("," block_id)* "]"
+
+block           : optional_block_label operation_list
+region : "{" block* "}"
+region_list : "(" region? ("," region)* ")"
+
+// ---------------------------------------------------------------------
+// Optional types
+?optional_symbol_ref_id                 : symbol_ref_id?                       -> optional
+?optional_func_mod_attrs                : ("attributes" attribute_dict)?       -> optional
+?optional_arg_list                      : argument_list?                       -> optional
+?optional_fn_result_list                : ("->" function_result_list)?         -> optional
+?optional_fn_body                       : function_body?                       -> optional
+?optional_symbol_id_list                : symbol_id_list?                      -> optional
+?optional_affine_constraint_conjunction : affine_constraint_conjunction?       -> optional
+?optional_float_type                    : (":" float_type)?                    -> optional
+?optional_int_type                      : ( ":" (index_type | integer_type) )? -> optional
+?optional_type                          : (":" type)?                          -> optional
+?optional_int_literal                   : (":" integer_literal)?               -> optional
+?optional_ssa_use_list                  : ssa_use_list?                        -> optional
+?optional_attr_dict                     : attribute_dict?                      -> optional
+?optional_trailing_loc                  : trailing_location?                   -> optional
+?optional_op_result_list                : op_result_list?                      -> optional
+?optional_ssa_and_type_list             : ssa_id_and_type_list?                -> optional
+?optional_block_arg_list                : block_arg_list?                      -> optional
+?optional_layout_specification          : ("," layout_specification)?          -> optional
+?optional_memory_space                  : ("," memory_space)?                  -> optional
+?optional_block_label                   : block_label?                         -> optional
+?optional_symbol_use_list               : symbol_use_list?                     -> optional
+?optional_successor_list                : successor_list?                      -> optional
+?optional_region_list                   : region_list?                         -> optional
+// ----------------------------------------------------------------------
+// Modules and functions
+
+// Arguments
+named_argument : ssa_id ":" type optional_attr_dict
+argument_list : (named_argument ("," named_argument)*) | (type optional_attr_dict ("," type optional_attr_dict)*)
+argument_assignment : ssa_id "=" ssa_id
+argument_assignment_list_no_parens : argument_assignment ("," argument_assignment)*
+argument_assignment_list_parens : ("(" ")") | ("(" argument_assignment_list_no_parens ")")
+
+// Return values
+function_result : type optional_attr_dict
+function_result_list_no_parens : function_result ("," function_result)*
+function_result_list_parens : ("(" ")") | ("(" function_result_list_no_parens ")")
+?function_result_list : function_result_list_parens | non_function_type
+
+// Body
+?function_body : region
+
+// Definition
+module : "module" optional_symbol_ref_id optional_func_mod_attrs region optional_trailing_loc
+function : "func.func" symbol_ref_id "(" optional_arg_list ")" optional_fn_result_list optional_func_mod_attrs optional_fn_body optional_trailing_loc
+generic_module : string_literal "(" optional_arg_list ")" "(" region ")" optional_attr_dict trailing_type optional_trailing_loc
+
+// ----------------------------------------------------------------------
+// (semi-)affine expressions, maps, and integer sets
+
+dim_id_list : "(" bare_id? ("," bare_id)* ")"
+symbol_id_list: "[" bare_id? ("," bare_id)* "]"
+dim_and_symbol_id_lists : dim_id_list optional_symbol_id_list
+?symbol_or_const : posneg_integer_literal | ssa_id | bare_id
+
+?dim_use_list    : "(" ssa_use_list? ")"
+?symbol_use_list : "[" ssa_use_list? "]"
+dim_and_symbol_use_list : dim_use_list optional_symbol_use_list
+
+affine_expr : "(" affine_expr ")"                      -> affine_parens
+            | affine_expr "+" affine_expr              -> affine_add
+            | affine_expr "-" affine_expr              -> affine_sub
+            | posneg_integer_literal "*" affine_expr   -> affine_mul
+            | affine_expr "*" posneg_integer_literal   -> affine_mul
+            | affine_expr "&ceildiv&" integer_literal  -> affine_ceildiv
+            | affine_expr "&floordiv&" integer_literal -> affine_floordiv
+            | affine_expr "&mod&" integer_literal      -> affine_mod
+            | "-" affine_expr                          -> affine_neg
+            | "symbol" "(" ssa_id ")"                  -> affine_symbol_explicit
+            | posneg_integer_literal                   -> affine_literal
+            | ssa_id                                   -> affine_ssa
+            | bare_id                                  -> affine_dim_or_symbol
+
+semi_affine_expr : "(" semi_affine_expr ")"                        -> semi_affine_parens
+                 | semi_affine_expr "+" semi_affine_expr           -> semi_affine_add
+                 | semi_affine_expr "-" semi_affine_expr           -> semi_affine_sub
+                 | symbol_or_const "*" semi_affine_expr            -> semi_affine_mul
+                 | semi_affine_expr "*" symbol_or_const            -> semi_affine_mul
+                 | semi_affine_expr "&ceildiv&" semi_affine_oprnd  -> semi_affine_ceildiv
+                 | semi_affine_expr "&floordiv&" semi_affine_oprnd -> semi_affine_floordiv
+                 | semi_affine_expr "&mod&" semi_affine_oprnd      -> semi_affine_mod
+                 | "symbol" "(" symbol_or_const ")"                -> semi_affine_symbol_explicit
+                 | symbol_or_const                                 -> semi_affine_symbol
+
+// Second operand for floordiv/ceildiv/mod in semi-affine expressions
+?semi_affine_oprnd : symbol_or_const
+                   | "(" semi_affine_expr ")" -> semi_affine_parens
+
+?multi_dim_affine_expr_no_parens : affine_expr ("," affine_expr)*
+?multi_dim_semi_affine_expr_no_parens : semi_affine_expr ("," semi_affine_expr)*
+multi_dim_affine_expr : "(" multi_dim_affine_expr_no_parens ")"
+multi_dim_semi_affine_expr : "(" multi_dim_semi_affine_expr_no_parens ")"
+affine_constraint : affine_expr ">=" "0"    -> affine_constraint_ge
+                  | affine_expr "==" "0"    -> affine_constraint_eq
+affine_constraint_conjunction : affine_constraint ("," affine_constraint)*
+
+affine_map_inline      : "affine_map" "<" dim_and_symbol_id_lists "->" multi_dim_affine_expr ">"
+semi_affine_map_inline : dim_and_symbol_id_lists "->" multi_dim_semi_affine_expr
+integer_set_inline     : dim_and_symbol_id_lists ":" "(" optional_affine_constraint_conjunction ")"
+
+// Definition of maps and sets
+affine_map      : map_or_set_id | affine_map_inline
+semi_affine_map : map_or_set_id | semi_affine_map_inline
+integer_set     : map_or_set_id | integer_set_inline
+
+affine_map_list : affine_map ("," affine_map)*
+
+// ----------------------------------------------------------------------
+// General structure and top-level definitions
+
+// Definitions of affine maps/integer sets/aliases are at the top of the file
+type_alias_def : type_alias "=" "type" type
+affine_map_def      : map_or_set_id "=" affine_map_inline
+semi_affine_map_def : map_or_set_id "=" semi_affine_map_inline
+integer_set_def     : map_or_set_id "=" integer_set_inline
+attribute_alias_def : attribute_alias "=" attribute_value
+?definition : type_alias_def | affine_map_def | semi_affine_map_def | integer_set_def | attribute_alias_def
+
+
+// ----------------------------------------------------------------------
+// Structure of an MLIR parse-able string
+
+definition_list              : definition*
+function_list                : function*
+module_list                  : (module | generic_module)*
+definition_and_function_list : definition_list function_list
+definition_and_module_list   : definition_list module_list
+
+mlir_file: definition_and_function_list*       -> only_functions_and_definitions_file
+         | definition_and_module_list*         -> mlir_file_as_definition_and_module_list
+
+
+?start: mlir_file
+
+// Lark imports
+%import common.ESCAPED_STRING
+%import common.SIGNED_NUMBER
+%import common.WS
+%import common.NEWLINE
+
+// Things to ignore: whitespace, single-line comments
+%ignore WS
+
+COMMENT : "//" /(.)*/ NEWLINE
+%ignore COMMENT

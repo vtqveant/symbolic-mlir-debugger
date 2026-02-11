@@ -1,0 +1,248 @@
+{
+  "name": "mlir-debug",
+  "displayName": "MLIR Debug",
+  "version": "0.1.0",
+  "publisher": "VIBE",
+  "description": "Debug adapter for MLIR programs with symbolic execution support.",
+  "author": {
+    "name": "VIBE"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mlir",
+    "debug",
+    "symbolic-execution"
+  ],
+  "engines": {
+    "vscode": "^1.66.0"
+  },
+  "icon": "images/mlir-debug-icon.jpg",
+  "categories": [
+    "Debuggers"
+  ],
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anomalyco/opencode"
+  },
+  "bugs": {
+    "url": "https://github.com/anomalyco/opencode/issues"
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "lint": "eslint src --ext ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --tsconfig=./tsconfig.json --external:vscode --format=cjs --platform=node --outfile=dist/extension.js",
+    "watch": "npm run -S esbuild-base -- --sourcemap --sources-content=false --watch",
+    "esbuild-web": "esbuild ./src/web-extension.ts --bundle --tsconfig=./tsconfig.json --external:vscode --format=cjs --platform=browser --outfile=dist/web-extension.js",
+    "watch-web": "npm run -S esbuild-web -- --sourcemap --sources-content=false --watch",
+    "build": "npm run -S esbuild-base -- --sourcemap --sources-content=false && npm run -S esbuild-web -- --sourcemap --sources-content=false",
+    "package": "vsce package",
+    "publish": "vsce publish",
+    "publish-pre-release": "vsce publish --pre-release",
+    "vscode:prepublish": "rimraf dist && npm run -S esbuild-base -- --minify && npm run -S esbuild-web -- --minify",
+    "test": "npm run typecheck"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.2.0",
+    "@types/mocha": "^9.1.0",
+    "@types/node": "^14.14.37",
+    "@types/vscode": "^1.66.0",
+    "@typescript-eslint/eslint-plugin": "^5.17.0",
+    "@typescript-eslint/parser": "^5.17.0",
+    "@vscode/debugadapter": "^1.56.0",
+    "@vscode/debugadapter-testsupport": "^1.56.0",
+    "await-notify": "^1.0.1",
+    "base64-js": "^1.5.1",
+    "esbuild": "^0.25.0",
+    "eslint": "^8.12.0",
+    "events": "^3.3.0",
+    "glob": "^7.2.0",
+    "mocha": "^9.2.2",
+    "path-browserify": "^1.0.1",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.6.3",
+    "url": "^0.11.0",
+    "vsce": "^2.7.0"
+  },
+  "main": "./dist/extension.js",
+  "browser": "./dist/web-extension.js",
+  "activationEvents": [
+    "onDebugResolve:mlir",
+    "onDebugDynamicConfigurations:mlir",
+    "onCommand:extension.mlir-debug.getProgramName"
+  ],
+  "workspaceTrust": {
+    "request": "never"
+  },
+  "contributes": {
+    "menus": {
+      "editor/title/run": [
+        {
+          "command": "extension.mlir-debug.runEditorContents",
+          "when": "resourceLangId == mlir",
+          "group": "navigation@1"
+        },
+        {
+          "command": "extension.mlir-debug.debugEditorContents",
+          "when": "resourceLangId == mlir",
+          "group": "navigation@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "extension.mlir-debug.debugEditorContents",
+          "when": "resourceLangId == mlir"
+        },
+        {
+          "command": "extension.mlir-debug.runEditorContents",
+          "when": "resourceLangId == mlir"
+        }
+      ],
+      "debug/variables/context": [
+        {
+          "command": "extension.mlir-debug.toggleFormatting",
+          "when": "debugType == 'mlir' && debugProtocolVariableMenuContext == 'simple'"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "extension.mlir-debug.debugEditorContents",
+        "title": "Debug File",
+        "category": "MLIR Debug",
+        "enablement": "!inDebugMode",
+        "icon": "$(debug-alt)"
+      },
+      {
+        "command": "extension.mlir-debug.runEditorContents",
+        "title": "Run File",
+        "category": "MLIR Debug",
+        "enablement": "!inDebugMode",
+        "icon": "$(play)"
+      },
+      {
+        "command": "extension.mlir-debug.toggleFormatting",
+        "title": "Toggle between decimal and hex formatting"
+      }
+    ],
+    "breakpoints": [
+      {
+        "language": "mlir"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "mlir",
+        "languages": [
+          "mlir"
+        ],
+        "label": "MLIR Debug",
+        "program": "symbolic_mlir_debugger/dap_server.py",
+        "runtime": "python3",
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "program"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Absolute path to an MLIR file.",
+                "default": "${workspaceFolder}/${command:AskForProgramName}"
+              },
+              "args": {
+                "type": "array",
+                "description": "Arguments to pass to the MLIR program (e.g., concrete inputs as key=value pairs).",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "Automatically stop after launch.",
+                "default": true
+              },
+              "trace": {
+                "type": "boolean",
+                "description": "Enable logging of the Debug Adapter Protocol.",
+                "default": true
+              }
+            }
+          },
+          "attach": {
+            "required": [
+              "program"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Absolute path to an MLIR file.",
+                "default": "${workspaceFolder}/${command:AskForProgramName}"
+              },
+              "args": {
+                "type": "array",
+                "description": "Arguments to pass to the MLIR program (e.g., concrete inputs as key=value pairs).",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "Automatically stop after attach.",
+                "default": true
+              },
+              "trace": {
+                "type": "boolean",
+                "description": "Enable logging of the Debug Adapter Protocol.",
+                "default": true
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "mlir",
+            "request": "launch",
+            "name": "Ask for file name",
+            "program": "${workspaceFolder}/${command:AskForProgramName}",
+            "stopOnEntry": true
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "MLIR Debug: Launch",
+            "description": "A new configuration for debugging a user selected MLIR file.",
+            "body": {
+        "type": "mlir",
+              "request": "launch",
+              "name": "Ask for file name",
+              "program": "^\"\\${workspaceFolder}/\\${command:AskForProgramName}\"",
+              "stopOnEntry": true
+            }
+          }
+        ],
+        "variables": {
+          "AskForProgramName": "extension.mlir-debug.getProgramName"
+        }
+      }
+    ],
+    "configuration": {
+      "title": "MLIR Debug",
+      "properties": {
+        "mlir-debug.dapServerPath": {
+          "type": "string",
+          "default": "symbolic_mlir_debugger/dap_server.py",
+          "description": "Path to the Python DAP server script (dap_server.py)."
+        },
+        "mlir-debug.pythonPath": {
+          "type": "string",
+          "default": "python3",
+          "description": "Path to Python interpreter (e.g., python3, python, or full path)."
+        }
+      }
+    }
+  }
+}
