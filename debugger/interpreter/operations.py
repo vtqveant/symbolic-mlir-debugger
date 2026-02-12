@@ -344,6 +344,7 @@ def operation_from_dict(op_dict: Dict[str, Any]) -> Operation:
         "uitofp",
         "truncf",
         "extf",
+        "splat",
     }
     if name in unary_ops:
         dest = op_dict.get("dest")
@@ -408,14 +409,34 @@ def operation_from_dict(op_dict: Dict[str, Any]) -> Operation:
         dest = op_dict.get("dest")
         if dest is not None:
             dest = clean_operand(dest)
-        memref = clean_operand(
-            op_dict.get("memref", op_dict.get("arg", op_dict.get("addr", "")))
+        # Handle both old (src/dst/index) and new (memref/value/indices) formats
+        # Also handle memref.store fields (addr, ref)
+        memref = op_dict.get("memref")
+        if memref is None:
+            # Try dst (old tensor.insert format)
+            memref = op_dict.get("dst")
+        if memref is None:
+            # Try addr (memref.store format)
+            memref = op_dict.get("addr")
+        value = op_dict.get("value")
+        if value is None:
+            # Try src (old tensor.insert format)
+            value = op_dict.get("src")
+        if value is None:
+            # Try ref (memref.store format)
+            value = op_dict.get("ref")
+        indices = op_dict.get("indices")
+        if indices is None:
+            indices = op_dict.get("index", [])
+
+        memref = clean_operand(memref if memref is not None else "")
+        value = clean_operand(value if value is not None else "")
+        indices = [clean_operand(idx) for idx in indices]
+
+        # Debug
+        print(
+            f"DEBUG operation_from_dict insert: op_dict keys={list(op_dict.keys())}, memref={memref}, value={value}, indices={indices}"
         )
-        indices = [
-            clean_operand(idx)
-            for idx in op_dict.get("indices", op_dict.get("index", []))
-        ]
-        value = clean_operand(op_dict.get("value", op_dict.get("ref", "")))
         return StoreOperation(
             dialect=dialect,
             name=name,

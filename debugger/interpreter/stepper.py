@@ -477,6 +477,58 @@ class ExecutionStepper:
                 cell_summary["_memory_indices"] = indices
                 variables[cell_key] = cell_summary
 
+        # Add tensor memory entries from tensor memory model
+        tensor_entries = self.current_state.tensor_memory_model.get_all_memory_entries()
+        for tensor_name, entries in tensor_entries.items():
+            if not entries:
+                # Still show allocated tensors
+                if tensor_name in self.current_state.tensor_memory_model.shapes:
+                    shape = self.current_state.tensor_memory_model.shapes[tensor_name]
+                    dtype = self.current_state.tensor_memory_model.dtypes.get(
+                        tensor_name, "unknown"
+                    )
+                    region_summary = {
+                        "name": f"{tensor_name} (tensor)",
+                        "value": f"shape={shape}, dtype={dtype}",
+                        "type": "tensor_region",
+                        "presentationHint": "data",
+                        "_tensor_region": True,
+                        "_tensor_name": tensor_name,
+                    }
+                    variables[f"{tensor_name}_tensor"] = region_summary
+                continue
+
+            # Create a summary for the tensor region
+            shape = self.current_state.tensor_memory_model.shapes.get(tensor_name, ())
+            dtype = self.current_state.tensor_memory_model.dtypes.get(tensor_name, "unknown")
+            region_summary = {
+                "name": f"{tensor_name} (tensor)",
+                "value": f"{len(entries)} entries, shape={shape}, dtype={dtype}",
+                "type": "tensor_region",
+                "presentationHint": "data",
+                "_tensor_region": True,
+                "_tensor_name": tensor_name,
+            }
+            variables[f"{tensor_name}_tensor"] = region_summary
+
+            # Add individual entries (could be many)
+            for entry in entries:
+                indices = entry["indices"]
+                # Skip sentinel for symbolic stores
+                if indices == (-1,):
+                    continue
+
+                cell_key = f"{tensor_name}{''.join(f'[{i}]' for i in indices)}"
+                cell_summary = get_variable_summary(
+                    name=cell_key,
+                    value=entry["symbolic_expr"],
+                    value_type=dtype,
+                    concrete_value=entry["concrete_value"],
+                )
+                cell_summary["_tensor_cell"] = True
+                cell_summary["_tensor_indices"] = indices
+                variables[cell_key] = cell_summary
+
         # Add path conditions as special variable
         if self.current_state.path_condition:
             path_cond_strs = [str(pc) for pc in self.current_state.path_condition]
@@ -508,6 +560,27 @@ class ExecutionStepper:
                 "presentationHint": "data",
                 "_skip_dap": False,
                 "details": memref_counts,
+            }
+
+        # Add tensor map summary using tensor memory model
+        tensor_counts = {}
+        for tensor_name in self.current_state.tensor_memory_model.shapes:
+            entries = tensor_entries.get(tensor_name, [])
+            # Count only concrete cells (not sentinel (-1,) indices)
+            concrete_count = sum(1 for e in entries if e["indices"] != (-1,))
+            tensor_counts[tensor_name] = concrete_count
+
+        if tensor_counts:
+            tensor_summary = ", ".join(
+                f"{tensor}: {count} cells" for tensor, count in tensor_counts.items()
+            )
+            variables[""] = {
+                "name": "",
+                "value": tensor_summary,
+                "type": "tensor_map",
+                "presentationHint": "data",
+                "_skip_dap": False,
+                "details": tensor_counts,
             }
 
         # Add control flow information

@@ -9,7 +9,7 @@ import z3
 from typing import Any, Optional, Tuple, List, Union
 
 from .base import OperationHandler
-from ..operations import LoadOperation, StoreOperation, Operation
+from ..operations import LoadOperation, StoreOperation, Operation, UnaryOperation
 from ..models import SymbolicState, MLIRFunction
 
 
@@ -65,6 +65,29 @@ def get_dimension_sizes(dimensions: List[str]) -> List[Union[int, None]]:
     return result
 
 
+def extract_element_type(tensor_type: str) -> str:
+    """Extract element type from tensor type string."""
+    # Find outermost '<' and '>'
+    start = tensor_type.find("<")
+    end = tensor_type.rfind(">")
+    if start == -1 or end == -1:
+        return "i32"  # fallback
+    inner = tensor_type[start + 1 : end].strip()
+    # Find last 'x' not inside nested <>
+    depth = 0
+    last_x_pos = -1
+    for i, ch in enumerate(inner):
+        if ch == "<":
+            depth += 1
+        elif ch == ">":
+            depth -= 1
+        elif ch == "x" and depth == 0:
+            last_x_pos = i
+    if last_x_pos == -1:
+        return inner.strip()
+    return inner[last_x_pos + 1 :].strip()
+
+
 class TensorExtractHandler(OperationHandler):
     """Handler for tensor.extract operation."""
 
@@ -81,37 +104,40 @@ class TensorExtractHandler(OperationHandler):
 
         tensor = op.memref
         indices = op.indices
+        dtype = op.result_type or "i32"
 
-        # Try to get concrete indices
-        concrete_indices = self._get_concrete_indices(indices, state)
+        # Convert index names to values (int or z3 expression)
+        index_values = []
+        for idx_name in indices:
+            # Try to get concrete value first
+            concrete = state.get_concrete_value(idx_name)
+            if concrete is not None and isinstance(concrete, int):
+                index_values.append(concrete)
+                continue
+            # Try to parse as integer constant
+            try:
+                val = int(idx_name)
+                index_values.append(val)
+                continue
+            except (ValueError, TypeError):
+                pass
+            # Get symbolic expression
+            expr = state.get_expr(idx_name)
+            if expr is None:
+                # Create fresh symbolic index
+                expr = z3.FreshConst(z3.IntSort(), f"index_{idx_name}")
+                state.set_value(idx_name, expr, "index")
+            index_values.append(expr)
 
-        if concrete_indices is not None:
-            # Multi-cell access with concrete indices
-            tensor_value = state.get_memory_cell(tensor, concrete_indices)
-            if tensor_value is None:
-                # Uninitialized cell: create fresh symbolic value
-                expr = z3.FreshConst(z3.IntSort(), f"tensor_{tensor}{concrete_indices}")
-                state.set_memory_cell(
-                    tensor, concrete_indices, expr, op.result_type or "i32"
-                )
-                tensor_value = state.get_memory_cell(tensor, concrete_indices)
-            assert tensor_value is not None
-            assert tensor_value.expr is not None
-            state.set_value(op.dest, tensor_value.expr, op.result_type or "i32")
-            # Try to get concrete value from tensor cell
-            concrete_val = state.get_memory_cell_concrete(tensor, concrete_indices)
-            if concrete_val is not None:
-                state.set_concrete_value(op.dest, concrete_val)
-        else:
-            # Symbolic indices or no indices: fall back to single-cell model
-            tensor_value = state.get_memory(tensor)
-            if tensor_value is None:
-                expr = z3.FreshConst(z3.IntSort(), f"tensor_{tensor}")
-                state.set_memory(tensor, expr, op.result_type or "i32")
-                tensor_value = state.get_memory(tensor)
-            assert tensor_value is not None
-            assert tensor_value.expr is not None
-            state.set_value(op.dest, tensor_value.expr, op.result_type or "i32")
+        # Load from tensor memory model
+        expr = state.tensor_memory_model.load(tensor, index_values, dtype)
+        if op.dest:
+            state.set_value(op.dest, expr, dtype)
+
+        # Try to get concrete value
+        concrete_val = self._try_concrete_evaluation(op, state, func)
+        if concrete_val is not None and op.dest:
+            state.set_concrete_value(op.dest, concrete_val)
 
     def _try_concrete_evaluation(
         self, op: LoadOperation, state: SymbolicState, func: MLIRFunction
@@ -122,15 +148,13 @@ class TensorExtractHandler(OperationHandler):
 
         concrete_indices = self._get_concrete_indices(indices, state)
         if concrete_indices is not None:
-            concrete_val = state.get_memory_cell_concrete(tensor, concrete_indices)
+            concrete_val = state.tensor_memory_model.get_concrete_value(
+                tensor, list(concrete_indices)
+            )
             if concrete_val is not None:
                 return concrete_val
 
-        # Check single-cell memory model
-        tensor_concrete = state.get_concrete_value(tensor)
-        if tensor_concrete is not None:
-            return tensor_concrete
-
+        # No concrete value found
         return None
 
     def _get_concrete_indices(
@@ -156,38 +180,104 @@ class TensorInsertHandler(OperationHandler):
         func: MLIRFunction,
         interpreter=None,
     ) -> None:
-        """Execute tensor.insert symbolically."""
+        """Execute tensor.insert symbolically using copy-on-write semantics."""
+
         if not isinstance(op, StoreOperation):
             raise TypeError(f"Expected StoreOperation, got {type(op)}")
 
-        tensor = op.memref
+        src_tensor = op.memref
         value = op.value
         indices = op.indices
+
+        # Destination tensor (result of insert)
+        if not op.dest:
+            raise ValueError("tensor.insert must have destination tensor")
+        dst_tensor = op.dest
 
         # Get value expression
         value_expr = state.get_expr(value)
         if value_expr is None:
             raise ValueError(f"Cannot get expression for value: {value}")
 
-        # Try to get concrete indices
-        concrete_indices = self._get_concrete_indices(indices, state)
+        # Get concrete value if available
+        concrete_val = state.get_concrete_value(value)
 
-        if concrete_indices is not None:
-            # Multi-cell insert with concrete indices
-            state.set_memory_cell(
-                tensor, concrete_indices, value_expr, op.result_type or "i32"
+        # Parse indices (convert to int or z3 expression)
+        index_values = []
+        concrete_indices = []
+        all_concrete = True
+        for idx_name in indices:
+            # Try to get concrete value first
+            concrete = state.get_concrete_value(idx_name)
+            if concrete is not None and isinstance(concrete, int):
+                index_values.append(concrete)
+                if concrete_indices is not None:
+                    concrete_indices.append(concrete)
+                continue
+            # Try to parse as integer constant
+            try:
+                val = int(idx_name)
+                index_values.append(val)
+                if concrete_indices is not None:
+                    concrete_indices.append(val)
+                continue
+            except (ValueError, TypeError):
+                pass
+            # Get symbolic expression
+            expr = state.get_expr(idx_name)
+            if expr is None:
+                # Create fresh symbolic index
+                expr = z3.FreshConst(z3.IntSort(), f"index_{idx_name}")
+                state.set_value(idx_name, expr, "index")
+            index_values.append(expr)
+            all_concrete = False
+            concrete_indices = None  # Can't use concrete indices if any symbolic
+
+        # Extract element type from tensor type
+        tensor_type = op.result_type or "tensor<?xi32>"
+        element_type = self._extract_element_type(tensor_type)
+
+        # Debug
+        # Copy source tensor to destination (copy-on-write)
+        state.tensor_memory_model.copy_tensor(src_tensor, dst_tensor)
+
+        # Store value at indices in destination tensor
+        state.tensor_memory_model.store(
+            dst_tensor, index_values, value_expr, element_type
+        )
+
+        # Store concrete value if available and indices are concrete
+        if concrete_val is not None and all_concrete and concrete_indices is not None:
+            state.tensor_memory_model.set_concrete_value(
+                dst_tensor, concrete_indices, concrete_val
             )
-            # Store concrete value if available
-            concrete_val = state.get_concrete_value(value)
-            if concrete_val is not None:
-                state.set_memory_cell_concrete(tensor, concrete_indices, concrete_val)
-        else:
-            # Symbolic indices or no indices: fall back to single-cell model
-            state.set_memory(tensor, value_expr, op.result_type or "i32")
-            # Store concrete value if available
-            concrete_val = state.get_concrete_value(value)
-            if concrete_val is not None:
-                state.set_concrete_value(tensor, concrete_val)
+
+        # Also set the destination value in state's value map (tensor as whole)
+        # For tensors, we can store a reference to the tensor memory
+        tensor_expr = z3.FreshConst(z3.IntSort(), f"tensor_{dst_tensor}")
+        state.set_value(dst_tensor, tensor_expr, tensor_type)
+
+    def _extract_element_type(self, tensor_type: str) -> str:
+        """Extract element type from tensor type string."""
+        # Find outermost '<' and '>'
+        start = tensor_type.find("<")
+        end = tensor_type.rfind(">")
+        if start == -1 or end == -1:
+            return "i32"  # fallback
+        inner = tensor_type[start + 1 : end].strip()
+        # Find last 'x' not inside nested <>
+        depth = 0
+        last_x_pos = -1
+        for i, ch in enumerate(inner):
+            if ch == "<":
+                depth += 1
+            elif ch == ">":
+                depth -= 1
+            elif ch == "x" and depth == 0:
+                last_x_pos = i
+        if last_x_pos == -1:
+            return inner.strip()
+        return inner[last_x_pos + 1 :].strip()
 
     def _try_concrete_evaluation(
         self, op: StoreOperation, state: SymbolicState, func: MLIRFunction
@@ -217,6 +307,30 @@ class TensorSplatHandler(OperationHandler):
         """Execute tensor.splat symbolically."""
         if not op.dest:
             raise ValueError("tensor.splat must have destination")
+
+        # Get value operand (splat value)
+        value_operand = None
+        if isinstance(op, UnaryOperation):
+            value_operand = op.operand
+        else:
+            # Fallback to attributes
+            value_operand = op.attributes.get("arg")
+            if value_operand is None:
+                # Try "value" attribute
+                value_operand = op.attributes.get("value")
+
+        if value_operand is None:
+            raise ValueError("tensor.splat missing value operand")
+
+        # Get value expression
+        value_expr = state.get_expr(value_operand)
+        if value_expr is None:
+            # Create fresh symbolic value
+            value_expr = z3.FreshConst(z3.IntSort(), f"val_{value_operand}")
+            state.set_value(value_operand, value_expr, "i32")
+
+        # Get concrete value if available
+        concrete_val = state.get_concrete_value(value_operand)
 
         # Extract dynamic sizes if present
         dynamic_sizes = op.attributes.get("dynamic_sizes", [])
@@ -253,13 +367,23 @@ class TensorSplatHandler(OperationHandler):
             else:
                 shape.append(int(dim_str))
 
-        # Store tensor shape in state
+        # Store tensor shape in tensor memory model
         state.set_tensor_shape(op.dest, shape)
+        # Set dtype
+        element_type = extract_element_type(tensor_type)
+        state.tensor_memory_model.dtypes[op.dest] = element_type
 
-        # Create a fresh symbolic tensor
+        # Set splat value in tensor memory model
+        state.tensor_memory_model.set_splat_value(
+            tensor=op.dest,
+            symbolic_expr=value_expr,
+            concrete_value=concrete_val,
+        )
+
+        # Create a fresh symbolic tensor reference (for value map)
         expr = z3.FreshConst(z3.IntSort(), f"tensor_{op.dest}")
-        state.set_memory(op.dest, expr, tensor_type)
         state.set_value(op.dest, expr, tensor_type)
+        # Do NOT store in legacy memory model
 
     def _try_concrete_evaluation(
         self, op: Operation, state: SymbolicState, func: MLIRFunction
@@ -310,13 +434,13 @@ class TensorEmptyHandler(OperationHandler):
             else:
                 shape.append(int(dim_str))
 
-        # Store tensor shape in state
+        # Store tensor shape in tensor memory model
         state.set_tensor_shape(op.dest, shape)
 
-        # Create a fresh symbolic tensor (contents unspecified)
+        # Create a fresh symbolic tensor reference (for value map)
         expr = z3.FreshConst(z3.IntSort(), f"tensor_{op.dest}")
-        state.set_memory(op.dest, expr, tensor_type)
         state.set_value(op.dest, expr, tensor_type)
+        # Do NOT store in legacy memory model
 
     def _try_concrete_evaluation(
         self, op: Operation, state: SymbolicState, func: MLIRFunction
@@ -367,13 +491,13 @@ class TensorGenerateHandler(OperationHandler):
             else:
                 shape.append(int(dim_str))
 
-        # Store tensor shape in state
+        # Store tensor shape in tensor memory model
         state.set_tensor_shape(op.dest, shape)
 
-        # Create a fresh symbolic tensor (contents from region, ignored for now)
+        # Create a fresh symbolic tensor reference (for value map)
         expr = z3.FreshConst(z3.IntSort(), f"tensor_{op.dest}")
-        state.set_memory(op.dest, expr, tensor_type)
         state.set_value(op.dest, expr, tensor_type)
+        # Do NOT store in legacy memory model
 
     def _try_concrete_evaluation(
         self, op: Operation, state: SymbolicState, func: MLIRFunction
