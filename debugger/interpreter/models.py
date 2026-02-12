@@ -163,6 +163,19 @@ class SymbolicState:
     memory_model: MemoryModel = field(
         default_factory=MemrefMemoryModel
     )  # Unified memory model for symbolic/concrete storage
+    tensor_shapes: Dict[str, List[Union[int, z3.ExprRef]]] = field(
+        default_factory=dict
+    )  # Tensor name -> shape (list of dimension sizes)
+
+    def set_tensor_shape(
+        self, tensor: str, shape: List[Union[int, z3.ExprRef]]
+    ) -> None:
+        """Store shape of a tensor."""
+        self.tensor_shapes[tensor] = shape
+
+    def get_tensor_shape(self, tensor: str) -> Optional[List[Union[int, z3.ExprRef]]]:
+        """Retrieve shape of a tensor."""
+        return self.tensor_shapes.get(tensor)
 
     def fork(self) -> "SymbolicState":
         """Create a copy of this state."""
@@ -189,6 +202,7 @@ class SymbolicState:
             },
             memory_cells=memory_cells_copy,
             memory_model=forked_memory_model,
+            tensor_shapes=dict(self.tensor_shapes),
         )
 
     def add_path_condition(self, condition: z3.ExprRef) -> None:

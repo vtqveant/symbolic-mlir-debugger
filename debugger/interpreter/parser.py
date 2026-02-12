@@ -1839,7 +1839,12 @@ class MLIRParser:
             "op": op.__class__._opname_,
             "arg": self._ssa_use_to_string(op.arg),
             "type": self._type_to_string(op.type),
+            "attributes": {},
         }
+        if hasattr(op, "dynamic_sizes") and op.dynamic_sizes is not None:
+            result["attributes"]["dynamic_sizes"] = [
+                self._ssa_use_to_string(sz) for sz in op.dynamic_sizes
+            ]
         if op_node.result_list:
             result_item = op_node.result_list[0]
             if hasattr(result_item, "value") and hasattr(result_item.value, "value"):
@@ -1969,7 +1974,12 @@ class MLIRParser:
         result = {
             "op": op.__class__._opname_,
             "type": self._type_to_string(op.type),
+            "attributes": {},
         }
+        if hasattr(op, "dynamic_sizes") and op.dynamic_sizes is not None:
+            result["attributes"]["dynamic_sizes"] = [
+                self._ssa_use_to_string(sz) for sz in op.dynamic_sizes
+            ]
         if op_node.result_list:
             result_item = op_node.result_list[0]
             if hasattr(result_item, "value") and hasattr(result_item.value, "value"):
@@ -2033,7 +2043,20 @@ class MLIRParser:
         result = {
             "op": op.__class__._opname_,
             "type": self._type_to_string(op.type),
+            "attributes": {},
         }
+        if hasattr(op, "dynamic_extents") and op.dynamic_extents is not None:
+            result["attributes"]["dynamic_extents"] = [
+                self._ssa_use_to_string(ext) for ext in op.dynamic_extents
+            ]
+        if op.body and op.body.body:
+            # Parse region body operations
+            result["body"] = []
+            for block in op.body.body:
+                for body_op in block.body:
+                    op_dict = self._parse_operation(body_op)
+                    if op_dict:
+                        result["body"].append(op_dict)
         if op_node.result_list:
             result_item = op_node.result_list[0]
             if hasattr(result_item, "value") and hasattr(result_item.value, "value"):
