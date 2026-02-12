@@ -69,10 +69,9 @@ module {
     ret_value = state.get_value("return")
     assert ret_value is not None
     assert isinstance(ret_value.expr, z3.ExprRef)
-    # Memory should contain tensor and new_tensor
-    # Currently tensor and new_tensor are separate memory entries
-    # (simplified model)
-    assert "tensor" in state.memory or "new_tensor" in state.memory
+    # Tensors are now stored in tensor memory model, not legacy memory
+    assert "tensor" in state.tensor_memory_model.shapes
+    assert "new_tensor" in state.tensor_memory_model.shapes
 
 
 @pytest.mark.concolic

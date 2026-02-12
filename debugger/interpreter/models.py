@@ -9,6 +9,7 @@ import z3
 
 from .memory.base import MemoryModel
 from .memory.memref import MemrefMemoryModel
+from .memory.tensor import TensorMemoryModel
 
 
 @dataclass
@@ -162,20 +163,20 @@ class SymbolicState:
     )  # Multi-cell memory storage indexed by concrete indices (deprecated, use memory_model)
     memory_model: MemoryModel = field(
         default_factory=MemrefMemoryModel
-    )  # Unified memory model for symbolic/concrete storage
-    tensor_shapes: Dict[str, List[Union[int, z3.ExprRef]]] = field(
-        default_factory=dict
-    )  # Tensor name -> shape (list of dimension sizes)
+    )  # Memory model for memref operations
+    tensor_memory_model: TensorMemoryModel = field(
+        default_factory=TensorMemoryModel
+    )  # Memory model for tensor operations
 
     def set_tensor_shape(
         self, tensor: str, shape: List[Union[int, z3.ExprRef]]
     ) -> None:
         """Store shape of a tensor."""
-        self.tensor_shapes[tensor] = shape
+        self.tensor_memory_model.set_shape(tensor, shape)
 
     def get_tensor_shape(self, tensor: str) -> Optional[List[Union[int, z3.ExprRef]]]:
         """Retrieve shape of a tensor."""
-        return self.tensor_shapes.get(tensor)
+        return self.tensor_memory_model.get_shape(tensor)
 
     def fork(self) -> "SymbolicState":
         """Create a copy of this state."""
@@ -187,8 +188,9 @@ class SymbolicState:
                 for idx, val in cells.items()
             }
 
-        # Fork memory model
+        # Fork memory models
         forked_memory_model = self.memory_model.fork()
+        forked_tensor_memory_model = self.tensor_memory_model.fork()
 
         return SymbolicState(
             pc=self.pc,
@@ -202,7 +204,7 @@ class SymbolicState:
             },
             memory_cells=memory_cells_copy,
             memory_model=forked_memory_model,
-            tensor_shapes=dict(self.tensor_shapes),
+            tensor_memory_model=forked_tensor_memory_model,
         )
 
     def add_path_condition(self, condition: z3.ExprRef) -> None:

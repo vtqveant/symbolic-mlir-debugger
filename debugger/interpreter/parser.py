@@ -2065,12 +2065,13 @@ class MLIRParser:
 
     def _parse_tensor_insert_op(self, op_node):
         """Parse tensor.insert operation."""
+        print(f"DEBUG _parse_tensor_insert_op called: op_node={op_node}")
         op = op_node.op
         result = {
             "op": op.__class__._opname_,
-            "src": self._ssa_use_to_string(op.src),
-            "dst": self._ssa_use_to_string(op.dst),
-            "index": [self._ssa_use_to_string(idx) for idx in op.index],
+            "memref": self._ssa_use_to_string(op.dst),  # tensor being inserted into
+            "value": self._ssa_use_to_string(op.src),  # value to insert
+            "indices": [self._ssa_use_to_string(idx) for idx in op.index],
             "type": self._type_to_string(op.type),
         }
         if op_node.result_list:
