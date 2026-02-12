@@ -55,16 +55,10 @@ class MLIRParser:
       is not supported by pymlir's grammar. Use scf.if instead.
     """
 
-    def __init__(self, use_operations: bool = False):
-        self.functions: Dict[str, MLIRFunction] = {}
+    def __init__(self):
+        """Initialize parser with operation dataclass mode."""
+        self.parser = Parser()
         self._dialect_handlers = {}
-        self.operation_positions = []  # List of (line, column) for operations in order
-        self._op_pos_index = 0  # Index into operation_positions for current operation
-        self.use_operations = (
-            use_operations  # Whether to produce Operation dataclasses instead of dicts
-        )
-        self.current_block_label = None
-        self.current_func = None
         self._setup_dialect_handlers()
 
     def _setup_dialect_handlers(self):
@@ -597,10 +591,8 @@ class MLIRParser:
         # Add full location information for debugging
         result["location"] = self._extract_location(op)
 
-        # Convert to Operation dataclass if enabled
-        if self.use_operations:
-            return operation_from_dict(result)
-        return result
+        # Convert to Operation dataclass
+        return operation_from_dict(result)
 
     def _parse_custom_operation(
         self, op: mast.Operation, custom_op: mast.CustomOperation

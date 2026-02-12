@@ -20,8 +20,8 @@ module {
     assert len(func.basic_blocks) == 1
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
-    assert bb.operations[0]["op"] == "arith.cmpi"
-    assert bb.operations[1]["op"] == "return"
+    assert bb.operations[0].full_name == "arith.cmpi"
+    assert bb.operations[1].full_name == ".return"
 
 
 @pytest.mark.parser
@@ -40,8 +40,8 @@ module {
     func = functions["test"]
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
-    assert bb.operations[0]["op"] == "arith.addi"
-    assert bb.operations[1]["op"] == "return"
+    assert bb.operations[0].full_name == "arith.addi"
+    assert bb.operations[1].full_name == ".return"
 
 
 @pytest.mark.parser
@@ -60,9 +60,9 @@ module {
     func = functions["test"]
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
-    assert bb.operations[0]["op"] == "arith.constant"
+    assert bb.operations[0].full_name == "arith.constant"
     # Check that value is negative
-    assert bb.operations[0]["value"] == -42
+    assert bb.operations[0].value == -42
 
 
 @pytest.mark.parser
@@ -81,9 +81,9 @@ module {
     func = functions["test"]
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
-    assert bb.operations[0]["op"] == "arith.cmpi"
+    assert bb.operations[0].full_name == "arith.cmpi"
     # Should have predicate attribute
-    assert "predicate" in str(bb.operations[0].get("attributes", ""))
+    assert "predicate" in str(bb.operations[0].attributes)
 
 
 # Parameterized test for various arithmetic operations
@@ -112,7 +112,7 @@ module {{
     func = functions["test"]
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
-    assert bb.operations[0]["op"] == expected_op_name
+    assert bb.operations[0].full_name == expected_op_name
 
 
 # Location parsing tests
@@ -133,7 +133,7 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
+    assert op.full_name == "arith.constant"
     # Location should be present in operation
     # Note: location parsing may store location in different format
     # For now, just verify parsing succeeds
@@ -156,7 +156,7 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
+    assert op.full_name == "arith.constant"
 
 
 @pytest.mark.parser
@@ -176,7 +176,7 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
+    assert op.full_name == "arith.constant"
 
 
 @pytest.mark.parser
@@ -196,7 +196,7 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
+    assert op.full_name == "arith.constant"
 
 
 @pytest.mark.parser
@@ -216,7 +216,7 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
+    assert op.full_name == "arith.constant"
 
 
 @pytest.mark.parser
@@ -236,7 +236,7 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
+    assert op.full_name == "arith.constant"
 
 
 # Attribute parsing tests
@@ -257,9 +257,9 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
-    assert op["value"] == 42
-    assert op["type"] == "i32"
+    assert op.full_name == "arith.constant"
+    assert op.value == 42
+    assert op.result_type == "i32"
 
 
 @pytest.mark.parser
@@ -279,10 +279,10 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
+    assert op.full_name == "arith.constant"
     # Value should be parsed as integer 42
-    assert op["value"] == 42  # 0x2A = 42
-    assert op["type"] == "i32"
+    assert op.value == 42  # 0x2A = 42
+    assert op.result_type == "i32"
 
 
 @pytest.mark.parser

@@ -261,6 +261,153 @@ class LoopOperation(Operation):
         return result
 
 
+@dataclass
+class IfOperation(Operation):
+    """Conditional region operations (scf.if)."""
+
+    cond: str = ""  # Condition SSA value
+    body: List[Dict[str, Any]] = field(default_factory=list)  # Then body operations
+    elsebody: List[Dict[str, Any]] = field(default_factory=list)  # Else body operations
+    result_types: List[str] = field(default_factory=list)  # Result types
+
+    def to_dict(self) -> Dict[str, Any]:
+        result = super().to_dict()
+        result["cond"] = self.cond
+        if self.body:
+            result["body"] = self.body
+        if self.elsebody:
+            result["elsebody"] = self.elsebody
+        if self.result_types:
+            result["result_types"] = self.result_types
+        return result
+
+
+@dataclass
+class YieldOperation(TerminatorOperation):
+    """Yield operations (scf.yield)."""
+
+    value: Optional[str] = None  # Yield value SSA value (optional)
+
+    def to_dict(self) -> Dict[str, Any]:
+        result = super().to_dict()
+        if self.value is not None:
+            result["value"] = self.value
+        return result
+
+
+@dataclass
+class LinalgGenericOperation(Operation):
+    """Linalg generic operation."""
+
+    inputs: List[str] = field(default_factory=list)
+    input_types: List[str] = field(default_factory=list)
+    outputs: List[str] = field(default_factory=list)
+    output_types: List[str] = field(default_factory=list)
+    attributes: Dict[str, Any] = field(default_factory=dict)
+    body: List[Dict[str, Any]] = field(default_factory=list)
+    block_args: List[str] = field(default_factory=list)
+    block_arg_types: List[str] = field(default_factory=list)
+    indexing_maps: List[str] = field(default_factory=list)
+    iterator_types: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        result = super().to_dict()
+        if self.inputs:
+            result["inputs"] = self.inputs
+        if self.input_types:
+            result["input_types"] = self.input_types
+        if self.outputs:
+            result["outputs"] = self.outputs
+        if self.output_types:
+            result["output_types"] = self.output_types
+        if self.attributes:
+            result["attributes"] = self.attributes
+        if self.body:
+            result["body"] = self.body
+        if self.block_args:
+            result["block_args"] = self.block_args
+        if self.block_arg_types:
+            result["block_arg_types"] = self.block_arg_types
+        if self.indexing_maps:
+            result["indexing_maps"] = self.indexing_maps
+        if self.iterator_types:
+            result["iterator_types"] = self.iterator_types
+        return result
+
+
+@dataclass
+class LinalgMatmulOperation(Operation):
+    """Linalg matmul operation."""
+
+    A: str = ""
+    B: str = ""
+    C: str = ""
+    A_type: str = ""
+    B_type: str = ""
+    C_type: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        result = super().to_dict()
+        if self.A:
+            result["A"] = self.A
+        if self.B:
+            result["B"] = self.B
+        if self.C:
+            result["C"] = self.C
+        if self.A_type:
+            result["A_type"] = self.A_type
+        if self.B_type:
+            result["B_type"] = self.B_type
+        if self.C_type:
+            result["C_type"] = self.C_type
+        return result
+
+
+@dataclass
+class LinalgBatchMatmulOperation(Operation):
+    """Linalg batch matmul operation."""
+
+    # For simplicity, same as matmul but with batch dimension
+    A: str = ""
+    B: str = ""
+    C: str = ""
+    A_type: str = ""
+    B_type: str = ""
+    C_type: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        result = super().to_dict()
+        if self.A:
+            result["A"] = self.A
+        if self.B:
+            result["B"] = self.B
+        if self.C:
+            result["C"] = self.C
+        if self.A_type:
+            result["A_type"] = self.A_type
+        if self.B_type:
+            result["B_type"] = self.B_type
+        if self.C_type:
+            result["C_type"] = self.C_type
+        return result
+
+
+@dataclass
+class LinalgYieldOperation(TerminatorOperation):
+    """Linalg yield operation (multiple values)."""
+
+    values: List[str] = field(default_factory=list)
+    types: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        result = super().to_dict()
+        if self.values:
+            result["values"] = self.values
+        if self.types:
+            result["types"] = self.types
+        return result
+
+
 # Utility functions for operation conversion
 
 
@@ -269,7 +416,11 @@ def operation_from_dict(op_dict: Dict[str, Any]) -> Operation:
 
     Attempts to infer the appropriate operation type based on
     the operation name and dictionary keys.
+
+    If op_dict is already an Operation instance, return it unchanged.
     """
+    if isinstance(op_dict, Operation):
+        return op_dict
     op_name = op_dict.get("op", "")
     line = op_dict.get("line", 0)
 
@@ -570,6 +721,129 @@ def operation_from_dict(op_dict: Dict[str, Any]) -> Operation:
             init=init,
             body=op_dict.get("body", []),
         )
+
+    # If operations (scf.if, affine.if)
+    if name == "if":
+        dest = op_dict.get("dest")
+        if dest is not None:
+            dest = clean_operand(dest)
+        cond = clean_operand(op_dict.get("cond", ""))
+        body = op_dict.get("body", [])
+        elsebody = op_dict.get("elsebody", [])
+        result_types = op_dict.get("result_types", [])
+        return IfOperation(
+            dialect=dialect,
+            name=name,
+            line=line,
+            dest=dest,
+            result_type=op_dict.get("type"),
+            cond=cond,
+            body=body,
+            elsebody=elsebody,
+            result_types=result_types,
+        )
+
+    # Yield operations (scf.yield)
+    if name == "yield" and dialect != "linalg":
+        dest = op_dict.get("dest")
+        if dest is not None:
+            dest = clean_operand(dest)
+        value = op_dict.get("value")
+        if value is not None:
+            value = clean_operand(value)
+        return YieldOperation(
+            dialect=dialect,
+            name=name,
+            line=line,
+            dest=dest,
+            result_type=op_dict.get("type"),
+            value=value,
+        )
+    # Linalg operations
+    if dialect == "linalg":
+        if name == "generic":
+            inputs = [clean_operand(i) for i in op_dict.get("inputs", [])]
+            input_types = op_dict.get("input_types", [])
+            outputs = [clean_operand(o) for o in op_dict.get("outputs", [])]
+            output_types = op_dict.get("output_types", [])
+            attributes = op_dict.get("attributes", {})
+            body = op_dict.get("body", [])
+            block_args = [clean_operand(a) for a in op_dict.get("block_args", [])]
+            block_arg_types = op_dict.get("block_arg_types", [])
+            indexing_maps = op_dict.get("indexing_maps", [])
+            iterator_types = op_dict.get("iterator_types", [])
+            return LinalgGenericOperation(
+                dialect=dialect,
+                name=name,
+                line=line,
+                dest=clean_operand(op_dict.get("dest")) if op_dict.get("dest") else "",
+                result_type=op_dict.get("type"),
+                inputs=inputs,
+                input_types=input_types,
+                outputs=outputs,
+                output_types=output_types,
+                attributes=attributes,
+                body=body,
+                block_args=block_args,
+                block_arg_types=block_arg_types,
+                indexing_maps=indexing_maps,
+                iterator_types=iterator_types,
+            )
+        elif name == "matmul":
+            A = clean_operand(op_dict.get("A", ""))
+            B = clean_operand(op_dict.get("B", ""))
+            C = clean_operand(op_dict.get("C", ""))
+            A_type = op_dict.get("A_type", "")
+            B_type = op_dict.get("B_type", "")
+            C_type = op_dict.get("C_type", "")
+            return LinalgMatmulOperation(
+                dialect=dialect,
+                name=name,
+                line=line,
+                dest=clean_operand(op_dict.get("dest")) if op_dict.get("dest") else "",
+                result_type=op_dict.get("type"),
+                A=A,
+                B=B,
+                C=C,
+                A_type=A_type,
+                B_type=B_type,
+                C_type=C_type,
+            )
+        elif name == "batch_matmul":
+            A = clean_operand(op_dict.get("A", ""))
+            B = clean_operand(op_dict.get("B", ""))
+            C = clean_operand(op_dict.get("C", ""))
+            A_type = op_dict.get("A_type", "")
+            B_type = op_dict.get("B_type", "")
+            C_type = op_dict.get("C_type", "")
+            return LinalgBatchMatmulOperation(
+                dialect=dialect,
+                name=name,
+                line=line,
+                dest=clean_operand(op_dict.get("dest")) if op_dict.get("dest") else "",
+                result_type=op_dict.get("type"),
+                A=A,
+                B=B,
+                C=C,
+                A_type=A_type,
+                B_type=B_type,
+                C_type=C_type,
+            )
+        elif name == "conv_1d" or name == "conv_2d":
+            # For now treat as generic operation with attributes
+            pass
+        elif name == "yield":
+            values = [clean_operand(v) for v in op_dict.get("values", [])]
+            types = op_dict.get("types", [])
+            return LinalgYieldOperation(
+                dialect=dialect,
+                name=name,
+                line=line,
+                dest=clean_operand(op_dict.get("dest")) if op_dict.get("dest") else "",
+                result_type=op_dict.get("type"),
+                values=values,
+                types=types,
+            )
 
     # Default generic operation
     dest = op_dict.get("dest")

@@ -111,8 +111,19 @@ class FuncReturnHandler(OperationHandler):
 # Function to register all func dialect handlers
 def register_handlers(registry) -> None:
     """Register func dialect handlers with registry."""
+    import sys
+
+    print(f"DEBUG func.register_handlers: registering func handlers", file=sys.stderr)
     registry.register("func.call", FuncCallHandler())
     registry.register("func.call_indirect", FuncCallIndirectHandler())
     registry.register("func.return", FuncReturnHandler())
     # Also register generic return without dialect prefix
     registry.register(".return", FuncReturnHandler())
+    # Handle misparsed return operations
+    registry.register("ape.sizereturn", FuncReturnHandler())
+    registry.register("e.sizereturn", FuncReturnHandler())
+    registry.register("hape.sizereturn", FuncReturnHandler())
+    registry.register("shape.sizereturn", FuncReturnHandler())
+    registry.register("sizereturn", FuncReturnHandler())
+    registry.register(".sizereturn", FuncReturnHandler())
+    print(f"DEBUG func.register_handlers: done", file=sys.stderr)
