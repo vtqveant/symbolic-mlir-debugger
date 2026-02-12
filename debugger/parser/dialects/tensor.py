@@ -27,7 +27,11 @@ class ExtractOperation(DialectOp):
 class SplatOperation(DialectOp):
     arg: SsaUse
     type: Union[mast.VectorType, mast.TensorType]
-    _syntax_ = "tensor.splat {arg.ssa_use} : {type.type}"  # (vector_type | tensor_type)
+    dynamic_sizes: Optional[List[SsaUse]] = None
+    _syntax_ = [
+        "tensor.splat {arg.ssa_use} : {type.type}",
+        "tensor.splat {arg.ssa_use} [ {dynamic_sizes.ssa_use_list} ] : {type.type}",
+    ]
     _opname_ = "tensor.splat"
 
 
@@ -110,7 +114,11 @@ class DimOperation(DialectOp):
 @dataclass
 class EmptyOperation(DialectOp):
     type: mast.TensorType
-    _syntax_ = "tensor.empty : {type.tensor_type}"
+    dynamic_sizes: Optional[List[SsaUse]] = None
+    _syntax_ = [
+        "tensor.empty : {type.tensor_type}",
+        "tensor.empty ( {dynamic_sizes.ssa_use_list} ) : {type.tensor_type}",
+    ]
     _opname_ = "tensor.empty"
 
 
@@ -150,7 +158,12 @@ class FromElementsOperation(DialectOp):
 @dataclass
 class GenerateOperation(DialectOp):
     type: mast.TensorType
-    _syntax_ = "tensor.generate {type.tensor_type}"
+    body: mast.Region
+    dynamic_extents: Optional[List[SsaUse]] = None
+    _syntax_ = [
+        "tensor.generate {body.region} : {type.tensor_type}",
+        "tensor.generate {dynamic_extents.ssa_use_list} {body.region} : {type.tensor_type}",
+    ]
     _opname_ = "tensor.generate"
 
 

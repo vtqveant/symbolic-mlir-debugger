@@ -6,11 +6,63 @@ Handles operations: extract, insert, splat, etc.
 """
 
 import z3
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, List, Union
 
 from .base import OperationHandler
 from ..operations import LoadOperation, StoreOperation, Operation
 from ..models import SymbolicState, MLIRFunction
+
+
+def parse_tensor_dimensions(tensor_type: str) -> List[str]:
+    """Parse tensor type string and return list of dimension strings.
+
+    Example: "tensor<?x?x10xi32>" -> ["?", "?", "10"]
+    Handles nested types by skipping inside <> pairs.
+    """
+    # Find outermost '<' and '>'
+    start = tensor_type.find("<")
+    end = tensor_type.rfind(">")
+    if start == -1 or end == -1:
+        raise ValueError(f"Invalid tensor type: {tensor_type}")
+    inner = tensor_type[start + 1 : end].strip()
+    # Parse dimensions while skipping nested <>
+    dimensions = []
+    current = []
+    depth = 0
+    for ch in inner:
+        if ch == "<":
+            depth += 1
+            current.append(ch)
+        elif ch == ">":
+            depth -= 1
+            current.append(ch)
+        elif ch == "x" and depth == 0:
+            dimensions.append("".join(current).strip())
+            current = []
+        else:
+            current.append(ch)
+    if current:
+        dimensions.append("".join(current).strip())
+    # The last token is element type, remove it
+    if dimensions:
+        dimensions.pop()
+    return dimensions
+
+
+def count_wildcards(dimensions: List[str]) -> int:
+    """Count '?' wildcard dimensions."""
+    return sum(1 for d in dimensions if d == "?")
+
+
+def get_dimension_sizes(dimensions: List[str]) -> List[Union[int, None]]:
+    """Convert dimension strings to int or None for wildcard."""
+    result = []
+    for d in dimensions:
+        if d == "?":
+            result.append(None)
+        else:
+            result.append(int(d))
+    return result
 
 
 class TensorExtractHandler(OperationHandler):
@@ -166,15 +218,167 @@ class TensorSplatHandler(OperationHandler):
         if not op.dest:
             raise ValueError("tensor.splat must have destination")
 
+        # Extract dynamic sizes if present
+        dynamic_sizes = op.attributes.get("dynamic_sizes", [])
+
+        # Parse tensor type dimensions
+        tensor_type = op.result_type or "tensor<?xi32>"
+        dim_strings = parse_tensor_dimensions(tensor_type)
+        wildcard_count = count_wildcards(dim_strings)
+        if len(dynamic_sizes) != wildcard_count:
+            raise ValueError(
+                f"tensor.splat: expected {wildcard_count} dynamic sizes for type {tensor_type}, "
+                f"got {len(dynamic_sizes)}"
+            )
+
+        # Build shape list
+        shape = []
+        dynamic_idx = 0
+        for dim_str in dim_strings:
+            if dim_str == "?":
+                # Get dynamic size expression
+                size_name = dynamic_sizes[dynamic_idx]
+                # Strip leading '%' if present
+                if size_name.startswith("%"):
+                    size_name = size_name[1:]
+                size_expr = state.get_expr(size_name)
+                if size_expr is None:
+                    # Create fresh symbolic expression for size
+                    size_expr = z3.FreshConst(
+                        z3.IntSort(), f"dim_{op.dest}_{dynamic_idx}"
+                    )
+                    state.set_value(size_name, size_expr, "index")
+                shape.append(size_expr)
+                dynamic_idx += 1
+            else:
+                shape.append(int(dim_str))
+
+        # Store tensor shape in state
+        state.set_tensor_shape(op.dest, shape)
+
         # Create a fresh symbolic tensor
         expr = z3.FreshConst(z3.IntSort(), f"tensor_{op.dest}")
-        state.set_memory(op.dest, expr, op.result_type or "tensor<?xi32>")
-        state.set_value(op.dest, expr, op.result_type or "tensor<?xi32>")
+        state.set_memory(op.dest, expr, tensor_type)
+        state.set_value(op.dest, expr, tensor_type)
 
     def _try_concrete_evaluation(
         self, op: Operation, state: SymbolicState, func: MLIRFunction
     ) -> Any:
         """Splat operations don't have simple concrete values."""
+        return None
+
+
+class TensorEmptyHandler(OperationHandler):
+    """Handler for tensor.empty operation."""
+
+    def execute_symbolic(
+        self, op: Operation, state: SymbolicState, func: MLIRFunction, interpreter=None
+    ) -> None:
+        """Execute tensor.empty symbolically."""
+        if not op.dest:
+            raise ValueError("tensor.empty must have destination")
+
+        # Extract dynamic sizes if present
+        dynamic_sizes = op.attributes.get("dynamic_sizes", [])
+
+        # Parse tensor type dimensions
+        tensor_type = op.result_type or "tensor<?xi32>"
+        dim_strings = parse_tensor_dimensions(tensor_type)
+        wildcard_count = count_wildcards(dim_strings)
+        if len(dynamic_sizes) != wildcard_count:
+            raise ValueError(
+                f"tensor.empty: expected {wildcard_count} dynamic sizes for type {tensor_type}, "
+                f"got {len(dynamic_sizes)}"
+            )
+
+        # Build shape list
+        shape = []
+        dynamic_idx = 0
+        for dim_str in dim_strings:
+            if dim_str == "?":
+                size_name = dynamic_sizes[dynamic_idx]
+                if size_name.startswith("%"):
+                    size_name = size_name[1:]
+                size_expr = state.get_expr(size_name)
+                if size_expr is None:
+                    size_expr = z3.FreshConst(
+                        z3.IntSort(), f"dim_{op.dest}_{dynamic_idx}"
+                    )
+                    state.set_value(size_name, size_expr, "index")
+                shape.append(size_expr)
+                dynamic_idx += 1
+            else:
+                shape.append(int(dim_str))
+
+        # Store tensor shape in state
+        state.set_tensor_shape(op.dest, shape)
+
+        # Create a fresh symbolic tensor (contents unspecified)
+        expr = z3.FreshConst(z3.IntSort(), f"tensor_{op.dest}")
+        state.set_memory(op.dest, expr, tensor_type)
+        state.set_value(op.dest, expr, tensor_type)
+
+    def _try_concrete_evaluation(
+        self, op: Operation, state: SymbolicState, func: MLIRFunction
+    ) -> Any:
+        """empty operations don't have simple concrete values."""
+        return None
+
+
+class TensorGenerateHandler(OperationHandler):
+    """Handler for tensor.generate operation."""
+
+    def execute_symbolic(
+        self, op: Operation, state: SymbolicState, func: MLIRFunction, interpreter=None
+    ) -> None:
+        """Execute tensor.generate symbolically."""
+        if not op.dest:
+            raise ValueError("tensor.generate must have destination")
+
+        # Extract dynamic extents if present
+        dynamic_extents = op.attributes.get("dynamic_extents", [])
+
+        # Parse tensor type dimensions
+        tensor_type = op.result_type or "tensor<?xi32>"
+        dim_strings = parse_tensor_dimensions(tensor_type)
+        wildcard_count = count_wildcards(dim_strings)
+        if len(dynamic_extents) != wildcard_count:
+            raise ValueError(
+                f"tensor.generate: expected {wildcard_count} dynamic extents for type {tensor_type}, "
+                f"got {len(dynamic_extents)}"
+            )
+
+        # Build shape list
+        shape = []
+        dynamic_idx = 0
+        for dim_str in dim_strings:
+            if dim_str == "?":
+                size_name = dynamic_extents[dynamic_idx]
+                if size_name.startswith("%"):
+                    size_name = size_name[1:]
+                size_expr = state.get_expr(size_name)
+                if size_expr is None:
+                    size_expr = z3.FreshConst(
+                        z3.IntSort(), f"dim_{op.dest}_{dynamic_idx}"
+                    )
+                    state.set_value(size_name, size_expr, "index")
+                shape.append(size_expr)
+                dynamic_idx += 1
+            else:
+                shape.append(int(dim_str))
+
+        # Store tensor shape in state
+        state.set_tensor_shape(op.dest, shape)
+
+        # Create a fresh symbolic tensor (contents from region, ignored for now)
+        expr = z3.FreshConst(z3.IntSort(), f"tensor_{op.dest}")
+        state.set_memory(op.dest, expr, tensor_type)
+        state.set_value(op.dest, expr, tensor_type)
+
+    def _try_concrete_evaluation(
+        self, op: Operation, state: SymbolicState, func: MLIRFunction
+    ) -> Any:
+        """generate operations don't have simple concrete values."""
         return None
 
 
@@ -184,3 +388,5 @@ def register_handlers(registry) -> None:
     registry.register("tensor.extract", TensorExtractHandler())
     registry.register("tensor.insert", TensorInsertHandler())
     registry.register("tensor.splat", TensorSplatHandler())
+    registry.register("tensor.empty", TensorEmptyHandler())
+    registry.register("tensor.generate", TensorGenerateHandler())

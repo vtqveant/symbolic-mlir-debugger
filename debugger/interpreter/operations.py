@@ -560,6 +560,7 @@ def operation_from_dict(op_dict: Dict[str, Any]) -> Operation:
         line=line,
         dest=dest,
         result_type=op_dict.get("type"),
+        attributes=op_dict.get("attributes", {}),
     )
 
 
