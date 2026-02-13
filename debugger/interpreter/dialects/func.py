@@ -122,6 +122,7 @@ def register_handlers(registry) -> None:
     # Handle misparsed return operations
     registry.register("ape.sizereturn", FuncReturnHandler())
     registry.register("e.sizereturn", FuncReturnHandler())
+    registry.register("pe.sizereturn", FuncReturnHandler())
     registry.register("hape.sizereturn", FuncReturnHandler())
     registry.register("shape.sizereturn", FuncReturnHandler())
     registry.register("sizereturn", FuncReturnHandler())

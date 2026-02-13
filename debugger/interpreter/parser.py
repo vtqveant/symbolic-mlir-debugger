@@ -14,7 +14,7 @@ import parser
 import parser.astnodes as mast
 from parser.parser import Parser
 from lark import Tree
-from .operations import Operation
+from .operations import Operation, ReturnOperation
 
 # Import dialect modules
 from parser.dialects import (
@@ -442,19 +442,99 @@ class MLIRParser:
         self, op: mast.Operation
     ) -> Optional[Any]:  # Returns Operation or None
         """Parse an operation into Operation object using dialect parser registry."""
+        # First check for misparsed return operations (ape.sizereturn, e.sizereturn, hape.sizereturn, pe.sizereturn, shape.sizereturn)
+        # These are misparsed by pymlir and need special handling before dialect parser
+        op_obj = op.op
+        class_name = op_obj.__class__.__name__
+
+        # Check if this is a CustomOperation or GenericOperation that looks like misparsed return
+        if class_name in ["CustomOperation", "GenericOperation"]:
+            # Extract dialect and name
+            dialect = "unknown"
+            name = "unknown"
+            if (
+                class_name == "CustomOperation"
+                and hasattr(op_obj, "namespace")
+                and hasattr(op_obj, "name")
+            ):
+                dialect = op_obj.namespace
+                name = op_obj.name
+            elif class_name == "GenericOperation" and hasattr(op_obj, "name"):
+                name_obj = op_obj.name
+                if hasattr(name_obj, "value"):
+                    full_name = name_obj.value
+                else:
+                    full_name = str(name_obj)
+                if "." in full_name:
+                    dialect, name = full_name.split(".", 1)
+                else:
+                    dialect = "unknown"
+                    name = full_name
+
+            # Check if it's a misparsed return
+            if name == "sizereturn" and dialect in ["ape", "e", "hape", "pe", "shape"]:
+                # Extract return value from args (if any)
+                value = None
+                if hasattr(op_obj, "args") and op_obj.args:
+                    # Convert first arg SsaId to string
+                    arg = op_obj.args[0]
+                    if hasattr(arg, "value"):
+                        value = arg.value
+                    else:
+                        value = str(arg)
+                # Extract result type
+                result_type = None
+                if hasattr(op_obj, "type"):
+                    result_type = self._type_to_string(op_obj.type)
+                # Create ReturnOperation
+                line = self._extract_line_number(op)
+                dest = None
+                if hasattr(op_obj, "result_list") and op_obj.result_list:
+                    # Assume single result
+                    result_item = op_obj.result_list[0]
+                    if hasattr(result_item, "value") and hasattr(
+                        result_item.value, "value"
+                    ):
+                        dest = result_item.value.value
+                return ReturnOperation(
+                    dialect=dialect,
+                    name=name,
+                    line=line,
+                    dest=dest or "",
+                    result_type=result_type,
+                    value=value,
+                )
+
         # Try dialect parser registry first (returns Operation objects directly)
+        sys.stderr.write(
+            f"DEBUG parser: trying dialect parser registry for {op.op.__class__.__name__}\n"
+        )
         operation = self.dialect_parser_registry.parse(op)
         if operation is not None:
             # Set line number only if not already set by dialect parser
             if operation.line == 0:
                 operation.line = self._extract_line_number(op)
             # Note: location information not stored in Operation currently
+            sys.stderr.write(
+                f"DEBUG parser: dialect parser returned {operation.__class__.__name__}\n"
+            )
             return operation
 
         # No dialect parser registered for this operation
         # Create a generic Operation object as fallback
         op_obj = op.op
         class_name = op_obj.__class__.__name__
+        sys.stderr.write(f"DEBUG parser: fallback, class_name={class_name}\n")
+        if class_name == "CustomOperation":
+            sys.stderr.write(f"DEBUG parser: CustomOperation fields: {dir(op_obj)}\n")
+            if hasattr(op_obj, "namespace"):
+                sys.stderr.write(f"DEBUG parser: namespace={op_obj.namespace}\n")
+            if hasattr(op_obj, "name"):
+                sys.stderr.write(f"DEBUG parser: name={op_obj.name}\n")
+            if hasattr(op_obj, "args"):
+                sys.stderr.write(f"DEBUG parser: args={op_obj.args}\n")
+            if hasattr(op_obj, "values"):
+                sys.stderr.write(f"DEBUG parser: values={op_obj.values}\n")
 
         # Extract destination if possible
         dest = None
@@ -474,6 +554,9 @@ class MLIRParser:
         ):
             dialect = op_obj.namespace
             name = op_obj.name
+            sys.stderr.write(
+                f"DEBUG parser: CustomOperation namespace={dialect}, name={name}\n"
+            )
         elif class_name == "GenericOperation" and hasattr(op_obj, "name"):
             name_obj = op_obj.name
             if hasattr(name_obj, "value"):
@@ -485,6 +568,9 @@ class MLIRParser:
             else:
                 dialect = "unknown"
                 name = full_name
+            sys.stderr.write(
+                f"DEBUG parser: GenericOperation full_name={full_name}, dialect={dialect}, name={name}\n"
+            )
 
         # Parse attributes if present
         attributes = {}
@@ -497,6 +583,9 @@ class MLIRParser:
             result_type = self._type_to_string(op_obj.type)
 
         line = self._extract_line_number(op)
+        sys.stderr.write(
+            f"DEBUG parser: creating Operation dialect={dialect}, name={name}, dest={dest}, result_type={result_type}\n"
+        )
 
         return Operation(
             dialect=dialect,
