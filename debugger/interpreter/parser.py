@@ -442,15 +442,25 @@ class MLIRParser:
         self, op: mast.Operation
     ) -> Optional[Any]:  # Returns Operation or None
         """Parse an operation into Operation object using dialect parser registry."""
+        # Try dialect parser registry first (returns Operation objects directly)
+        operation = self.dialect_parser_registry.parse(op)
+        if operation is not None:
+            # Set line number only if not already set by dialect parser
+            if operation.line == 0:
+                operation.line = self._extract_line_number(op)
+            # Note: location information not stored in Operation currently
+            return operation
+
+        # No dialect parser registered for this operation
+        # Create a generic Operation object as fallback
+        op_obj = op.op
+        class_name = op_obj.__class__.__name__
+
         # First check for misparsed return operations (ape.sizereturn, e.sizereturn, hape.sizereturn, pe.sizereturn, shape.sizereturn)
         # These are misparsed by pymlir due to a lexer/parser bug when processing shape dialect examples.
         # The bug causes "!shape.size" followed by "return" to be incorrectly concatenated/tokenized.
         # TODO: Fix this in pymlir's lexer/parser (debugger/parser/lark/mlir.lark and parser_transformer.py)
         # Workaround: detect misparsed returns and convert them to proper ReturnOperation objects.
-        op_obj = op.op
-        class_name = op_obj.__class__.__name__
-
-        # Check if this is a CustomOperation or GenericOperation that looks like misparsed return
         if class_name in ["CustomOperation", "GenericOperation"]:
             # Extract dialect and name
             dialect = "unknown"
@@ -475,7 +485,9 @@ class MLIRParser:
                     name = full_name
 
             # Check if it's a misparsed return
-            if name == "sizereturn" and dialect in ["ape", "e", "hape", "pe", "shape"]:
+            if (
+                name == "sizereturn" and dialect in ["ape", "e", "hape", "pe", "shape"]
+            ) or (name == "custom" and dialect == "shape"):
                 # Extract return value from args (if any)
                 value = None
                 if hasattr(op_obj, "args") and op_obj.args:
@@ -508,37 +520,6 @@ class MLIRParser:
                     value=value,
                 )
 
-        # Try dialect parser registry first (returns Operation objects directly)
-        sys.stderr.write(
-            f"DEBUG parser: trying dialect parser registry for {op.op.__class__.__name__}\n"
-        )
-        operation = self.dialect_parser_registry.parse(op)
-        if operation is not None:
-            # Set line number only if not already set by dialect parser
-            if operation.line == 0:
-                operation.line = self._extract_line_number(op)
-            # Note: location information not stored in Operation currently
-            sys.stderr.write(
-                f"DEBUG parser: dialect parser returned {operation.__class__.__name__}\n"
-            )
-            return operation
-
-        # No dialect parser registered for this operation
-        # Create a generic Operation object as fallback
-        op_obj = op.op
-        class_name = op_obj.__class__.__name__
-        sys.stderr.write(f"DEBUG parser: fallback, class_name={class_name}\n")
-        if class_name == "CustomOperation":
-            sys.stderr.write(f"DEBUG parser: CustomOperation fields: {dir(op_obj)}\n")
-            if hasattr(op_obj, "namespace"):
-                sys.stderr.write(f"DEBUG parser: namespace={op_obj.namespace}\n")
-            if hasattr(op_obj, "name"):
-                sys.stderr.write(f"DEBUG parser: name={op_obj.name}\n")
-            if hasattr(op_obj, "args"):
-                sys.stderr.write(f"DEBUG parser: args={op_obj.args}\n")
-            if hasattr(op_obj, "values"):
-                sys.stderr.write(f"DEBUG parser: values={op_obj.values}\n")
-
         # Extract destination if possible
         dest = None
         if hasattr(op_obj, "result_list") and op_obj.result_list:
@@ -557,9 +538,6 @@ class MLIRParser:
         ):
             dialect = op_obj.namespace
             name = op_obj.name
-            sys.stderr.write(
-                f"DEBUG parser: CustomOperation namespace={dialect}, name={name}\n"
-            )
         elif class_name == "GenericOperation" and hasattr(op_obj, "name"):
             name_obj = op_obj.name
             if hasattr(name_obj, "value"):
@@ -571,9 +549,6 @@ class MLIRParser:
             else:
                 dialect = "unknown"
                 name = full_name
-            sys.stderr.write(
-                f"DEBUG parser: GenericOperation full_name={full_name}, dialect={dialect}, name={name}\n"
-            )
 
         # Parse attributes if present
         attributes = {}
@@ -586,9 +561,6 @@ class MLIRParser:
             result_type = self._type_to_string(op_obj.type)
 
         line = self._extract_line_number(op)
-        sys.stderr.write(
-            f"DEBUG parser: creating Operation dialect={dialect}, name={name}, dest={dest}, result_type={result_type}\n"
-        )
 
         return Operation(
             dialect=dialect,

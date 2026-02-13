@@ -71,35 +71,25 @@ class FuncReturnHandler(OperationHandler):
         """Execute return symbolically."""
         if not isinstance(op, ReturnOperation):
             raise TypeError(f"Expected ReturnOperation, got {type(op)}")
-        print(
-            f"DEBUG FuncReturnHandler: op.value={op.value}, op.result_type={op.result_type}"
-        )
         # Store return value if present
         if op.value is not None:
             ret_expr = state.get_expr(op.value)
-            print(f"DEBUG FuncReturnHandler: ret_expr={ret_expr}")
             if ret_expr is not None:
                 state.set_value("return", ret_expr, op.result_type or "i32")
-                print("DEBUG FuncReturnHandler: set return value")
                 # Also propagate concrete value if available
                 concrete_val = state.get_concrete_value(op.value)
                 if concrete_val is not None:
                     state.set_concrete_value("return", concrete_val)
-                    print(
-                        f"DEBUG FuncReturnHandler: set concrete return value {concrete_val}"
-                    )
             else:
                 # Create a fresh symbolic variable for the missing value
                 import z3
 
                 fresh_expr = z3.FreshConst(z3.IntSort(), f"ret_{op.value}")
                 state.set_value("return", fresh_expr, op.result_type or "i32")
-                print("DEBUG FuncReturnHandler: created fresh return expr")
         else:
             # No return value (void return)
             pass
         state.pc = None  # Terminate state
-        print("DEBUG FuncReturnHandler: set pc=None")
 
     def _try_concrete_evaluation(
         self, op: ReturnOperation, state: SymbolicState, func: MLIRFunction
@@ -113,7 +103,6 @@ def register_handlers(registry) -> None:
     """Register func dialect handlers with registry."""
     import sys
 
-    print(f"DEBUG func.register_handlers: registering func handlers", file=sys.stderr)
     registry.register("func.call", FuncCallHandler())
     registry.register("func.call_indirect", FuncCallIndirectHandler())
     registry.register("func.return", FuncReturnHandler())
@@ -128,4 +117,4 @@ def register_handlers(registry) -> None:
     registry.register("shape.sizereturn", FuncReturnHandler())
     registry.register("sizereturn", FuncReturnHandler())
     registry.register(".sizereturn", FuncReturnHandler())
-    print(f"DEBUG func.register_handlers: done", file=sys.stderr)
+    registry.register("shape.custom", FuncReturnHandler())

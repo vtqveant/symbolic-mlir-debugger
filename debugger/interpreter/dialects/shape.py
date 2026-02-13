@@ -40,10 +40,6 @@ class ShapeConstSizeHandler(ConstantOperationHandler):
         value = op.value
         import sys
 
-        print(
-            f"DEBUG ShapeConstSizeHandler: op.value = {op.value}, op.attributes = {op.attributes}",
-            file=sys.stderr,
-        )
         if value is None and op.attributes and "value" in op.attributes:
             attr_val = op.attributes["value"]
             # Attribute might be string like "42"
@@ -58,30 +54,18 @@ class ShapeConstSizeHandler(ConstantOperationHandler):
         # Create Z3 constant from value
         import sys
 
-        print(
-            f"DEBUG ShapeConstSizeHandler value type: {type(value)}, value={value}",
-            file=sys.stderr,
-        )
         if isinstance(value, int):
             expr = z3.IntVal(value)
-            print(
-                f"DEBUG ShapeConstSizeHandler created IntVal({value})", file=sys.stderr
-            )
         elif isinstance(value, float):
             expr = z3.RealVal(value)
         else:
             # Fallback to symbolic variable
-            print(f"DEBUG ShapeConstSizeHandler creating fresh const", file=sys.stderr)
             expr = z3.FreshConst(z3.IntSort(), f"shape_const_{op.dest}")
 
         state.set_value(op.dest, expr, op.result_type or "!shape.size")
 
         # Also store concrete value if we have it
         if isinstance(value, (int, float)):
-            print(
-                f"DEBUG ShapeConstSizeHandler setting concrete value {op.dest} = {value}",
-                file=sys.stderr,
-            )
             state.set_concrete_value(op.dest, value)
 
     def _try_concrete_evaluation(
