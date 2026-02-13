@@ -437,10 +437,10 @@ class MLIRParser:
 
         # Parse operations in block
         for op in block.body:
-            op_dict = self._parse_operation(op)
-            if op_dict:
+            operation = self._parse_operation(op)
+            if operation:
                 # Line number is already set by _parse_operation via _extract_line_number
-                bb.add_operation(op_dict)
+                bb.add_operation(operation)
 
         # Clear current block and function
         self.current_block_label = None
@@ -453,8 +453,9 @@ class MLIRParser:
         # Try dialect parser registry first (returns Operation objects directly)
         operation = self.dialect_parser_registry.parse(op)
         if operation is not None:
-            # Set line number
-            operation.line = self._extract_line_number(op)
+            # Set line number only if not already set by dialect parser
+            if operation.line == 0:
+                operation.line = self._extract_line_number(op)
             # Note: location information not stored in Operation currently
             return operation
 

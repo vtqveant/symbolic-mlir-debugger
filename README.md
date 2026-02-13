@@ -28,19 +28,19 @@ The Symbolic MLIR Debugger enables advanced debugging and analysis of MLIR progr
 └────────────────────────────┬────────────────────────────────┘
                              │
 ┌────────────────────────────▼────────────────────────────────┐
-│                 Symbolic MLIR Debugger                       │
-├──────────────────────────────────────────────────────────────┤
+│                 Symbolic MLIR Debugger                      │
+├─────────────────────────────────────────────────────────────┤
 │  • Parser (MLIR text → AST)                                 │
 │  • Symbolic Interpreter (MLIR → Z3 constraints)             │
 │  • Concolic Engine (Mixed concrete/symbolic execution)      │
 │  • Dialect Registry (Extensible operation handlers)         │
 │  • State Manager (Path forking & merging)                   │
-└──────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────┘
                              │
 ┌────────────────────────────▼────────────────────────────────┐
 │                     Z3 SMT Solver                           │
 │               (Constraint solving & SAT)                    │
-└──────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Applications

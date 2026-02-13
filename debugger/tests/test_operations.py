@@ -40,8 +40,8 @@ module {
     # Entry block should have constant and br
     entry_bb = func.basic_blocks["^entry"]
     assert len(entry_bb.operations) == 2
-    assert entry_bb.operations[0]["op"] == "arith.constant"
-    assert entry_bb.operations[1]["op"] == "cf.br"
+    assert entry_bb.operations[0].full_name == "arith.constant"
+    assert entry_bb.operations[1].full_name == "cf.br"
 
 
 @pytest.mark.parser

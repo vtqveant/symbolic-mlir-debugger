@@ -12,6 +12,15 @@ from .models import SymbolicState
 from .parser import MLIRParser
 from .interpreter import ConcolicInterpreter
 from .debug_utils import get_variable_summary
+from .operations import (
+    Operation,
+    LoopOperation,
+    ConditionalBranchOperation,
+    UnconditionalBranchOperation,
+    ReturnOperation,
+    IfOperation,
+    YieldOperation,
+)
 
 
 class ExecutionStepper:
@@ -108,7 +117,7 @@ class ExecutionStepper:
         if not self.func.cfg.dominators:
             self.func.cfg.compute_dominators()
 
-    def _enter_loop(self, op: Dict[str, Any]) -> bool:
+    def _enter_loop(self, op: LoopOperation) -> bool:
         """Enter a loop (scf.for) for stepping.
 
         Sets up loop state if bounds are concrete.
@@ -118,26 +127,28 @@ class ExecutionStepper:
         assert self.current_state is not None
         state = cast(SymbolicState, self.current_state)
         # Get concrete bounds
-        lb = self.interpreter._get_concrete_operand(op.get("lb", "0"), state)
-        ub = self.interpreter._get_concrete_operand(op.get("ub", "0"), state)
-        step = self.interpreter._get_concrete_operand(op.get("step", "1"), state)
+        lb = self.interpreter._get_concrete_operand(op.lb, state) if op.lb else None
+        ub = self.interpreter._get_concrete_operand(op.ub, state) if op.ub else None
+        step = (
+            self.interpreter._get_concrete_operand(op.step, state) if op.step else None
+        )
 
         if lb is None or ub is None or step is None:
             # Symbolic bounds - cannot step through loop
             return False
 
         # Get induction variable name (strip % if present)
-        iv = op.get("iv", "")
+        iv = op.index if op.index else ""
         iv_name = iv[1:] if iv.startswith("%") else iv
 
         # Get iteration argument if present
-        iter_arg = op.get("iter_arg", "")
+        iter_arg = op.iter_arg if op.iter_arg else ""
         iter_arg_name = iter_arg[1:] if iter_arg.startswith("%") else iter_arg
-        init = op.get("init", "")
-        result_type = op.get("result_type", "i32")
+        init = op.init if op.init else ""
+        result_type = op.result_type if op.result_type else "i32"
 
         # Get body operations
-        body_ops = op.get("body", [])
+        body_ops = op.body
         if not body_ops:
             # Empty loop body
             body_ops = []
@@ -158,7 +169,7 @@ class ExecutionStepper:
             if init
             else None,
             "body_op_index": -1,  # -1 indicates not yet started iteration
-            "line": op.get("line", 0),
+            "line": op.line,
         }
 
         self.loop_stack.append(loop_context)
@@ -215,7 +226,7 @@ class ExecutionStepper:
         ):
             # Loop completed
             # Set loop result value (dest) if any
-            dest = loop["op"].get("dest")
+            dest = loop["op"].dest
             if dest and loop["iter_arg_value"] is not None:
                 # Strip leading % if present
                 dest_name = dest[1:] if dest.startswith("%") else dest
@@ -223,7 +234,7 @@ class ExecutionStepper:
                 state.set_concrete_value(dest_name, loop["iter_arg_value"])
                 # Also set symbolic value
                 state.set_value(
-                    dest_name, z3.Int(dest_name), loop["op"].get("result_type", "i32")
+                    dest_name, z3.Int(dest_name), loop["op"].result_type or "i32"
                 )
 
             self._exit_loop()
@@ -245,10 +256,10 @@ class ExecutionStepper:
             self._execute_single_operation(body_op, state)
 
             # Check if operation was scf.yield (end of loop body)
-            if body_op.get("op") == "scf.yield":
+            if body_op.dialect == "scf" and body_op.name == "yield":
                 # Yield value becomes next iteration argument
                 yield_val = self.interpreter._get_concrete_operand(
-                    body_op.get("value", ""), state
+                    body_op.value if body_op.value else "", state
                 )
                 if yield_val is not None:
                     loop["iter_arg_value"] = yield_val
@@ -352,32 +363,16 @@ class ExecutionStepper:
             current_op = block.operations[self.current_op_index]
             current_op_index = self.current_op_index
 
-        line = current_op.get("line", 0)
+        line = current_op.line
         file = self.mlir_file
         column = 0
-
-        # Extract location information if present
-        location = current_op.get("location")
-        if location and isinstance(location, dict):
-            # Use file from location if it's a FileLineColLoc
-            if location.get("type") == "FileLineColLoc":
-                loc_file = location.get("file")
-                if loc_file:
-                    file = loc_file
-                # Location line may be more accurate than op["line"]
-                loc_line = location.get("line")
-                if loc_line is not None:
-                    line = loc_line
-                loc_column = location.get("column")
-                if loc_column is not None:
-                    column = loc_column
 
         return {
             "file": file,
             "line": line,
             "column": column,
             "block": current_block,
-            "operation": current_op["op"],
+            "operation": current_op,
             "operation_index": current_op_index,
         }
 
@@ -500,7 +495,9 @@ class ExecutionStepper:
 
             # Create a summary for the tensor region
             shape = self.current_state.tensor_memory_model.shapes.get(tensor_name, ())
-            dtype = self.current_state.tensor_memory_model.dtypes.get(tensor_name, "unknown")
+            dtype = self.current_state.tensor_memory_model.dtypes.get(
+                tensor_name, "unknown"
+            )
             region_summary = {
                 "name": f"{tensor_name} (tensor)",
                 "value": f"{len(entries)} entries, shape={shape}, dtype={dtype}",
@@ -641,16 +638,17 @@ class ExecutionStepper:
         op = block.operations[self.current_op_index]
 
         # Handle scf.for specially: enter loop if bounds are concrete
-        if op.get("op") == "scf.for" and self.current_loop is None:
+        if op.dialect == "scf" and op.name == "for" and self.current_loop is None:
             # Try to enter the loop
-            if self._enter_loop(op):
-                # Loop entered successfully - don't execute the operation
-                # Return current location (still at scf.for line)
-                return self.get_current_location()
-            else:
-                # Could not enter loop (symbolic bounds) - execute as normal operation
-                # This will use the interpreter's loop unrolling
-                pass
+            if isinstance(op, LoopOperation):
+                if self._enter_loop(cast(LoopOperation, op)):
+                    # Loop entered successfully - don't execute the operation
+                    # Return current location (still at scf.for line)
+                    return self.get_current_location()
+                else:
+                    # Could not enter loop (symbolic bounds) - execute as normal operation
+                    # This will use the interpreter's loop unrolling
+                    pass
 
         # Store old pc to detect if operation changed block
         old_pc = state.pc
@@ -672,7 +670,7 @@ class ExecutionStepper:
             else:
                 # Check breakpoint on next operation
                 next_op = block.operations[self.current_op_index]
-                if next_op.get("line", 0) in self.breakpoints:
+                if next_op.line in self.breakpoints:
                     self.paused = True
         else:
             # Block changed (or terminated)
@@ -682,7 +680,7 @@ class ExecutionStepper:
                 new_block = self.func.get_basic_block(state.pc)
                 if new_block and new_block.operations:
                     first_op = new_block.operations[0]
-                    if first_op.get("line", 0) in self.breakpoints:
+                    if first_op.line in self.breakpoints:
                         self.paused = True
 
         return self.get_current_location()
@@ -705,7 +703,7 @@ class ExecutionStepper:
 
             # Check breakpoint on current operation
             op = block.operations[self.current_op_index]
-            if op.get("line", 0) in self.breakpoints:
+            if op.line in self.breakpoints:
                 self.paused = True
                 break
 
@@ -714,7 +712,7 @@ class ExecutionStepper:
 
         return self.get_current_location()
 
-    def _execute_single_operation(self, op: Dict[str, Any], state: SymbolicState):
+    def _execute_single_operation(self, op: Operation, state: SymbolicState):
         """Execute a single operation using concolic execution.
 
         Uses the ConcolicInterpreter's _execute_operation_concolic method
@@ -724,35 +722,36 @@ class ExecutionStepper:
         old_pc = state.pc
 
         # Execute the operation using concolic interpreter
-        print(f"STEPPER executing op: {op}")
+        print(f"STEPPER executing op: {op.full_name}")
         self.interpreter._execute_operation_concolic(op, state, self.func)
 
         # Post-processing: ensure concrete values for return operation
-        if op.get("op") == "return":
+        if isinstance(op, ReturnOperation):
             # Try to get concrete value for the return operand
-            operand = op.get("value", "")
+            operand = op.value
             print(f"STEPPER return op, operand={operand}")
-            concrete_val = self.interpreter._get_concrete_operand(operand, state)
-            print(f"STEPPER concrete_val={concrete_val}")
-            if concrete_val is not None:
-                state.set_concrete_value("return", concrete_val)
-                print(f"STEPPER set concrete return value {concrete_val}")
+            if operand:
+                concrete_val = self.interpreter._get_concrete_operand(operand, state)
+                print(f"STEPPER concrete_val={concrete_val}")
+                if concrete_val is not None:
+                    state.set_concrete_value("return", concrete_val)
+                    print(f"STEPPER set concrete return value {concrete_val}")
 
         # Check if this operation caused a block transition
         if state.pc != old_pc:
             # Block transition occurred
             # Record branch decision if operation is a branch
-            if op.get("op") in ("cf.cond_br", "cf.br"):
+            if op.dialect == "cf" and op.name in ("cond_br", "br"):
                 branch_info = {
-                    "operation": op["op"],
+                    "operation": op.full_name,
                     "from_block": old_pc,
                     "to_block": state.pc,
-                    "line": op.get("line", 0),
+                    "line": op.line,
                 }
-                if op["op"] == "cf.cond_br":
+                if op.name == "cond_br" and isinstance(op, ConditionalBranchOperation):
                     # Determine which branch was taken
-                    true_block = op.get("true_block")
-                    false_block = op.get("false_block")
+                    true_block = op.true_block
+                    false_block = op.false_block
                     if state.pc == true_block:
                         branch_info["taken_branch"] = "true"
                     elif state.pc == false_block:
@@ -760,7 +759,7 @@ class ExecutionStepper:
                     else:
                         branch_info["taken_branch"] = "unknown"
                     # Try to get concrete condition value
-                    cond_operand = op.get("cond")
+                    cond_operand = op.cond
                     if cond_operand:
                         concrete_cond = self.interpreter._get_concrete_operand(
                             cond_operand, state
@@ -772,7 +771,7 @@ class ExecutionStepper:
                 self.last_branch_decision = branch_info
                 self.branch_history.append(branch_info)
                 # Log branch decision
-                if op["op"] == "cf.cond_br":
+                if op.name == "cond_br":
                     print(
                         f"STEPPER conditional branch: {old_pc} -> {state.pc} (condition={branch_info.get('condition_value', 'unknown')})"
                     )

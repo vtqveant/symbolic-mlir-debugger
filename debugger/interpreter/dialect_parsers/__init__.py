@@ -51,7 +51,8 @@ def register_default_parsers(registry: DialectParserRegistry) -> None:
     registry.register_dialect("memref", MemrefDialectParser())
     registry.register_dialect("tensor", TensorDialectParser())
     registry.register_dialect("affine", AffineDialectParser())
-    registry.register_dialect("cf", CfDialectParser())
+    cf_parser = CfDialectParser()
+    registry.register_dialect("cf", cf_parser)
     registry.register_dialect("scf", ScfDialectParser())
     registry.register_dialect("func", FuncDialectParser())
     linalg_parser = LinalgDialectParser()
@@ -81,4 +82,7 @@ def register_default_parsers(registry: DialectParserRegistry) -> None:
     registry.register_operation(
         "LinalgYield", linalg_parser._parse_linalg_yield_operation
     )
+    # Register operation handlers for cf operations
+    registry.register_operation("BrOperation", cf_parser._parse_br_operation)
+    registry.register_operation("CondBrOperation", cf_parser._parse_cond_br_operation)
     # Add more default parsers here as they are implemented

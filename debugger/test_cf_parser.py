@@ -37,7 +37,7 @@ func.func @test() -> i32 {
                 print(f"    dialect={op.dialect}, name={op.name}")
             if isinstance(op, dict):
                 print(f"    dict op={op.get('op')}")
-                if op.get("op") == "cf.br":
+                if op == "cf.br":
                     print("    Found cf.br dict")
             # Check if it's a UnconditionalBranchOperation
             if isinstance(op, UnconditionalBranchOperation):
@@ -66,7 +66,7 @@ func.func @test(%cond: i1) -> i32 {
   return %c2 : i32
 }
 """
-    parser = MLIRParser(use_operations=True)
+    parser = MLIRParser()
     functions = parser.parse_string(mlir_code)
 
     # This may fail due to pymlir limitation - we'll check what we get
