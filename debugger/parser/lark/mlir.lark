@@ -6,8 +6,6 @@ digit      : /[0-9]/
 digits     : /[0-9]+/
 hex_digit  : /[0-9a-fA-F]/
 hex_digits : /[0-9a-fA-F]+/
-letter     : /[a-zA-Z]/
-letters    : /[a-zA-Z]+/
 id_punct   : /[$._-]/
 underscore : /[_]/
 true       : "true"
@@ -25,9 +23,15 @@ float_literal : /[-+]?[0-9]+[.][0-9]*([eE][-+]?[0-9]+)?/
 string_literal  : ESCAPED_STRING
 constant_literal : bool_literal | posneg_integer_literal | float_literal | string_literal
 
+// Integer type prefixes as terminals to avoid conflict with identifiers
+SI_DIGIT: /si[1-9][0-9]*/
+UI_DIGIT: /ui[1-9][0-9]*/
+I_DIGIT: /i[1-9][0-9]*/
+
+
 // Identifier syntax
-bare_id : (letter| underscore) (letter|digit|underscore|id_chars)*
-suffix_id : digits | ((letter | id_punct) (letter | id_punct | digits)*)
+bare_id : /[a-zA-Z_][a-zA-Z0-9_$]*/
+suffix_id : digits | /[a-zA-Z$._-][a-zA-Z0-9$._-]*/
 
 // Dimensions
 dimension : "?" | decimal_literal
@@ -60,9 +64,9 @@ none_type : "none"
 !float_type : "f16" | "bf16" | "f32" | "f64"
 index_type : "index"
 inttype_width: /[1-9][0-9]*/  // Sized integers like i1, i4, i8, i16, i32.
-signed_integer_type : "si" inttype_width
-unsigned_integer_type : "ui" inttype_width
-signless_integer_type : "i" inttype_width
+signed_integer_type : SI_DIGIT
+unsigned_integer_type : UI_DIGIT
+signless_integer_type : I_DIGIT
 integer_type : signed_integer_type | unsigned_integer_type | signless_integer_type
 complex_type : "complex" "<" type ">"
 tuple_type : "tuple" "<" type_list_no_parens ">"
@@ -72,7 +76,7 @@ vector_element_type : float_type | integer_type
 vector_type : "vector" "<" static_dimension_list vector_element_type ">"
 
 // Tensor type
-tensor_memref_element_type : vector_element_type | vector_type | complex_type | type_alias
+tensor_memref_element_type : vector_element_type | vector_type | complex_type | type_alias | index_type
 ranked_tensor_type : "tensor" "<" dimension_list_ranked tensor_memref_element_type ">"
 unranked_tensor_type : "tensor" "<" dimension_list_unranked tensor_memref_element_type ">"
 tensor_type : ranked_tensor_type | unranked_tensor_type
@@ -103,7 +107,7 @@ dialect_type : "!" (pymlir_dialect_types | opaque_dialect_item | pretty_dialect_
 // Final type definition
 standard_type     : complex_type | float_type | function_type | llvm_function_type | index_type | integer_type | memref_type | none_type | tensor_type | tuple_type | vector_type
 non_function_type : type_alias | complex_type | float_type | index_type | integer_type | memref_type | none_type | tensor_type | tuple_type | vector_type | dialect_type
-type              : type_alias | dialect_type | standard_type
+type              : dialect_type | type_alias | standard_type
 
 // Uses of types
 type_list_no_parens :  type ("," type)*
