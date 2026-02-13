@@ -151,34 +151,6 @@ class ShapeGetExtentHandler(ShapeDimHandler):
     pass
 
 
-class ShapeReturnHandler(OperationHandler):
-    """Handler for .sizereturn operation (misparsed shape.return)."""
-
-    def execute_symbolic(
-        self, op: Operation, state: SymbolicState, func: MLIRFunction, interpreter=None
-    ) -> None:
-        """Execute .sizereturn symbolically."""
-        # op should be a ReturnOperation with value field (already mapped from operands)
-        if not isinstance(op, ReturnOperation):
-            raise TypeError(f"Expected ReturnOperation, got {type(op)}")
-        if op.value:
-            ret_expr = state.get_value(op.value)
-            if ret_expr is None:
-                # Try to get as constant
-                if op.value.isdigit():
-                    ret_expr = z3.IntVal(int(op.value))
-                else:
-                    ret_expr = z3.Int(f"return_{op.value}")
-            state.set_value("return", ret_expr, op.result_type or "i32")
-        state.pc = None
-
-    def _try_concrete_evaluation(
-        self, op: Operation, state: SymbolicState, func: MLIRFunction
-    ) -> Any:
-        """Try concrete evaluation of .sizereturn."""
-        return None
-
-
 # Function to register all shape dialect handlers
 def register_handlers(registry) -> None:
     """Register shape dialect handlers with registry."""
@@ -188,6 +160,3 @@ def register_handlers(registry) -> None:
     registry.register("shape.div", ShapeDivHandler())
     registry.register("shape.dim", ShapeDimHandler())
     registry.register("shape.get_extent", ShapeGetExtentHandler())
-    # Workaround for pymlir bug: misparsed returns appear as .sizereturn
-    # TODO: Fix pymlir lexer/parser to correctly parse "return" after "!shape.size"
-    registry.register(".sizereturn", ShapeReturnHandler())
