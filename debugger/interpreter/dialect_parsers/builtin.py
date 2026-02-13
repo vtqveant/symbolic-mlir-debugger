@@ -12,7 +12,13 @@ import dataclasses
 
 import parser.astnodes as mast
 from .base import BaseDialectParser
-from ..operations import Operation, BinaryOperation, UnaryOperation, ConstantOperation
+from ..operations import (
+    Operation,
+    BinaryOperation,
+    UnaryOperation,
+    ConstantOperation,
+    ReturnOperation,
+)
 
 
 class BuiltinDialectParser(BaseDialectParser):
@@ -34,6 +40,8 @@ class BuiltinDialectParser(BaseDialectParser):
             # Module operation (builtin.module) - typically handled at module level
             elif class_name == "ModuleOperation":
                 return self._parse_module_operation(op_node)
+            elif class_name == "ReturnOperation":
+                return self._parse_return_operation(op_node)
             # Generic fallback
             else:
                 return self._parse_generic_operation(op_node)
@@ -93,6 +101,40 @@ class BuiltinDialectParser(BaseDialectParser):
             dest=dest,
             result_type=None,
             attributes={},
+        )
+
+    def _parse_return_operation(
+        self, op_node: mast.Operation
+    ) -> Optional[ReturnOperation]:
+        """Parse return operation."""
+        op_obj = op_node.op
+
+        # Return operations don't have destinations, but extract anyway
+        dest = self._extract_destination(op_node) or ""
+
+        # Extract return value if present
+        value = None
+        if hasattr(op_obj, "values") and op_obj.values and len(op_obj.values) > 0:
+            val_node = op_obj.values[0]
+            if hasattr(val_node, "value"):
+                value = self._ssa_use_to_string(val_node.value)
+            else:
+                value = self._ssa_use_to_string(val_node)
+
+        # Extract return type if present
+        result_type = None
+        if hasattr(op_obj, "types") and op_obj.types and len(op_obj.types) > 0:
+            result_type = self._type_to_string(op_obj.types[0])
+
+        line = self._extract_line_number(op_node)
+
+        return ReturnOperation(
+            dialect="builtin",
+            name="return",
+            line=line,
+            dest=dest,
+            result_type=result_type,
+            value=value,
         )
 
     def _parse_generic_operation(self, op_node: mast.Operation) -> Optional[Operation]:

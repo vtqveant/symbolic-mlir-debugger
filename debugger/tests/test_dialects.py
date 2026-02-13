@@ -25,7 +25,7 @@ def test_affine_example_parsing(parser, dialect_examples_dir):
         bb = list(func.basic_blocks.values())[0]
         assert len(bb.operations) > 0
         # Should contain affine operations
-        affine_ops = [op for op in bb.operations if op["op"].startswith("affine.")]
+        affine_ops = [op for op in bb.operations if op.full_name.startswith("affine.")]
         assert len(affine_ops) > 0
 
 
@@ -44,7 +44,7 @@ def test_func_example_parsing(parser, dialect_examples_dir):
     # Check func.call operation in caller function
     caller_func = functions["caller"]
     caller_bb = list(caller_func.basic_blocks.values())[0]
-    caller_ops = [op["op"] for op in caller_bb.operations]
+    caller_ops = [op.full_name for op in caller_bb.operations]
     assert "func.call" in caller_ops
 
 
@@ -63,7 +63,7 @@ def test_linalg_example_parsing(parser, dialect_examples_dir):
     # Check linalg operations
     for name, func in functions.items():
         bb = list(func.basic_blocks.values())[0]
-        linalg_ops = [op for op in bb.operations if op["op"].startswith("linalg.")]
+        linalg_ops = [op for op in bb.operations if op.full_name.startswith("linalg.")]
         assert len(linalg_ops) > 0
 
 

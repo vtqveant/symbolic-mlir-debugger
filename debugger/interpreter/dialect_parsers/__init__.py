@@ -61,8 +61,13 @@ def register_default_parsers(registry: DialectParserRegistry) -> None:
     registry.register_dialect("bufferization", BufferizationDialectParser())
     registry.register_dialect("shape", ShapeDialectParser())
     registry.register_dialect("vector", VectorDialectParser())
-    registry.register_dialect("builtin", BuiltinDialectParser())
+    builtin_parser = BuiltinDialectParser()
+    registry.register_dialect("builtin", builtin_parser)
     registry.register_dialect("emitc", EmitcDialectParser())
+    # Register operation handlers for builtin operations
+    registry.register_operation(
+        "ReturnOperation", builtin_parser._parse_return_operation
+    )
     # Register operation handlers for linalg operations (since they lack _opname_)
     registry.register_operation(
         "LinalgGeneric", linalg_parser._parse_linalg_generic_operation

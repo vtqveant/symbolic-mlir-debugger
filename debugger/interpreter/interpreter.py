@@ -23,7 +23,7 @@ class SymbolicInterpreter:
         self.state_manager = StateManager()
 
     def _try_execute_with_registry(
-        self, op: Dict[str, Any], state: SymbolicState, func: MLIRFunction
+        self, op: Any, state: SymbolicState, func: MLIRFunction
     ) -> bool:
         """Try to execute operation using dialect registry.
 
@@ -33,18 +33,21 @@ class SymbolicInterpreter:
         # (e.g., control flow that needs state forking)
         legacy_ops = {"cf.cond_br", "cf.br"}
 
-        op_type = op.get("op")
+        # Determine operation type (full name) for both dict and Operation objects
+        if isinstance(op, dict):
+            op_type = op.get("op")
+            # Convert dict to Operation if needed
+            op_obj = operation_from_dict(op)
+        else:
+            # op is already an Operation object
+            op_obj = op
+            op_type = f"{op_obj.dialect}.{op_obj.name}"
+
         if op_type in legacy_ops:
             print(f"DEBUG: Skipping registry for legacy op {op_type}")
             return False
 
         try:
-            # Convert dict to Operation if needed
-            if isinstance(op, dict):
-                op_obj = operation_from_dict(op)
-            else:
-                op_obj = op
-
             # Try to get handler
             handler = get_handler(op_obj.full_name)
             if handler:
@@ -59,7 +62,7 @@ class SymbolicInterpreter:
                 pass
         except Exception:
             # Registry execution failed, fall back to legacy handler
-            # print(f"Registry execution failed for {op.get('op', 'unknown')}: {e}")  # Debug
+            # print(f"Registry execution failed for {op_type}: {e}")  # Debug
             pass
         # Operation not handled by registry
         return False
@@ -143,38 +146,48 @@ class SymbolicInterpreter:
         return tuple(concrete_indices)
 
     def _execute_operation(
-        self, op: Dict[str, Any], state: SymbolicState, func: MLIRFunction
+        self, op: Any, state: SymbolicState, func: MLIRFunction
     ) -> None:
         """Execute a single operation using dialect registry or fallback."""
         # Try to execute using dialect registry first
         if self._try_execute_with_registry(op, state, func):
             return
 
-        # Fallback for operations not yet in registry
-        op_type = op.get("op")
-        if op_type == "cf.cond_br":
+        # Convert dict to Operation if needed
+        if isinstance(op, dict):
             op_obj = operation_from_dict(op)
+        else:
+            op_obj = op
+
+        op_type = f"{op_obj.dialect}.{op_obj.name}"
+
+        if op_type == "cf.cond_br":
             self.cf_executor.execute_conditional_branch(op_obj, state, func, self)
 
         elif op_type == "cf.br":
-            op_obj = operation_from_dict(op)
             self.cf_executor.execute_unconditional_branch(op_obj, state, func, self)
 
-        elif op_type == "return":
+        elif op_type == "builtin.return":
             # Function return
-            if "value" in op:
-                ret_expr = self._get_operand_expr(op["value"], state)
-                state.set_value("return", ret_expr, op["type"])
+            if hasattr(op_obj, "value") and op_obj.value is not None:
+                ret_expr = self._get_operand_expr(op_obj.value, state)
+                state.set_value(
+                    "return",
+                    ret_expr,
+                    op_obj.result_type if hasattr(op_obj, "result_type") else None,
+                )
             state.pc = None
 
         else:
             # Unknown operation - treat as no-op
             print(f"Warning: Unknown operation type {op_type}, skipping")
             # Still need to produce a result if there's a dest
-            if "dest" in op:
+            if hasattr(op_obj, "dest") and op_obj.dest is not None:
                 # Create fresh symbolic value
                 expr = z3.FreshConst(z3.IntSort(), f"unknown_{op_type}")
-                state.set_value(op["dest"], expr, op.get("type", "unknown"))
+                state.set_value(
+                    op_obj.dest, expr, getattr(op_obj, "result_type", "unknown")
+                )
 
     def execute_function(self, func: MLIRFunction) -> List[SymbolicState]:
         """Symbolically execute an MLIR function."""
@@ -259,25 +272,28 @@ class ConcolicInterpreter(SymbolicInterpreter):
         self.input_models = []
 
     def _try_execute_with_registry(
-        self, op: Dict[str, Any], state: SymbolicState, func: MLIRFunction
+        self, op: Any, state: SymbolicState, func: MLIRFunction
     ) -> bool:
         """Try to execute operation using dialect registry with concolic support."""
         # Operations that should be handled by legacy elif branches
         # (e.g., control flow that needs state forking)
         legacy_ops = {"cf.cond_br", "cf.br"}
 
-        op_type = op.get("op")
+        # Determine operation type (full name) for both dict and Operation objects
+        if isinstance(op, dict):
+            op_type = op.get("op")
+            # Convert dict to Operation if needed
+            op_obj = operation_from_dict(op)
+        else:
+            # op is already an Operation object
+            op_obj = op
+            op_type = f"{op_obj.dialect}.{op_obj.name}"
+
         if op_type in legacy_ops:
             print(f"DEBUG concolic: Skipping registry for legacy op {op_type}")
             return False
 
         try:
-            # Convert dict to Operation if needed
-            if isinstance(op, dict):
-                op_obj = operation_from_dict(op)
-            else:
-                op_obj = op
-
             # Try to get handler
             handler = get_handler(op_obj.full_name)
             if handler:
@@ -293,7 +309,7 @@ class ConcolicInterpreter(SymbolicInterpreter):
                 print(f"DEBUG concolic: No handler found for {op_obj.full_name}")
         except Exception as e:
             # Registry execution failed, fall back to legacy handler
-            print(f"Registry execution failed for {op.get('op', 'unknown')}: {e}")
+            print(f"Registry execution failed for {op_type}: {e}")
             import traceback
 
             traceback.print_exc()
@@ -477,16 +493,20 @@ class ConcolicInterpreter(SymbolicInterpreter):
         return self.state_manager.get_all_completed()
 
     def _execute_operation_concolic(
-        self, op: Dict[str, Any], state: SymbolicState, func: MLIRFunction
+        self, op: Any, state: SymbolicState, func: MLIRFunction
     ) -> None:
         """Execute operation with concolic support (use concrete values when available)."""
-        op_type = op.get("op")
-
         # Try to execute using dialect registry first
         if self._try_execute_with_registry(op, state, func):
             return
 
-        super()._execute_operation(op, state, func)
+        # Convert dict to Operation if needed
+        if isinstance(op, dict):
+            op_obj = operation_from_dict(op)
+        else:
+            op_obj = op
+
+        super()._execute_operation(op_obj, state, func)
 
     def _try_concrete_evaluation(
         self, op: Dict[str, Any], state: SymbolicState

@@ -35,6 +35,24 @@ class ArithDialectParser(BaseDialectParser):
         if hasattr(op_obj, "__class__"):
             class_name = op_obj.__class__.__name__
 
+            # Handle CustomOperation (namespace.name operations)
+            if (
+                class_name == "CustomOperation"
+                and hasattr(op_obj, "namespace")
+                and op_obj.namespace == "arith"
+            ):
+                return self._parse_custom_operation(op_node)
+
+            # Handle GenericOperation (quoted operation names)
+            if class_name == "GenericOperation" and hasattr(op_obj, "name"):
+                name_obj = op_obj.name
+                if hasattr(name_obj, "value"):
+                    name = name_obj.value
+                else:
+                    name = str(name_obj)
+                if name.startswith("arith."):
+                    return self._parse_generic_operation(op_node)
+
             # Special handling for known operation classes (must come before generic checks)
             if class_name == "CmpiOperation":
                 return self._parse_cmpi_operation(op_node)
@@ -65,6 +83,143 @@ class ArithDialectParser(BaseDialectParser):
 
         # No handler found
         return None
+
+    def _parse_custom_operation(self, op_node: mast.Operation) -> Optional[Operation]:
+        """Parse arithmetic CustomOperation (e.g., arith.divsi)."""
+        op_obj = op_node.op
+
+        # Extract destination
+        dest = self._extract_destination(op_node)
+        if dest is None:
+            return None
+
+        # Get operation name
+        name = op_obj.name  # e.g., "divsi"
+
+        # Determine if binary or unary based on args length
+        args = op_obj.args if hasattr(op_obj, "args") else []
+        num_args = len(args)
+
+        # Extract result type
+        result_type = None
+        if hasattr(op_obj, "type"):
+            result_type = self._type_to_string(op_obj.type)
+
+        line = self._extract_line_number(op_node)
+
+        # Handle binary operations (addi, subi, muli, divsi, etc.)
+        if num_args == 2:
+            lhs = self._ssa_use_to_string(args[0])
+            rhs = self._ssa_use_to_string(args[1])
+            return BinaryOperation(
+                dialect="arith",
+                name=name,
+                line=line,
+                dest=dest,
+                result_type=result_type,
+                lhs=lhs,
+                rhs=rhs,
+                attributes={},
+            )
+        # Handle unary operations (absf, ceilf, etc.)
+        elif num_args == 1:
+            operand = self._ssa_use_to_string(args[0])
+            return UnaryOperation(
+                dialect="arith",
+                name=name,
+                line=line,
+                dest=dest,
+                result_type=result_type,
+                operand=operand,
+                attributes={},
+            )
+        # Handle zero-argument operations (constant? but constant is separate class)
+        else:
+            # Fallback: generic operation
+            return Operation(
+                dialect="arith",
+                name=name,
+                line=line,
+                dest=dest,
+                result_type=result_type,
+                attributes={"args": [self._ssa_use_to_string(arg) for arg in args]},
+            )
+
+    def _parse_generic_operation(self, op_node: mast.Operation) -> Optional[Operation]:
+        """Parse arithmetic GenericOperation (quoted operation names, e.g., "arith.cmpi")."""
+        op_obj = op_node.op
+
+        # Extract destination
+        dest = self._extract_destination(op_node)
+        if dest is None:
+            return None
+
+        # Get full operation name (e.g., "arith.cmpi")
+        name_obj = op_obj.name
+        if hasattr(name_obj, "value"):
+            full_name = name_obj.value
+        else:
+            full_name = str(name_obj)
+
+        # Strip dialect prefix
+        if "." in full_name:
+            dialect, name = full_name.split(".", 1)
+        else:
+            dialect = "arith"
+            name = full_name
+
+        # Determine if binary or unary based on args length
+        args = op_obj.args if hasattr(op_obj, "args") else []
+        num_args = len(args)
+
+        # Extract result type
+        result_type = None
+        if hasattr(op_obj, "type"):
+            result_type = self._type_to_string(op_obj.type)
+
+        # Parse attributes if present
+        attributes = {}
+        if hasattr(op_obj, "attributes") and op_obj.attributes is not None:
+            attributes = self._parse_attribute(op_obj.attributes)
+
+        line = self._extract_line_number(op_node)
+
+        # Handle binary operations
+        if num_args == 2:
+            lhs = self._ssa_use_to_string(args[0])
+            rhs = self._ssa_use_to_string(args[1])
+            return BinaryOperation(
+                dialect=dialect,
+                name=name,
+                line=line,
+                dest=dest,
+                result_type=result_type,
+                lhs=lhs,
+                rhs=rhs,
+                attributes=attributes,
+            )
+        # Handle unary operations
+        elif num_args == 1:
+            operand = self._ssa_use_to_string(args[0])
+            return UnaryOperation(
+                dialect=dialect,
+                name=name,
+                line=line,
+                dest=dest,
+                result_type=result_type,
+                operand=operand,
+                attributes=attributes,
+            )
+        else:
+            # Generic operation with attributes
+            return Operation(
+                dialect=dialect,
+                name=name,
+                line=line,
+                dest=dest,
+                result_type=result_type,
+                attributes=attributes,
+            )
 
     def _parse_binary_operation(
         self, op_node: mast.Operation

@@ -10,8 +10,12 @@ from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
 
 
-def clean_operand(operand: str) -> str:
+def clean_operand(operand) -> str:
     """Remove leading '%' from SSA value names, keep integer constants unchanged."""
+    # Handle SsaId objects
+    if hasattr(operand, "value"):
+        operand = operand.value
+    # Now operand should be a string
     if operand.startswith("%"):
         return operand[1:]
     return operand

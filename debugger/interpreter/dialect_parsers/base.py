@@ -303,4 +303,16 @@ class DialectParserRegistry:
                     if parser:
                         return parser.parse_operation(op_node)
 
+            # Handle CustomOperation (namespace.name operations)
+            if (
+                class_name == "CustomOperation"
+                and hasattr(op_obj, "namespace")
+                and hasattr(op_obj, "name")
+            ):
+                opname = f"{op_obj.namespace}.{op_obj.name}"
+                dialect_name = op_obj.namespace
+                parser = self.get_parser(dialect_name)
+                if parser:
+                    return parser.parse_operation(op_node)
+
         return None
