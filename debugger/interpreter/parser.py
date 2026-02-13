@@ -443,7 +443,10 @@ class MLIRParser:
     ) -> Optional[Any]:  # Returns Operation or None
         """Parse an operation into Operation object using dialect parser registry."""
         # First check for misparsed return operations (ape.sizereturn, e.sizereturn, hape.sizereturn, pe.sizereturn, shape.sizereturn)
-        # These are misparsed by pymlir and need special handling before dialect parser
+        # These are misparsed by pymlir due to a lexer/parser bug when processing shape dialect examples.
+        # The bug causes "!shape.size" followed by "return" to be incorrectly concatenated/tokenized.
+        # TODO: Fix this in pymlir's lexer/parser (debugger/parser/lark/mlir.lark and parser_transformer.py)
+        # Workaround: detect misparsed returns and convert them to proper ReturnOperation objects.
         op_obj = op.op
         class_name = op_obj.__class__.__name__
 

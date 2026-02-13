@@ -204,4 +204,6 @@ def register_handlers(registry) -> None:
     registry.register("shape.div", ShapeDivHandler())
     registry.register("shape.dim", ShapeDimHandler())
     registry.register("shape.get_extent", ShapeGetExtentHandler())
+    # Workaround for pymlir bug: misparsed returns appear as .sizereturn
+    # TODO: Fix pymlir lexer/parser to correctly parse "return" after "!shape.size"
     registry.register(".sizereturn", ShapeReturnHandler())

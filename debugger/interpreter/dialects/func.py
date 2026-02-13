@@ -119,7 +119,8 @@ def register_handlers(registry) -> None:
     registry.register("func.return", FuncReturnHandler())
     # Also register generic return without dialect prefix
     registry.register(".return", FuncReturnHandler())
-    # Handle misparsed return operations
+    # Handle misparsed return operations (pymlir bug workaround)
+    # TODO: Fix pymlir lexer/parser to correctly parse "return" after "!shape.size"
     registry.register("ape.sizereturn", FuncReturnHandler())
     registry.register("e.sizereturn", FuncReturnHandler())
     registry.register("pe.sizereturn", FuncReturnHandler())
