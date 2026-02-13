@@ -609,18 +609,10 @@ class ShapeDialectParser(BaseDialectParser):
         import sys
 
         if hasattr(op_obj, "attributes"):
-            print(
-                f"DEBUG shape.const_size op_obj.attributes type: {type(op_obj.attributes)}",
-                file=sys.stderr,
-            )
             # attributes is a dictionary attribute
             attr_dict = self._parse_attribute(op_obj.attributes)
-            print(f"DEBUG shape.const_size attr_dict: {attr_dict}", file=sys.stderr)
             if isinstance(attr_dict, dict) and "value" in attr_dict:
                 value = self._parse_constant_value(attr_dict["value"])
-                print(
-                    f"DEBUG shape.const_size extracted value: {value}", file=sys.stderr
-                )
 
         result_type = None
         if hasattr(op_obj, "type"):

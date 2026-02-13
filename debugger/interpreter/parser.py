@@ -14,7 +14,7 @@ import parser
 import parser.astnodes as mast
 from parser.parser import Parser
 from lark import Tree
-from .operations import Operation
+from .operations import Operation, ReturnOperation
 
 # Import dialect modules
 from parser.dialects import (

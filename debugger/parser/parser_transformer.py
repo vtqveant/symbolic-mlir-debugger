@@ -1,6 +1,6 @@
 from lark import v_args, Transformer
 from lark.exceptions import GrammarError
-from lark.visitors import Discard
+from lark.visitors import Discard, v_args
 from . import astnodes
 
 
@@ -67,9 +67,15 @@ class TreeToMlir(Transformer):
         astnodes.FloatTypeEnum(tok[0].value)
     )
     index_type = astnodes.IndexType.from_lark
-    signed_integer_type = astnodes.SignedIntegerType.from_lark
-    unsigned_integer_type = astnodes.UnsignedIntegerType.from_lark
-    signless_integer_type = astnodes.SignlessIntegerType.from_lark
+    signed_integer_type = lambda self, tok: astnodes.SignedIntegerType(
+        int(tok[0].value[2:])
+    )
+    unsigned_integer_type = lambda self, tok: astnodes.UnsignedIntegerType(
+        int(tok[0].value[2:])
+    )
+    signless_integer_type = lambda self, tok: astnodes.SignlessIntegerType(
+        int(tok[0].value[1:])
+    )
     complex_type = astnodes.ComplexType.from_lark
     tuple_type = astnodes.TupleType.from_lark
     vector_type = astnodes.VectorType.from_lark
@@ -80,7 +86,32 @@ class TreeToMlir(Transformer):
     ranked_memref_type = astnodes.RankedMemRefType.from_lark
     unranked_memref_type = astnodes.UnrankedMemRefType.from_lark
     opaque_dialect_item = astnodes.OpaqueDialectType.from_lark
-    pretty_dialect_item = astnodes.PrettyDialectType.from_lark
+
+    @v_args(inline=True)
+    def pretty_dialect_item(self, *args):
+        # args: could be (dialect, type_name) or (dialect, dot, type_name) with optional body
+        # dot is ignored if present
+        # print(f"DEBUG pretty_dialect_item args: {args}, len={len(args)}")
+        if len(args) == 2:
+            # No dot token: (dialect, type_name)
+            dialect, type_name = args
+        elif len(args) >= 3 and args[1] == ".":
+            # Has dot token: (dialect, '.', type_name, ...)
+            dialect, dot, type_name = args[0], args[1], args[2]
+            args = args[3:]
+        elif len(args) >= 3:
+            # Assume first two are dialect and type_name, third might be body
+            dialect, type_name = args[0], args[1]
+            args = args[2:]
+        else:
+            raise ValueError(f"Unexpected args for pretty_dialect_item: {args}")
+
+        body_items = []
+        if args:
+            # Remaining args are body
+            body_items = args[0]  # body is a list
+        return astnodes.PrettyDialectType(dialect, type_name, body_items)
+
     llvm_function_type = astnodes.LlvmFunctionType.from_lark
     function_type = astnodes.FunctionType.from_lark
     strided_layout = astnodes.StridedLayout.from_lark
