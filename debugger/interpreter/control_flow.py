@@ -16,6 +16,14 @@ class ControlFlowExecutor:
     def __init__(self):
         pass
 
+    def _ensure_caret_prefix(self, block_label: str) -> str:
+        """Ensure block label has ^ prefix for consistency with CFG."""
+        if not block_label:
+            return block_label
+        if block_label.startswith("^"):
+            return block_label
+        return "^" + block_label
+
     def execute_conditional_branch(
         self,
         op: ConditionalBranchOperation,
@@ -39,11 +47,11 @@ class ControlFlowExecutor:
             if cond_concrete:
                 # True branch
                 state.add_path_condition(cond_expr)
-                state.pc = op.true_block
+                state.pc = self._ensure_caret_prefix(op.true_block)
             else:
                 # False branch
                 state.add_path_condition(z3.Not(cond_expr))
-                state.pc = op.false_block
+                state.pc = self._ensure_caret_prefix(op.false_block)
             # Current state continues (no forking)
             return
 
@@ -56,8 +64,8 @@ class ControlFlowExecutor:
         false_state.add_path_condition(z3.Not(cond_expr))
 
         # Set program counters
-        true_state.pc = op.true_block
-        false_state.pc = op.false_block
+        true_state.pc = self._ensure_caret_prefix(op.true_block)
+        false_state.pc = self._ensure_caret_prefix(op.false_block)
 
         # Add forked states to interpreter's worklist via state manager
         if interpreter is not None:
@@ -90,11 +98,11 @@ class ControlFlowExecutor:
             if cond_concrete:
                 # True branch
                 state.add_path_condition(cond_expr)
-                state.pc = op.true_block
+                state.pc = self._ensure_caret_prefix(op.true_block)
             else:
                 # False branch
                 state.add_path_condition(z3.Not(cond_expr))
-                state.pc = op.false_block
+                state.pc = self._ensure_caret_prefix(op.false_block)
             # Current state continues (no forking)
             return
 
@@ -107,8 +115,8 @@ class ControlFlowExecutor:
         false_state.add_path_condition(z3.Not(cond_expr))
 
         # Set program counters
-        true_state.pc = op.true_block
-        false_state.pc = op.false_block
+        true_state.pc = self._ensure_caret_prefix(op.true_block)
+        false_state.pc = self._ensure_caret_prefix(op.false_block)
 
         # Add forked states to interpreter's worklist via state manager
         if interpreter is not None:
@@ -130,7 +138,7 @@ class ControlFlowExecutor:
             raise TypeError(f"Expected UnconditionalBranchOperation, got {type(op)}")
 
         # Use target block as-is (should have ^ prefix)
-        target_label = op.target_block
+        target_label = self._ensure_caret_prefix(op.target_block)
 
         # Get target block
         target_block = func.get_basic_block(target_label)

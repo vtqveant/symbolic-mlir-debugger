@@ -100,10 +100,10 @@ class ScfForHandler(OperationHandler):
                 # Execute body operations
                 yield_value = None
                 for body_op in op.body:
-                    if body_op["op"] == "scf.yield":
+                    if body_op.dialect == "scf" and body_op.name == "yield":
                         # This is the yield operation - get its value
                         yield_expr = interpreter._get_operand_expr(
-                            body_op["value"], iter_state
+                            body_op.value, iter_state
                         )
                         yield_value = yield_expr
                         print(f"DEBUG ScfForHandler: yield_expr={yield_expr}")

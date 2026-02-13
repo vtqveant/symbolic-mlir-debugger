@@ -10,6 +10,7 @@ import z3
 from .memory.base import MemoryModel
 from .memory.memref import MemrefMemoryModel
 from .memory.tensor import TensorMemoryModel
+from .operations import Operation
 
 
 @dataclass
@@ -30,10 +31,10 @@ class BasicBlock:
 
     label: str
     line: int = 0  # Source line number (0 for implicit blocks)
-    operations: List[Dict[str, Any]] = field(default_factory=list)
+    operations: List[Operation] = field(default_factory=list)
     parameters: List[Tuple[str, str]] = field(default_factory=list)  # [(name, type)]
 
-    def add_operation(self, op: Dict[str, Any]) -> None:
+    def add_operation(self, op: Operation) -> None:
         self.operations.append(op)
 
 

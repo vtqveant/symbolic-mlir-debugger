@@ -3,6 +3,7 @@
 import pytest
 import lark
 import re
+from interpreter.operations import LoopOperation
 
 
 @pytest.mark.parser
@@ -39,8 +40,8 @@ module {
     # Entry block should have constant and br
     entry_bb = func.basic_blocks["^entry"]
     assert len(entry_bb.operations) == 2
-    assert entry_bb.operations[0]["op"] == "arith.constant"
-    assert entry_bb.operations[1]["op"] == "cf.br"
+    assert entry_bb.operations[0].full_name == "arith.constant"
+    assert entry_bb.operations[1].full_name == "cf.br"
 
 
 @pytest.mark.parser
@@ -221,10 +222,10 @@ module {
 
     # Should have 3 operations: 2 cmpi/cmpf and return
     assert len(bb.operations) == 3
-    ops = [op["op"] for op in bb.operations]
+    ops = [op.full_name for op in bb.operations]
     assert "arith.cmpi" in ops
     assert "arith.cmpf" in ops
-    assert "return" in ops
+    assert "builtin.return" in ops
 
 
 @pytest.mark.parser
@@ -248,15 +249,16 @@ module {
 
     # Should have scf.for and return
     assert len(bb.operations) == 2
-    assert bb.operations[0]["op"] == "scf.for"
-    assert bb.operations[1]["op"] == "return"
+    assert bb.operations[0].full_name == "scf.for"
+    assert bb.operations[1].full_name == "builtin.return"
 
     # Check scf.for has expected fields
     for_op = bb.operations[0]
-    assert "iv" in for_op
-    assert "lb" in for_op
-    assert "ub" in for_op
-    assert "step" in for_op
+    assert isinstance(for_op, LoopOperation)
+    assert hasattr(for_op, "index")  # Previously "iv"
+    assert hasattr(for_op, "lb")
+    assert hasattr(for_op, "ub")
+    assert hasattr(for_op, "step")
 
 
 @pytest.mark.parser
@@ -286,5 +288,80 @@ module {
     bb = list(func.basic_blocks.values())[0]
 
     assert len(bb.operations) == 2
-    assert bb.operations[0]["op"] == "scf.if"
-    assert bb.operations[1]["op"] == "return"
+    assert bb.operations[0].full_name == "scf.if"
+    assert bb.operations[1].full_name == "builtin.return"
+
+
+@pytest.mark.parser
+def test_scf_for_parsing_operations():
+    """Test parsing of scf.for operation with use_operations=True."""
+    from interpreter.parser import MLIRParser
+    from interpreter.operations import LoopOperation, ReturnOperation
+
+    parser = MLIRParser()
+    mlir_code = """
+module {
+  func.func @test(%lb: index, %ub: index, %step: index) -> index {
+    %result = scf.for %i = %lb to %ub step %step iter_args(%sum = %lb) -> index {
+      %new_sum = arith.addi %sum, %i : index
+      scf.yield %new_sum : index
+    }
+    return %result : index
+  }
+}
+"""
+    functions = parser.parse_string(mlir_code)
+    assert len(functions) == 1
+    func = functions["test"]
+    bb = list(func.basic_blocks.values())[0]
+
+    # Should have scf.for and return
+    assert len(bb.operations) == 2
+    # First operation should be LoopOperation
+    assert isinstance(bb.operations[0], LoopOperation)
+    assert bb.operations[0].dialect == "scf"
+    assert bb.operations[0].name == "for"
+    # Check fields
+    assert bb.operations[0].index == "i"
+    assert bb.operations[0].lb == "lb"
+    assert bb.operations[0].ub == "ub"
+    assert bb.operations[0].step == "step"
+    # Second operation should be ReturnOperation
+    assert isinstance(bb.operations[1], ReturnOperation)
+
+
+@pytest.mark.parser
+def test_func_call_parsing_operations():
+    """Test parsing of func.call operation with use_operations=True."""
+    from interpreter.parser import MLIRParser
+    from interpreter.operations import CallOperation, ReturnOperation
+
+    parser = MLIRParser()
+    mlir_code = """
+module {
+  func.func @callee(%x: i32) -> i32 {
+    return %x : i32
+  }
+  func.func @test(%arg: i32) -> i32 {
+    %result = func.call @callee(%arg) : (i32) -> i32
+    return %result : i32
+  }
+}
+"""
+    functions = parser.parse_string(mlir_code)
+    # We have two functions, we'll test the @test function
+    assert len(functions) == 2
+    func = functions["test"]
+    bb = list(func.basic_blocks.values())[0]
+
+    # Should have func.call and return
+    assert len(bb.operations) == 2
+    # First operation should be CallOperation
+    assert isinstance(bb.operations[0], CallOperation)
+    assert bb.operations[0].dialect == "func"
+    assert bb.operations[0].name == "call"
+    # Check fields
+    assert bb.operations[0].callee == "callee"
+    assert bb.operations[0].args == ["arg"]
+    # Second operation should be ReturnOperation
+    assert isinstance(bb.operations[1], ReturnOperation)

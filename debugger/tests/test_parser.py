@@ -1,6 +1,7 @@
 """Parser tests for symbolic MLIR debugger."""
 
 import pytest
+from interpreter.operations import CompareOperation
 
 
 @pytest.mark.parser
@@ -20,8 +21,8 @@ module {
     assert len(func.basic_blocks) == 1
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
-    assert bb.operations[0]["op"] == "arith.cmpi"
-    assert bb.operations[1]["op"] == "return"
+    assert bb.operations[0].full_name == "arith.cmpi"
+    assert bb.operations[1].full_name == "builtin.return"
 
 
 @pytest.mark.parser
@@ -40,8 +41,8 @@ module {
     func = functions["test"]
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
-    assert bb.operations[0]["op"] == "arith.addi"
-    assert bb.operations[1]["op"] == "return"
+    assert bb.operations[0].full_name == "arith.addi"
+    assert bb.operations[1].full_name == "builtin.return"
 
 
 @pytest.mark.parser
@@ -60,9 +61,9 @@ module {
     func = functions["test"]
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
-    assert bb.operations[0]["op"] == "arith.constant"
+    assert bb.operations[0].full_name == "arith.constant"
     # Check that value is negative
-    assert bb.operations[0]["value"] == -42
+    assert bb.operations[0].value == -42
 
 
 @pytest.mark.parser
@@ -81,9 +82,9 @@ module {
     func = functions["test"]
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
-    assert bb.operations[0]["op"] == "arith.cmpi"
+    assert bb.operations[0].full_name == "arith.cmpi"
     # Should have predicate attribute
-    assert "predicate" in str(bb.operations[0].get("attributes", ""))
+    assert "predicate" in str(bb.operations[0].attributes)
 
 
 # Parameterized test for various arithmetic operations
@@ -112,7 +113,7 @@ module {{
     func = functions["test"]
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
-    assert bb.operations[0]["op"] == expected_op_name
+    assert bb.operations[0].full_name == expected_op_name
 
 
 # Location parsing tests
@@ -133,7 +134,7 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
+    assert op.full_name == "arith.constant"
     # Location should be present in operation
     # Note: location parsing may store location in different format
     # For now, just verify parsing succeeds
@@ -156,7 +157,7 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
+    assert op.full_name == "arith.constant"
 
 
 @pytest.mark.parser
@@ -176,7 +177,7 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
+    assert op.full_name == "arith.constant"
 
 
 @pytest.mark.parser
@@ -196,7 +197,7 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
+    assert op.full_name == "arith.constant"
 
 
 @pytest.mark.parser
@@ -216,7 +217,7 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
+    assert op.full_name == "arith.constant"
 
 
 @pytest.mark.parser
@@ -236,7 +237,7 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
+    assert op.full_name == "arith.constant"
 
 
 # Attribute parsing tests
@@ -257,9 +258,9 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
-    assert op["value"] == 42
-    assert op["type"] == "i32"
+    assert op.full_name == "arith.constant"
+    assert op.value == 42
+    assert op.result_type == "i32"
 
 
 @pytest.mark.parser
@@ -279,10 +280,10 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.constant"
+    assert op.full_name == "arith.constant"
     # Value should be parsed as integer 42
-    assert op["value"] == 42  # 0x2A = 42
-    assert op["type"] == "i32"
+    assert op.value == 42  # 0x2A = 42
+    assert op.result_type == "i32"
 
 
 @pytest.mark.parser
@@ -302,10 +303,9 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "foo.op"
-    assert "attributes" in op
+    assert op.full_name == "foo.op"
     # String attribute should be parsed as string "hello"
-    assert op["attributes"]["attr"] == "hello"
+    assert op.attributes["attr"] == "hello"
 
 
 @pytest.mark.parser
@@ -325,11 +325,10 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "foo.op"
-    assert "attributes" in op
+    assert op.full_name == "foo.op"
     # Boolean attributes should be parsed as Python bool
-    assert op["attributes"]["flag"] is True
-    assert op["attributes"]["other"] is False
+    assert op.attributes["flag"] is True
+    assert op.attributes["other"] is False
 
 
 @pytest.mark.parser
@@ -349,10 +348,9 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "foo.op"
-    assert "attributes" in op
+    assert op.full_name == "foo.op"
     # Array attribute should be parsed as list
-    assert op["attributes"]["arr"] == [1, 2, 3]
+    assert op.attributes["arr"] == [1, 2, 3]
 
 
 @pytest.mark.parser
@@ -372,11 +370,10 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "foo.op"
-    assert "attributes" in op
+    assert op.full_name == "foo.op"
     # Dictionary attribute should be parsed as dict
-    assert op["attributes"]["dict"]["key1"] == 42
-    assert op["attributes"]["dict"]["key2"] == "value"
+    assert op.attributes["dict"]["key1"] == 42
+    assert op.attributes["dict"]["key2"] == "value"
 
 
 @pytest.mark.parser
@@ -396,15 +393,15 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "arith.cmpi"
-    # For comma syntax, predicate should be in top-level key
-    # (parsed as custom operation, not generic with attributes)
-    assert "pred" in op
-    assert op["pred"] == "slt"
+    assert op.full_name == "arith.cmpi"
+    # For comma syntax, predicate should be in operation fields
+    # (parsed as CompareOperation, not generic with attributes)
+    assert isinstance(op, CompareOperation)
+    assert op.pred == "slt"
     # For comma syntax, attributes may not be present
     # Check if attributes exist, then verify pred is also there
-    if "attributes" in op:
-        assert op["attributes"]["pred"] == "slt"
+    if op.attributes:
+        assert op.attributes.get("pred") == "slt"
 
 
 @pytest.mark.parser
@@ -424,10 +421,9 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "foo.op"
-    assert "attributes" in op
+    assert op.full_name == "foo.op"
     # Unit attribute should be parsed as None
-    assert op["attributes"]["unit"] is None
+    assert op.attributes["unit"] is None
 
 
 @pytest.mark.parser
@@ -447,7 +443,6 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     op = bb.operations[0]
-    assert op["op"] == "foo.op"
-    assert "attributes" in op
+    assert op.full_name == "foo.op"
     # Type attribute should be parsed as type string
-    assert op["attributes"]["type_attr"] == "i32"
+    assert op.attributes["type_attr"] == "i32"

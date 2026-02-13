@@ -67,13 +67,6 @@ def _register_all_dialects(registry: DialectRegistry) -> None:
 def execute_operation(op, state, func, mode="symbolic") -> None:
     """Execute operation using registered handler."""
     registry = get_registry()
-
-    # Convert dict to Operation if needed
-    from ..operations import operation_from_dict
-
-    if isinstance(op, dict):
-        op = operation_from_dict(op)
-
     registry.execute(op, state, func, mode)
 
 

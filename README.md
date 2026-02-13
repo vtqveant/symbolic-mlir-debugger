@@ -1,7 +1,7 @@
 # Symbolic MLIR Debugger
 
 <div align="center">
-  <img src="vscode/images/mlir-debug-icon.jpg" alt="MLIR Debug Logo" width="100" height="100">
+  <img src="vscode/images/mlir-debug-icon.jpg" alt="MLIR Debug Logo" width="200" height="200">
 </div>
 
 A symbolic and concolic execution engine for MLIR (Multi-Level Intermediate Representation) programs with full Debug Adapter Protocol (DAP) support for Visual Studio Code integration.
@@ -28,19 +28,19 @@ The Symbolic MLIR Debugger enables advanced debugging and analysis of MLIR progr
 └────────────────────────────┬────────────────────────────────┘
                              │
 ┌────────────────────────────▼────────────────────────────────┐
-│                 Symbolic MLIR Debugger                       │
-├──────────────────────────────────────────────────────────────┤
+│                 Symbolic MLIR Debugger                      │
+├─────────────────────────────────────────────────────────────┤
 │  • Parser (MLIR text → AST)                                 │
 │  • Symbolic Interpreter (MLIR → Z3 constraints)             │
 │  • Concolic Engine (Mixed concrete/symbolic execution)      │
 │  • Dialect Registry (Extensible operation handlers)         │
 │  • State Manager (Path forking & merging)                   │
-└──────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────┘
                              │
 ┌────────────────────────────▼────────────────────────────────┐
 │                     Z3 SMT Solver                           │
 │               (Constraint solving & SAT)                    │
-└──────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Applications

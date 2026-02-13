@@ -4,14 +4,18 @@ Symbolic and concolic interpreters for MLIR programs.
 """
 
 import random
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any, Tuple, cast
 import z3
 
 from .models import MLIRFunction, SymbolicState
-from .operations import operation_from_dict
 from .dialects import get_handler
 from .control_flow import ControlFlowExecutor
 from .state_manager import StateManager
+from .operations import (
+    Operation,
+    ConditionalBranchOperation,
+    UnconditionalBranchOperation,
+)
 
 
 class SymbolicInterpreter:
@@ -22,8 +26,63 @@ class SymbolicInterpreter:
         self.cf_executor = ControlFlowExecutor()
         self.state_manager = StateManager()
 
+    def _convert_to_operation(self, op: Any) -> Operation:
+        """Convert op (dict or Operation) to Operation object.
+
+        For backward compatibility with dict-based operations.
+        """
+        if isinstance(op, Operation):
+            return op
+        elif isinstance(op, dict):
+            # Convert legacy dict representation to Operation
+            op_type = op.get("op", "")
+            if "." in op_type:
+                dialect, name = op_type.split(".", 1)
+            else:
+                dialect = "unknown"
+                name = op_type
+            line = op.get("line", 0)
+            dest = op.get("dest")
+            result_type = op.get("result_type")
+            attributes = op.get("attributes", {})
+            # Handle special operation types
+            if op_type == "cf.cond_br":
+                return ConditionalBranchOperation(
+                    dialect=dialect,
+                    name=name,
+                    line=line,
+                    dest=dest,
+                    result_type=result_type,
+                    attributes=attributes,
+                    cond=op.get("cond", ""),
+                    true_block=op.get("true_block", ""),
+                    false_block=op.get("false_block", ""),
+                )
+            elif op_type == "cf.br":
+                return UnconditionalBranchOperation(
+                    dialect=dialect,
+                    name=name,
+                    line=line,
+                    dest=dest,
+                    result_type=result_type,
+                    attributes=attributes,
+                    target_block=op.get("target_block", ""),
+                    args=op.get("args", []),
+                )
+            else:
+                return Operation(
+                    dialect=dialect,
+                    name=name,
+                    line=line,
+                    dest=dest,
+                    result_type=result_type,
+                    attributes=attributes,
+                )
+        else:
+            raise TypeError(f"Unsupported operation type: {type(op)}")
+
     def _try_execute_with_registry(
-        self, op: Dict[str, Any], state: SymbolicState, func: MLIRFunction
+        self, op: Any, state: SymbolicState, func: MLIRFunction
     ) -> bool:
         """Try to execute operation using dialect registry.
 
@@ -33,18 +92,14 @@ class SymbolicInterpreter:
         # (e.g., control flow that needs state forking)
         legacy_ops = {"cf.cond_br", "cf.br"}
 
-        op_type = op.get("op")
+        # Convert to Operation object (handles both dict and Operation)
+        op_obj = self._convert_to_operation(op)
+        op_type = f"{op_obj.dialect}.{op_obj.name}"
+
         if op_type in legacy_ops:
-            print(f"DEBUG: Skipping registry for legacy op {op_type}")
             return False
 
         try:
-            # Convert dict to Operation if needed
-            if isinstance(op, dict):
-                op_obj = operation_from_dict(op)
-            else:
-                op_obj = op
-
             # Try to get handler
             handler = get_handler(op_obj.full_name)
             if handler:
@@ -59,7 +114,7 @@ class SymbolicInterpreter:
                 pass
         except Exception:
             # Registry execution failed, fall back to legacy handler
-            # print(f"Registry execution failed for {op.get('op', 'unknown')}: {e}")  # Debug
+            # print(f"Registry execution failed for {op_type}: {e}")  # Debug
             pass
         # Operation not handled by registry
         return False
@@ -143,38 +198,52 @@ class SymbolicInterpreter:
         return tuple(concrete_indices)
 
     def _execute_operation(
-        self, op: Dict[str, Any], state: SymbolicState, func: MLIRFunction
+        self, op: Any, state: SymbolicState, func: MLIRFunction
     ) -> None:
         """Execute a single operation using dialect registry or fallback."""
         # Try to execute using dialect registry first
         if self._try_execute_with_registry(op, state, func):
             return
 
-        # Fallback for operations not yet in registry
-        op_type = op.get("op")
+        # Convert to Operation object (handles both dict and Operation)
+        op_obj = self._convert_to_operation(op)
+        op_type = f"{op_obj.dialect}.{op_obj.name}"
+
         if op_type == "cf.cond_br":
-            op_obj = operation_from_dict(op)
-            self.cf_executor.execute_conditional_branch(op_obj, state, func, self)
+            from .operations import ConditionalBranchOperation
+
+            branch_op = cast(ConditionalBranchOperation, op_obj)
+            self.cf_executor.execute_conditional_branch(branch_op, state, func, self)
 
         elif op_type == "cf.br":
-            op_obj = operation_from_dict(op)
-            self.cf_executor.execute_unconditional_branch(op_obj, state, func, self)
+            from .operations import UnconditionalBranchOperation
 
-        elif op_type == "return":
+            branch_op = cast(UnconditionalBranchOperation, op_obj)
+            self.cf_executor.execute_unconditional_branch(branch_op, state, func, self)
+
+        elif op_type == "builtin.return":
             # Function return
-            if "value" in op:
-                ret_expr = self._get_operand_expr(op["value"], state)
-                state.set_value("return", ret_expr, op["type"])
+            from .operations import ReturnOperation
+
+            return_op = cast(ReturnOperation, op_obj)
+            if return_op.value is not None:
+                ret_expr = self._get_operand_expr(return_op.value, state)
+                result_type = "unknown"
+                if return_op.result_type:
+                    result_type = return_op.result_type
+                state.set_value("return", ret_expr, result_type)
             state.pc = None
 
         else:
             # Unknown operation - treat as no-op
             print(f"Warning: Unknown operation type {op_type}, skipping")
             # Still need to produce a result if there's a dest
-            if "dest" in op:
+            if hasattr(op_obj, "dest") and op_obj.dest is not None:
                 # Create fresh symbolic value
                 expr = z3.FreshConst(z3.IntSort(), f"unknown_{op_type}")
-                state.set_value(op["dest"], expr, op.get("type", "unknown"))
+                state.set_value(
+                    op_obj.dest, expr, getattr(op_obj, "result_type", "unknown")
+                )
 
     def execute_function(self, func: MLIRFunction) -> List[SymbolicState]:
         """Symbolically execute an MLIR function."""
@@ -259,25 +328,22 @@ class ConcolicInterpreter(SymbolicInterpreter):
         self.input_models = []
 
     def _try_execute_with_registry(
-        self, op: Dict[str, Any], state: SymbolicState, func: MLIRFunction
+        self, op: Any, state: SymbolicState, func: MLIRFunction
     ) -> bool:
         """Try to execute operation using dialect registry with concolic support."""
         # Operations that should be handled by legacy elif branches
         # (e.g., control flow that needs state forking)
         legacy_ops = {"cf.cond_br", "cf.br"}
 
-        op_type = op.get("op")
+        # Convert to Operation object (handles both dict and Operation)
+        op_obj = self._convert_to_operation(op)
+        op_type = f"{op_obj.dialect}.{op_obj.name}"
+
         if op_type in legacy_ops:
             print(f"DEBUG concolic: Skipping registry for legacy op {op_type}")
             return False
 
         try:
-            # Convert dict to Operation if needed
-            if isinstance(op, dict):
-                op_obj = operation_from_dict(op)
-            else:
-                op_obj = op
-
             # Try to get handler
             handler = get_handler(op_obj.full_name)
             if handler:
@@ -293,7 +359,7 @@ class ConcolicInterpreter(SymbolicInterpreter):
                 print(f"DEBUG concolic: No handler found for {op_obj.full_name}")
         except Exception as e:
             # Registry execution failed, fall back to legacy handler
-            print(f"Registry execution failed for {op.get('op', 'unknown')}: {e}")
+            print(f"Registry execution failed for {op_type}: {e}")
             import traceback
 
             traceback.print_exc()
@@ -477,307 +543,16 @@ class ConcolicInterpreter(SymbolicInterpreter):
         return self.state_manager.get_all_completed()
 
     def _execute_operation_concolic(
-        self, op: Dict[str, Any], state: SymbolicState, func: MLIRFunction
+        self, op: Any, state: SymbolicState, func: MLIRFunction
     ) -> None:
         """Execute operation with concolic support (use concrete values when available)."""
-        op_type = op.get("op")
-
         # Try to execute using dialect registry first
         if self._try_execute_with_registry(op, state, func):
             return
 
-        super()._execute_operation(op, state, func)
-
-    def _try_concrete_evaluation(
-        self, op: Dict[str, Any], state: SymbolicState
-    ) -> Optional[Any]:
-        """Try to evaluate operation concretely."""
-        op_type = op.get("op")
-
-        if op_type == "arith.constant":
-            return int(op["value"])
-
-        elif op_type == "arith.addi":
-            lhs = self._get_concrete_operand(op["lhs"], state)
-            rhs = self._get_concrete_operand(op["rhs"], state)
-            if lhs is not None and rhs is not None:
-                return lhs + rhs
-
-        elif op_type == "arith.subi":
-            lhs = self._get_concrete_operand(op["lhs"], state)
-            rhs = self._get_concrete_operand(op["rhs"], state)
-            if lhs is not None and rhs is not None:
-                return lhs - rhs
-
-        elif op_type == "arith.muli":
-            lhs = self._get_concrete_operand(op["lhs"], state)
-            rhs = self._get_concrete_operand(op["rhs"], state)
-            if lhs is not None and rhs is not None:
-                return lhs * rhs
-
-        elif op_type == "arith.divi":
-            lhs = self._get_concrete_operand(op["lhs"], state)
-            rhs = self._get_concrete_operand(op["rhs"], state)
-            if lhs is not None and rhs is not None and rhs != 0:
-                return int(lhs / rhs)  # truncate towards zero
-
-        elif op_type == "arith.cmpi":
-            lhs = self._get_concrete_operand(op["lhs"], state)
-            rhs = self._get_concrete_operand(op["rhs"], state)
-            pred = op["pred"]
-
-            if lhs is not None and rhs is not None:
-                if pred == "slt":
-                    return lhs < rhs
-                elif pred == "sle":
-                    return lhs <= rhs
-                elif pred == "sgt":
-                    return lhs > rhs
-                elif pred == "sge":
-                    return lhs >= rhs
-                elif pred == "eq":
-                    return lhs == rhs
-                elif pred == "ne":
-                    return lhs != rhs
-
-        # Shape operations
-        elif op_type == "shape.const_size":
-            # Try to get value from op["value"] or from attributes
-            if "value" in op:
-                return int(op["value"])
-            elif "attributes" in op:
-                # Use parsed attribute value
-                attr_dict = op["attributes"]
-                return attr_dict.get("value", 0)
-            return 0  # Default value
-
-        elif op_type == "shape.add":
-            lhs = self._get_concrete_operand(op["lhs"], state)
-            rhs = self._get_concrete_operand(op["rhs"], state)
-            if lhs is not None and rhs is not None:
-                return lhs + rhs
-
-        elif op_type == "shape.div":
-            lhs = self._get_concrete_operand(op["lhs"], state)
-            rhs = self._get_concrete_operand(op["rhs"], state)
-            if lhs is not None and rhs is not None and rhs != 0:
-                return int(lhs / rhs)  # truncate towards zero
-
-        elif op_type == "shape.const_shape":
-            # shape.const_shape creates a shape tensor
-            # For concrete evaluation, we need to parse the shape attribute
-            # Format: shape = dense<[42, 100, 200]> : tensor<3xindex>
-            # For now, return a placeholder list
-            if "shape" in op:
-                # shape is a list of dimension values (strings)
-                # Try to evaluate each dimension concretely
-                shape_dims = []
-                for dim in op["shape"]:
-                    concrete_dim = self._get_concrete_operand(dim, state)
-                    if concrete_dim is not None:
-                        shape_dims.append(concrete_dim)
-                    else:
-                        # If any dimension is symbolic, can't evaluate concretely
-                        return None
-                return tuple(shape_dims)  # Return as tuple for hashability
-            return None
-
-        elif op_type == "shape.get_extent":
-            # shape.get_extent extracts dimension from shape
-            # lhs = shape, rhs = index
-            shape_val = self._get_concrete_operand(op["lhs"], state)
-            index_val = self._get_concrete_operand(op["rhs"], state)
-            if shape_val is not None and index_val is not None:
-                # shape_val should be a tuple/list from shape.const_shape
-                if isinstance(shape_val, tuple) and 0 <= index_val < len(shape_val):
-                    return shape_val[index_val]
-            return None
-
-        # Vector operations
-        elif op_type == "vector.broadcast":
-            # operand may be in "value" (generic parser) or "source" (specialized)
-            source_key = "value" if "value" in op else "source"
-            source_val = self._get_concrete_operand(op[source_key], state)
-            if source_val is not None:
-                return source_val  # For now, return scalar value
-
-        elif op_type == "vector.bitcast":
-            # operand may be in "value" (generic parser) or "source" (specialized)
-            source_key = "value" if "value" in op else "source"
-            source_val = self._get_concrete_operand(op[source_key], state)
-            if source_val is not None:
-                return source_val  # For now, return scalar value
-
-        elif op_type == "vector.fma":
-            # operands may be in lhs/rhs/acc (specialized) or "operands" list (generic parser)
-            lhs_val = None
-            rhs_val = None
-            acc_val = None
-
-            if "lhs" in op:
-                lhs_val = self._get_concrete_operand(op["lhs"], state)
-                rhs_val = self._get_concrete_operand(op["rhs"], state)
-                acc_val = self._get_concrete_operand(op["acc"], state)
-            else:
-                operands = op.get("operands", [])
-                if len(operands) >= 3:
-                    lhs_val = self._get_concrete_operand(operands[0], state)
-                    rhs_val = self._get_concrete_operand(operands[1], state)
-                    acc_val = self._get_concrete_operand(operands[2], state)
-
-            if lhs_val is not None and rhs_val is not None and acc_val is not None:
-                return lhs_val * rhs_val + acc_val  # FMA: lhs * rhs + acc
-
-        # Bufferization operations
-        elif op_type == "bufferization.alloc_tensor":
-            # alloc_tensor creates a new tensor - can't evaluate concretely
-            return None
-
-        elif op_type == "bufferization.to_buffer":
-            # Convert tensor to buffer - return tensor value if concrete
-            tensor_val = self._get_concrete_operand(op["tensor"], state)
-            if tensor_val is not None:
-                return tensor_val
-
-        elif op_type == "bufferization.to_tensor":
-            # Convert buffer to tensor - return buffer value if concrete
-            buffer_val = self._get_concrete_operand(op["buffer"], state)
-            if buffer_val is not None:
-                return buffer_val
-
-        elif op_type == "bufferization.clone":
-            # Clone creates a copy - return source value if concrete
-            src_val = self._get_concrete_operand(op["src"], state)
-            if src_val is not None:
-                return src_val
-
-        # EmitC operations
-        elif op_type == "emitc.constant":
-            # value may be in "value" key or in attributes
-            value = None
-            if "value" in op:
-                value = op["value"]
-            elif "attributes" in op:
-                # Use parsed attribute value
-                attr = op["attributes"]
-                value = attr.get("value")
-            # Parse constant value - could be integer or other types
-            if value is not None:
-                try:
-                    return int(value)
-                except ValueError:
-                    return None
-            return None
-
-        elif op_type == "emitc.add":
-            lhs = self._get_concrete_operand(op["lhs"], state)
-            rhs = self._get_concrete_operand(op["rhs"], state)
-            if lhs is not None and rhs is not None:
-                return lhs + rhs
-
-        elif op_type == "emitc.cmp":
-            # predicate may be in "predicate" key or in attributes
-            predicate = None
-            if "predicate" in op:
-                predicate = op["predicate"]
-            elif "attributes" in op:
-                attr = op["attributes"]
-                # Use parsed attribute value
-                predicate = attr.get("predicate")
-            if predicate is None:
-                return None
-            lhs = self._get_concrete_operand(op["lhs"], state)
-            rhs = self._get_concrete_operand(op["rhs"], state)
-            if lhs is not None and rhs is not None:
-                # EmitC predicates can be strings like "eq", "ne", "lt", "le", "gt", "ge"
-                # or integer codes: 0=eq, 1=ne, 2=lt, 3=le, 4=gt, 5=ge, 6=three_way
-                pred_str = str(predicate)
-                if pred_str == "slt" or pred_str == "2":  # signed less than (integer 2)
-                    return lhs < rhs
-                elif pred_str == "sle" or pred_str == "3":  # signed less than or equal
-                    return lhs <= rhs
-                elif pred_str == "sgt" or pred_str == "4":  # signed greater than
-                    return lhs > rhs
-                elif (
-                    pred_str == "sge" or pred_str == "5"
-                ):  # signed greater than or equal
-                    return lhs >= rhs
-                elif pred_str == "eq" or pred_str == "0":  # equal
-                    return lhs == rhs
-                elif pred_str == "ne" or pred_str == "1":  # not equal
-                    return lhs != rhs
-                elif pred_str == "lt":  # less than (string)
-                    return lhs < rhs
-                elif pred_str == "le":  # less than or equal
-                    return lhs <= rhs
-                elif pred_str == "gt":  # greater than
-                    return lhs > rhs
-                elif pred_str == "ge":  # greater than or equal
-                    return lhs >= rhs
-
-        elif op_type == "emitc.conditional":
-            # Handle both named keys and operands list
-            if "condition" in op and "true_value" in op and "false_value" in op:
-                cond_val = self._get_concrete_operand(op["condition"], state)
-                true_val = self._get_concrete_operand(op["true_value"], state)
-                false_val = self._get_concrete_operand(op["false_value"], state)
-            elif "operands" in op and len(op["operands"]) >= 3:
-                cond_val = self._get_concrete_operand(op["operands"][0], state)
-                true_val = self._get_concrete_operand(op["operands"][1], state)
-                false_val = self._get_concrete_operand(op["operands"][2], state)
-            else:
-                return None
-            if cond_val is not None and true_val is not None and false_val is not None:
-                return true_val if cond_val else false_val
-
-        elif op_type == "emitc.cast":
-            # Handle both dialect-specific "operand" and generic "value"
-            operand_key = "operand" if "operand" in op else "value"
-            operand_val = self._get_concrete_operand(op[operand_key], state)
-            if operand_val is not None:
-                return operand_val  # Cast doesn't change value for concrete integers
-
-        elif op_type == "emitc.assign":
-            rhs_val = self._get_concrete_operand(op["rhs"], state)
-            if rhs_val is not None:
-                return rhs_val
-
-        elif op_type == "emitc.bitwise_and":
-            lhs = self._get_concrete_operand(op["lhs"], state)
-            rhs = self._get_concrete_operand(op["rhs"], state)
-            if lhs is not None and rhs is not None:
-                return lhs & rhs
-
-        elif op_type == "emitc.bitwise_or":
-            lhs = self._get_concrete_operand(op["lhs"], state)
-            rhs = self._get_concrete_operand(op["rhs"], state)
-            if lhs is not None and rhs is not None:
-                return lhs | rhs
-
-        elif op_type == "emitc.bitwise_xor":
-            lhs = self._get_concrete_operand(op["lhs"], state)
-            rhs = self._get_concrete_operand(op["rhs"], state)
-            if lhs is not None and rhs is not None:
-                return lhs ^ rhs
-
-        elif op_type == "emitc.bitwise_left_shift":
-            lhs = self._get_concrete_operand(op["lhs"], state)
-            rhs = self._get_concrete_operand(op["rhs"], state)
-            if lhs is not None and rhs is not None:
-                return lhs << rhs
-
-        elif op_type == "emitc.bitwise_right_shift":
-            lhs = self._get_concrete_operand(op["lhs"], state)
-            rhs = self._get_concrete_operand(op["rhs"], state)
-            if lhs is not None and rhs is not None:
-                return lhs >> rhs
-
-        elif op_type == "emitc.bitwise_not":
-            operand_val = self._get_concrete_operand(op["operand"], state)
-            if operand_val is not None:
-                return ~operand_val
-
-        return None
+        # Convert to Operation object (handles both dict and Operation)
+        op_obj = self._convert_to_operation(op)
+        super()._execute_operation(op_obj, state, func)
 
     def _get_concrete_operand(
         self, operand: str, state: SymbolicState
