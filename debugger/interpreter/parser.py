@@ -17,31 +17,23 @@ from lark import Tree
 from .operations import Operation
 
 # Import dialect modules
-try:
-    from parser.dialects import (
-        affine,
-        func,
-        linalg,
-        scf,
-        cf,
-        arith,
-        memref,
-        tensor,
-        index,
-        math,
-        bufferization,
-        shape,
-        vector,
-        builtin,
-        emitc,
-    )
-
-    HAVE_DIALECTS = True
-except ImportError:
-    HAVE_DIALECTS = False
-    affine = func = linalg = scf = cf = arith = memref = tensor = index = math = (
-        bufferization
-    ) = shape = vector = builtin = emitc = None
+from parser.dialects import (
+    affine,
+    func,
+    linalg,
+    scf,
+    cf,
+    arith,
+    memref,
+    tensor,
+    index,
+    math,
+    bufferization,
+    shape,
+    vector,
+    builtin,
+    emitc,
+)
 
 # Import models from same directory
 from .models import MLIRFunction
