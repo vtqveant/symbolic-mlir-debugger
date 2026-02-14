@@ -8,7 +8,7 @@ Supports concrete mode execution (single path) with breakpoints and stepping.
 from typing import Dict, List, Optional, Any, cast
 import z3
 
-from .models import SymbolicState
+from .models import SymbolicState, LoopContext
 from .parser import MLIRParser
 from .interpreter import ConcolicInterpreter
 from .debug_utils import get_variable_summary
@@ -154,23 +154,23 @@ class ExecutionStepper:
             body_ops = []
 
         # Create loop context
-        loop_context = {
-            "op": op,
-            "iv_name": iv_name,
-            "lb": lb,
-            "ub": ub,
-            "step": step,
-            "iter_arg_name": iter_arg_name,
-            "init": init,
-            "body_ops": body_ops,
-            "current_iteration": 0,
-            "iv_value": lb,
-            "iter_arg_value": self.interpreter._get_concrete_operand(init, state)
+        loop_context = LoopContext(
+            op=op,
+            iv_name=iv_name,
+            lb=lb,
+            ub=ub,
+            step=step,
+            iter_arg_name=iter_arg_name,
+            init=init,
+            body_ops=body_ops,
+            current_iteration=0,
+            iv_value=lb,
+            iter_arg_value=self.interpreter._get_concrete_operand(init, state)
             if init
             else None,
-            "body_op_index": -1,  # -1 indicates not yet started iteration
-            "line": op.line,
-        }
+            body_op_index=-1,  # -1 indicates not yet started iteration
+            line=op.line,
+        )
 
         self.loop_stack.append(loop_context)
         self.current_loop = loop_context
@@ -197,7 +197,7 @@ class ExecutionStepper:
             return
         loop = self.loop_stack.pop()
         self.current_loop = self.loop_stack[-1] if self.loop_stack else None
-        print(f"STEPPER exited loop: {loop['iv_name']} = {loop['iv_value']}")
+        print(f"STEPPER exited loop: {loop.iv_name} = {loop.iv_value}")
 
     def _step_in_loop(self) -> Dict[str, Any]:
         """Execute next step within current loop.
@@ -214,27 +214,27 @@ class ExecutionStepper:
         loop = self.current_loop
 
         # If body_op_index is -1, we haven't started iteration yet
-        if loop["body_op_index"] == -1:
-            loop["body_op_index"] = 0
+        if loop.body_op_index == -1:
+            loop.body_op_index = 0
 
         # Check if loop iteration is complete (iv reached or exceeded ub)
         print(
-            f"STEPPER loop check: iv={loop['iv_value']}, ub={loop['ub']}, step={loop['step']}, iter={loop['current_iteration']}, body_idx={loop['body_op_index']}"
+            f"STEPPER loop check: iv={loop.iv_value}, ub={loop.ub}, step={loop.step}, iter={loop.current_iteration}, body_idx={loop.body_op_index}"
         )
-        if (loop["step"] > 0 and loop["iv_value"] >= loop["ub"]) or (
-            loop["step"] < 0 and loop["iv_value"] <= loop["ub"]
+        if (loop.step > 0 and loop.iv_value >= loop.ub) or (
+            loop.step < 0 and loop.iv_value <= loop.ub
         ):
             # Loop completed
             # Set loop result value (dest) if any
-            dest = loop["op"].dest
-            if dest and loop["iter_arg_value"] is not None:
+            dest = loop.op.dest
+            if dest and loop.iter_arg_value is not None:
                 # Strip leading % if present
                 dest_name = dest[1:] if dest.startswith("%") else dest
                 # The loop result is the final iteration argument value
-                state.set_concrete_value(dest_name, loop["iter_arg_value"])
+                state.set_concrete_value(dest_name, loop.iter_arg_value)
                 # Also set symbolic value
                 state.set_value(
-                    dest_name, z3.Int(dest_name), loop["op"].result_type or "i32"
+                    dest_name, z3.Int(dest_name), loop.op.result_type or "i32"
                 )
 
             self._exit_loop()
@@ -244,14 +244,14 @@ class ExecutionStepper:
             return self.get_current_location()
 
         # Check if we're at the start of a new iteration
-        if loop["body_op_index"] == 0:
+        if loop.body_op_index == 0:
             print(
-                f"STEPPER loop iteration {loop['current_iteration']}: {loop['iv_name']} = {loop['iv_value']}"
+                f"STEPPER loop iteration {loop.current_iteration}: {loop.iv_name} = {loop.iv_value}"
             )
 
         # Execute next body operation if any
-        if loop["body_op_index"] < len(loop["body_ops"]):
-            body_op = loop["body_ops"][loop["body_op_index"]]
+        if loop.body_op_index < len(loop.body_ops):
+            body_op = loop.body_ops[loop.body_op_index]
             # Execute the body operation
             self._execute_single_operation(body_op, state)
 
@@ -262,26 +262,26 @@ class ExecutionStepper:
                     body_op.value if body_op.value else "", state
                 )
                 if yield_val is not None:
-                    loop["iter_arg_value"] = yield_val
-                    if loop["iter_arg_name"]:
-                        state.set_concrete_value(loop["iter_arg_name"], yield_val)
+                    loop.iter_arg_value = yield_val
+                    if loop.iter_arg_name:
+                        state.set_concrete_value(loop.iter_arg_name, yield_val)
 
                 # Move to next iteration
-                loop["current_iteration"] += 1
-                loop["iv_value"] = loop["lb"] + loop["current_iteration"] * loop["step"]
-                loop["body_op_index"] = 0
+                loop.current_iteration += 1
+                loop.iv_value = loop.lb + loop.current_iteration * loop.step
+                loop.body_op_index = 0
 
                 # Update induction variable in state
-                state.set_concrete_value(loop["iv_name"], loop["iv_value"])
+                state.set_concrete_value(loop.iv_name, loop.iv_value)
             else:
                 # Not yield, advance to next body operation
-                loop["body_op_index"] += 1
+                loop.body_op_index += 1
         else:
             # No body operations (empty loop) - advance iteration
-            loop["current_iteration"] += 1
-            loop["iv_value"] = loop["lb"] + loop["current_iteration"] * loop["step"]
-            loop["body_op_index"] = 0
-            state.set_concrete_value(loop["iv_name"], loop["iv_value"])
+            loop.current_iteration += 1
+            loop.iv_value = loop.lb + loop.current_iteration * loop.step
+            loop.body_op_index = 0
+            state.set_concrete_value(loop.iv_name, loop.iv_value)
 
         return self.get_current_location()
 
@@ -302,16 +302,16 @@ class ExecutionStepper:
         # Add loop context if inside a loop
         if self.current_loop:
             info["current_loop"] = {
-                "iv_name": self.current_loop["iv_name"],
-                "lb": self.current_loop["lb"],
-                "ub": self.current_loop["ub"],
-                "step": self.current_loop["step"],
-                "current_iteration": self.current_loop["current_iteration"],
-                "iv_value": self.current_loop["iv_value"],
-                "iter_arg_name": self.current_loop["iter_arg_name"],
-                "iter_arg_value": self.current_loop["iter_arg_value"],
-                "body_op_index": self.current_loop["body_op_index"],
-                "line": self.current_loop["line"],
+                "iv_name": self.current_loop.iv_name,
+                "lb": self.current_loop.lb,
+                "ub": self.current_loop.ub,
+                "step": self.current_loop.step,
+                "current_iteration": self.current_loop.current_iteration,
+                "iv_value": self.current_loop.iv_value,
+                "iter_arg_name": self.current_loop.iter_arg_name,
+                "iter_arg_value": self.current_loop.iter_arg_value,
+                "body_op_index": self.current_loop.body_op_index,
+                "line": self.current_loop.line,
             }
             info["loop_stack_depth"] = len(self.loop_stack)
         # Add CFG edges for current block
@@ -340,14 +340,12 @@ class ExecutionStepper:
         current_op_index = self.current_op_index
         current_block = self.current_block_label
 
-        if self.current_loop is not None and 0 <= self.current_loop[
-            "body_op_index"
-        ] < len(self.current_loop["body_ops"]):
+        if self.current_loop is not None and 0 <= self.current_loop.body_op_index < len(
+            self.current_loop.body_ops
+        ):
             # Inside loop with a current body operation
-            current_op = self.current_loop["body_ops"][
-                self.current_loop["body_op_index"]
-            ]
-            current_op_index = self.current_loop["body_op_index"]
+            current_op = self.current_loop.body_ops[self.current_loop.body_op_index]
+            current_op_index = self.current_loop.body_op_index
             # Block remains the parent block containing the scf.for
         else:
             # Not in loop or between iterations, use block operation

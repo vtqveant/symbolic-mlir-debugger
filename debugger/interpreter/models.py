@@ -10,7 +10,7 @@ import z3
 from .memory.base import MemoryModel
 from .memory.memref import MemrefMemoryModel
 from .memory.tensor import TensorMemoryModel
-from .operations import Operation
+from .operations import Operation, LoopOperation
 
 
 @dataclass
@@ -144,6 +144,24 @@ class MLIRFunction:
 
     def get_basic_block(self, label: str) -> Optional[BasicBlock]:
         return self.basic_blocks.get(label)
+
+
+@dataclass
+class LoopContext:
+    """Represents the context of a loop being stepped through."""
+    op: LoopOperation
+    iv_name: str
+    lb: Union[int, z3.ExprRef]
+    ub: Union[int, z3.ExprRef]
+    step: Union[int, z3.ExprRef]
+    iter_arg_name: str
+    init: Union[str, int]
+    body_ops: List[Operation]
+    current_iteration: int = 0
+    iv_value: Union[int, z3.ExprRef] = None
+    iter_arg_value: Union[int, z3.ExprRef] = None
+    body_op_index: int = -1
+    line: int = 0
 
 
 @dataclass
