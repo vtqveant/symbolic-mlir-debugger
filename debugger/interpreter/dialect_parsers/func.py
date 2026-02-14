@@ -34,11 +34,11 @@ class FuncDialectParser(BaseDialectParser):
             class_name = op_obj.__class__.__name__
 
             # Map operation class names to parser methods
-            if class_name == "CallOp" or class_name == "CallOperation":
+            if class_name == "FuncCallOp":
                 return self._parse_call_operation(op_node)
-            elif class_name == "CallIndirectOp":
+            elif class_name == "FuncCallIndirectOp":
                 return self._parse_call_indirect_operation(op_node)
-            elif class_name == "ReturnOperation":
+            elif class_name == "FuncReturnOp":
                 return self._parse_return_operation(op_node)
 
         # No handler found

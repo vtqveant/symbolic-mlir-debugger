@@ -13,78 +13,78 @@ SsaUse = Union[mast.SsaId, Literal]
 
 
 # Unary Operations
-class AbsfOperation(UnaryOperation):
+class MathAbsFOp(UnaryOperation):
     _opname_ = "math.absf"
 
 
-class AbsiOperation(UnaryOperation):
+class MathAbsIOp(UnaryOperation):
     _opname_ = "math.absi"
 
 
-class CosOperation(UnaryOperation):
+class MathCosOp(UnaryOperation):
     _opname_ = "math.cos"
 
 
-class SinOperation(UnaryOperation):
+class MathSinOp(UnaryOperation):
     _opname_ = "math.sin"
 
 
-class ExpOperation(UnaryOperation):
+class MathExpOp(UnaryOperation):
     _opname_ = "math.exp"
 
 
-class LogOperation(UnaryOperation):
+class MathLogOp(UnaryOperation):
     _opname_ = "math.log"
 
 
-class SqrtOperation(UnaryOperation):
+class MathSqrtOp(UnaryOperation):
     _opname_ = "math.sqrt"
 
 
-class TanhOperation(UnaryOperation):
+class MathTanhOp(UnaryOperation):
     _opname_ = "math.tanh"
 
 
-class FloorOperation(UnaryOperation):
+class MathFloorOp(UnaryOperation):
     _opname_ = "math.floor"
 
 
-class CeilOperation(UnaryOperation):
+class MathCeilOp(UnaryOperation):
     _opname_ = "math.ceil"
 
 
-class RoundOperation(UnaryOperation):
+class MathRoundOp(UnaryOperation):
     _opname_ = "math.round"
 
 
-class CopysignOperation(UnaryOperation):
+class MathCopySignOp(UnaryOperation):
     _opname_ = "math.copysign"
 
 
-class ErfOperation(UnaryOperation):
+class MathErfOp(UnaryOperation):
     _opname_ = "math.erf"
 
 
-class ErfcOperation(UnaryOperation):
+class MathErfcOp(UnaryOperation):
     _opname_ = "math.erfc"
 
 
 # Binary Operations
-class Atan2Operation(BinaryOperation):
+class MathAtan2Op(BinaryOperation):
     _opname_ = "math.atan2"
 
 
-class FmaOperation(BinaryOperation):
+class MathFmaOp(BinaryOperation):
     _opname_ = "math.fma"
 
 
-class PowfOperation(BinaryOperation):
+class MathPowFOp(BinaryOperation):
     _opname_ = "math.powf"
 
 
 # Comparison Operation
 @dataclass
-class CmpfOperation(DialectOp):
+class MathCmpFOp(DialectOp):
     predicate: str
     operand_a: mast.SsaId
     operand_b: mast.SsaId
@@ -95,7 +95,7 @@ class CmpfOperation(DialectOp):
 
 # Constant Operation (if needed)
 @dataclass
-class ConstantOperation(DialectOp):
+class MathConstantOp(DialectOp):
     value: Literal
     type: mast.Type
     _syntax_ = "math.constant {value.constant_literal} : {type.type}"

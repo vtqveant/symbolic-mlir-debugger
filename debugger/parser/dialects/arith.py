@@ -13,98 +13,98 @@ SsaUse = Union[mast.SsaId, Literal]
 
 
 # Unary Operations
-class AbsfOperation(UnaryOperation):
+class ArithAbsFOp(UnaryOperation):
     _opname_ = "arith.absf"
 
 
-class CeilfOperation(UnaryOperation):
+class ArithCeilFOp(UnaryOperation):
     _opname_ = "arith.ceilf"
 
 
-class CosOperation(UnaryOperation):
+class ArithCosOp(UnaryOperation):
     _opname_ = "arith.cos"
 
 
-class ExpOperation(UnaryOperation):
+class ArithExpOp(UnaryOperation):
     _opname_ = "arith.exp"
 
 
-class NegfOperation(UnaryOperation):
+class ArithNegFOp(UnaryOperation):
     _opname_ = "arith.negf"
 
 
-class TanhOperation(UnaryOperation):
+class ArithTanhOp(UnaryOperation):
     _opname_ = "arith.tanh"
 
 
-class CopysignOperation(UnaryOperation):
+class ArithCopySignOp(UnaryOperation):
     _opname_ = "arith.copysign"
 
 
-class SIToFPOperation(UnaryOperation):
+class ArithSIToFPOp(UnaryOperation):
     _opname_ = "arith.sitofp"
 
 
 # Arithmetic Operations
-class AddiOperation(BinaryOperation):
+class ArithAddIOp(BinaryOperation):
     _opname_ = "arith.addi"
 
 
-class AddfOperation(BinaryOperation):
+class ArithAddFOp(BinaryOperation):
     _opname_ = "arith.addf"
 
 
-class AndOperation(BinaryOperation):
+class ArithAndOp(BinaryOperation):
     _opname_ = "arith.and"
 
 
-class DivisOperation(BinaryOperation):
+class ArithDivSIOp(BinaryOperation):
     _opname_ = "arith.divis"
 
 
-class DiviuOperation(BinaryOperation):
+class ArithDivUIOp(BinaryOperation):
     _opname_ = "arith.diviu"
 
 
-class RemisOperation(BinaryOperation):
+class ArithRemSIOp(BinaryOperation):
     _opname_ = "arith.remis"
 
 
-class RemiuOperation(BinaryOperation):
+class ArithRemUIOp(BinaryOperation):
     _opname_ = "arith.remiu"
 
 
-class DivfOperation(BinaryOperation):
+class ArithDivFOp(BinaryOperation):
     _opname_ = "arith.divf"
 
 
-class MulfOperation(BinaryOperation):
+class ArithMulFOp(BinaryOperation):
     _opname_ = "arith.mulf"
 
 
-class MulIOperation(BinaryOperation):
+class ArithMulIOp(BinaryOperation):
     _opname_ = "arith.muli"
 
 
-class SubiOperation(BinaryOperation):
+class ArithSubIOp(BinaryOperation):
     _opname_ = "arith.subi"
 
 
-class SubfOperation(BinaryOperation):
+class ArithSubFOp(BinaryOperation):
     _opname_ = "arith.subf"
 
 
-class OrOperation(BinaryOperation):
+class ArithOrOp(BinaryOperation):
     _opname_ = "arith.or"
 
 
-class XorOperation(BinaryOperation):
+class ArithXorOp(BinaryOperation):
     _opname_ = "arith.xor"
 
 
 # Comparison Operations
 @dataclass
-class CmpiOperation(DialectOp):
+class ArithCmpIOp(DialectOp):
     comptype: str
     operand_a: mast.SsaId
     operand_b: mast.SsaId
@@ -114,7 +114,7 @@ class CmpiOperation(DialectOp):
 
 
 @dataclass
-class CmpfOperation(DialectOp):
+class ArithCmpFOp(DialectOp):
     comptype: str
     operand_a: mast.SsaId
     operand_b: mast.SsaId
@@ -125,7 +125,7 @@ class CmpfOperation(DialectOp):
 
 # Constant Operation
 @dataclass
-class ConstantOperation(DialectOp):
+class ArithConstantOp(DialectOp):
     value: Literal
     type: mast.Type
     _syntax_ = "arith.constant {value.constant_literal} : {type.type}"
@@ -134,7 +134,7 @@ class ConstantOperation(DialectOp):
 
 # Cast Operations
 @dataclass
-class IndexCastOperation(DialectOp):
+class ArithIndexCastOp(DialectOp):
     arg: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
@@ -143,7 +143,7 @@ class IndexCastOperation(DialectOp):
 
 
 @dataclass
-class MemrefCastOperation(DialectOp):
+class ArithMemrefCastOp(DialectOp):
     arg: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
@@ -152,7 +152,7 @@ class MemrefCastOperation(DialectOp):
 
 
 @dataclass
-class TensorCastOperation(DialectOp):
+class ArithTensorCastOp(DialectOp):
     arg: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
@@ -162,7 +162,7 @@ class TensorCastOperation(DialectOp):
 
 # Select Operation
 @dataclass
-class SelectOperation(DialectOp):
+class ArithSelectOp(DialectOp):
     cond: SsaUse
     arg_true: SsaUse
     arg_false: SsaUse

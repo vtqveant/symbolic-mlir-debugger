@@ -11,7 +11,7 @@ SsaUse = Union[mast.SsaId, Literal]
 
 
 @dataclass
-class CallIndirectOperation(DialectOp):
+class FuncCallIndirectOp(DialectOp):
     func: mast.SymbolRefId
     type: mast.FunctionType
     args: Optional[List[SsaUse]] = None
@@ -23,7 +23,7 @@ class CallIndirectOperation(DialectOp):
 
 
 @dataclass
-class CallOperation(DialectOp):
+class FuncCallOp(DialectOp):
     func: mast.SymbolRefId
     type: mast.FunctionType
     args: Optional[List[SsaUse]] = None
@@ -35,7 +35,7 @@ class CallOperation(DialectOp):
 
 
 @dataclass
-class ConstantOperation(DialectOp):
+class FuncConstantOp(DialectOp):
     value: mast.SymbolRefId
     type: mast.Type
     _syntax_ = ["func.constant {value.symbol_ref_id} : {type.type}"]
@@ -46,7 +46,7 @@ class ConstantOperation(DialectOp):
 
 
 @dataclass
-class ReturnOperation(DialectOp):
+class FuncReturnOp(DialectOp):
     values: Optional[List[SsaUse]] = None
     types: Optional[List[mast.Type]] = None
     _syntax_ = ["return", "return {values.ssa_use_list} : {types.type_list_no_parens}"]

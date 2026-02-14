@@ -35,12 +35,12 @@ class BuiltinDialectParser(BaseDialectParser):
             class_name = op_obj.__class__.__name__
 
             # Special handling for unrealized_conversion_cast (has inputs, outputs)
-            if class_name == "UnrealizedConversionCastOperation":
+            if class_name == "BuiltinUnrealizedConversionCastOp":
                 return self._parse_unrealized_conversion_cast_operation(op_node)
             # Module operation (builtin.module) - typically handled at module level
-            elif class_name == "ModuleOperation":
+            elif class_name == "BuiltinModuleOp":
                 return self._parse_module_operation(op_node)
-            elif class_name == "ReturnOperation":
+            elif class_name == "FuncReturnOp":
                 return self._parse_return_operation(op_node)
             # Generic fallback
             else:

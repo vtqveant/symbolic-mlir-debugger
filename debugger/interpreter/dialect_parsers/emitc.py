@@ -35,31 +35,31 @@ class EmitcDialectParser(BaseDialectParser):
             class_name = op_obj.__class__.__name__
 
             # Special handling for operations with custom fields
-            if class_name == "ApplyOperation":
+            if class_name == "EmitCApplyOp":
                 return self._parse_apply_operation(op_node)
-            elif class_name == "CallOperation":
+            elif class_name == "EmitCCallOp":
                 return self._parse_call_operation(op_node)
-            elif class_name == "CallOpaqueOperation":
+            elif class_name == "EmitCCallOpaqueOp":
                 return self._parse_call_opaque_operation(op_node)
-            elif class_name == "ClassOperation":
+            elif class_name == "EmitCClassOp":
                 return self._parse_class_operation(op_node)
-            elif class_name == "CmpOperation":
+            elif class_name == "EmitCCmpOp":
                 return self._parse_cmp_operation(op_node)
-            elif class_name == "ConditionalOperation":
+            elif class_name == "EmitCConditionalOp":
                 return self._parse_conditional_operation(op_node)
-            elif class_name == "ConstantOperation":
+            elif class_name == "EmitCConstantOp":
                 return self._parse_constant_operation(op_node)
 
             # Binary operations (Add, BitwiseAnd, BitwiseLeftShift, BitwiseOr, BitwiseRightShift, BitwiseXor, Assign)
             elif (
-                class_name.endswith("Operation")
+                class_name.endswith("Op")
                 and hasattr(op_obj, "lhs")
                 and hasattr(op_obj, "rhs")
             ):
                 return self._parse_binary_operation(op_node)
 
             # Unary operations (AddressOf, BitwiseNot, Cast)
-            elif class_name.endswith("Operation") and hasattr(op_obj, "operand"):
+            elif class_name.endswith("Op") and hasattr(op_obj, "operand"):
                 return self._parse_unary_operation(op_node)
 
             # Generic fallback
@@ -83,7 +83,7 @@ class EmitcDialectParser(BaseDialectParser):
             full_name = op_obj.__class__._opname_
         else:
             class_name = op_obj.__class__.__name__
-            full_name = f"emitc.{class_name[:-9].lower()}"
+            full_name = f"emitc.{class_name[:-2].lower()}"
 
         if "." in full_name:
             dialect, name = full_name.split(".", 1)
@@ -125,7 +125,7 @@ class EmitcDialectParser(BaseDialectParser):
             full_name = op_obj.__class__._opname_
         else:
             class_name = op_obj.__class__.__name__
-            full_name = f"emitc.{class_name[:-9].lower()}"
+            full_name = f"emitc.{class_name[:-2].lower()}"
 
         if "." in full_name:
             dialect, name = full_name.split(".", 1)
@@ -524,7 +524,7 @@ class EmitcDialectParser(BaseDialectParser):
             full_name = op_obj.__class__._opname_
         else:
             class_name = op_obj.__class__.__name__
-            full_name = f"emitc.{class_name[:-9].lower()}"
+            full_name = f"emitc.{class_name[:-2].lower()}"
 
         if "." in full_name:
             dialect, name = full_name.split(".", 1)

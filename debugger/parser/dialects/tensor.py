@@ -14,7 +14,7 @@ SsaUse = Union[mast.SsaId, Literal]
 
 # Extract operation (from standard.extract_element)
 @dataclass
-class ExtractOperation(DialectOp):
+class TensorExtractOp(DialectOp):
     arg: SsaUse
     index: List[SsaUse]
     type: mast.Type
@@ -24,7 +24,7 @@ class ExtractOperation(DialectOp):
 
 # Splat operation (from standard.splat)
 @dataclass
-class SplatOperation(DialectOp):
+class TensorSplatOp(DialectOp):
     arg: SsaUse
     type: Union[mast.VectorType, mast.TensorType]
     dynamic_sizes: Optional[List[SsaUse]] = None
@@ -37,7 +37,7 @@ class SplatOperation(DialectOp):
 
 # Tensor load/store operations (legacy, may need updating)
 @dataclass
-class TensorLoadOperation(DialectOp):
+class TensorLoadOp(DialectOp):
     arg: SsaUse
     type: mast.Type
     _syntax_ = "tensor.load {arg.ssa_use} : {type.type}"
@@ -45,7 +45,7 @@ class TensorLoadOperation(DialectOp):
 
 
 @dataclass
-class TensorStoreOperation(DialectOp):
+class TensorStoreOp(DialectOp):
     src: SsaUse
     dst: SsaUse
     type: mast.MemRefType
@@ -55,7 +55,7 @@ class TensorStoreOperation(DialectOp):
 
 # Additional tensor operations from ops.md (stubs for now)
 @dataclass
-class CastOperation(DialectOp):
+class TensorCastOp(DialectOp):
     arg: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
@@ -64,7 +64,7 @@ class CastOperation(DialectOp):
 
 
 @dataclass
-class BitcastOperation(DialectOp):
+class TensorBitcastOp(DialectOp):
     arg: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
@@ -73,7 +73,7 @@ class BitcastOperation(DialectOp):
 
 
 @dataclass
-class CollapseShapeOperation(DialectOp):
+class TensorCollapseShapeOp(DialectOp):
     operand: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
@@ -84,7 +84,7 @@ class CollapseShapeOperation(DialectOp):
 
 
 @dataclass
-class ExpandShapeOperation(DialectOp):
+class TensorExpandShapeOp(DialectOp):
     operand: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
@@ -95,7 +95,7 @@ class ExpandShapeOperation(DialectOp):
 
 
 @dataclass
-class ConcatOperation(DialectOp):
+class TensorConcatOp(DialectOp):
     operands: List[SsaUse]
     type: mast.Type
     _syntax_ = "tensor.concat {operands.ssa_use_list} : {type.type}"
@@ -103,7 +103,7 @@ class ConcatOperation(DialectOp):
 
 
 @dataclass
-class DimOperation(DialectOp):
+class TensorDimOp(DialectOp):
     operand: mast.SsaId
     index: mast.SsaId
     type: mast.Type
@@ -112,7 +112,7 @@ class DimOperation(DialectOp):
 
 
 @dataclass
-class EmptyOperation(DialectOp):
+class TensorEmptyOp(DialectOp):
     type: mast.TensorType
     dynamic_sizes: Optional[List[SsaUse]] = None
     _syntax_ = [
@@ -123,7 +123,7 @@ class EmptyOperation(DialectOp):
 
 
 @dataclass
-class ExtractSliceOperation(DialectOp):
+class TensorExtractSliceOp(DialectOp):
     operand: SsaUse
     offsets: List[SsaUse]
     sizes: List[SsaUse]
@@ -135,7 +135,7 @@ class ExtractSliceOperation(DialectOp):
 
 
 @dataclass
-class InsertSliceOperation(DialectOp):
+class TensorInsertSliceOp(DialectOp):
     src: SsaUse
     dst: SsaUse
     offsets: List[SsaUse]
@@ -148,7 +148,7 @@ class InsertSliceOperation(DialectOp):
 
 
 @dataclass
-class FromElementsOperation(DialectOp):
+class TensorFromElementsOp(DialectOp):
     elements: List[SsaUse]
     type: mast.TensorType
     _syntax_ = "tensor.from_elements {elements.ssa_use_list} : {type.tensor_type}"
@@ -156,7 +156,7 @@ class FromElementsOperation(DialectOp):
 
 
 @dataclass
-class GenerateOperation(DialectOp):
+class TensorGenerateOp(DialectOp):
     type: mast.TensorType
     body: mast.Region
     dynamic_extents: Optional[List[SsaUse]] = None
@@ -168,7 +168,7 @@ class GenerateOperation(DialectOp):
 
 
 @dataclass
-class InsertOperation(DialectOp):
+class TensorInsertOp(DialectOp):
     src: SsaUse
     dst: SsaUse
     index: List[SsaUse]
@@ -178,7 +178,7 @@ class InsertOperation(DialectOp):
 
 
 @dataclass
-class PadOperation(DialectOp):
+class TensorPadOp(DialectOp):
     operand: SsaUse
     low: List[SsaUse]
     high: List[SsaUse]
@@ -189,7 +189,7 @@ class PadOperation(DialectOp):
 
 
 @dataclass
-class RankOperation(DialectOp):
+class TensorRankOp(DialectOp):
     operand: SsaUse
     type: mast.Type
     _syntax_ = "tensor.rank {operand.ssa_use} : {type.type}"
@@ -197,7 +197,7 @@ class RankOperation(DialectOp):
 
 
 @dataclass
-class ReshapeOperation(DialectOp):
+class TensorReshapeOp(DialectOp):
     operand: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
@@ -206,7 +206,7 @@ class ReshapeOperation(DialectOp):
 
 
 @dataclass
-class ScatterOperation(DialectOp):
+class TensorScatterOp(DialectOp):
     indices: SsaUse
     updates: SsaUse
     target: SsaUse
@@ -217,7 +217,7 @@ class ScatterOperation(DialectOp):
 
 
 @dataclass
-class GatherOperation(DialectOp):
+class TensorGatherOp(DialectOp):
     indices: SsaUse
     target: SsaUse
     src_type: mast.Type
@@ -227,7 +227,7 @@ class GatherOperation(DialectOp):
 
 
 @dataclass
-class YieldOperation(DialectOp):
+class TensorYieldOp(DialectOp):
     values: List[SsaUse]
     _syntax_ = "tensor.yield {values.ssa_use_list}"
     _opname_ = "tensor.yield"

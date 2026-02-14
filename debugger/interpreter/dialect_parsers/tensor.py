@@ -36,49 +36,49 @@ class TensorDialectParser(BaseDialectParser):
             class_name = op_obj.__class__.__name__
 
             # Map operation class names to parser methods
-            if class_name == "ExtractOperation":
+            if class_name == "TensorExtractOp":
                 return self._parse_extract_operation(op_node)
-            elif class_name == "InsertOperation":
+            elif class_name == "TensorInsertOp":
                 return self._parse_insert_operation(op_node)
-            elif class_name == "SplatOperation":
+            elif class_name == "TensorSplatOp":
                 return self._parse_splat_operation(op_node)
-            elif class_name == "LoadOperation":
+            elif class_name == "TensorLoadOp":
                 return self._parse_load_operation(op_node)
-            elif class_name == "StoreOperation":
+            elif class_name == "TensorStoreOp":
                 return self._parse_store_operation(op_node)
-            elif class_name == "CastOperation":
+            elif class_name == "TensorCastOp":
                 return self._parse_cast_operation(op_node)
-            elif class_name == "BitcastOperation":
+            elif class_name == "TensorBitcastOp":
                 return self._parse_bitcast_operation(op_node)
-            elif class_name == "CollapseShapeOperation":
+            elif class_name == "TensorCollapseShapeOp":
                 return self._parse_collapse_shape_operation(op_node)
-            elif class_name == "ExpandShapeOperation":
+            elif class_name == "TensorExpandShapeOp":
                 return self._parse_expand_shape_operation(op_node)
-            elif class_name == "DimOperation":
+            elif class_name == "TensorDimOp":
                 return self._parse_dim_operation(op_node)
-            elif class_name == "EmptyOperation":
+            elif class_name == "TensorEmptyOp":
                 return self._parse_empty_operation(op_node)
-            elif class_name == "ExtractSliceOperation":
+            elif class_name == "TensorExtractSliceOp":
                 return self._parse_extract_slice_operation(op_node)
-            elif class_name == "InsertSliceOperation":
+            elif class_name == "TensorInsertSliceOp":
                 return self._parse_insert_slice_operation(op_node)
-            elif class_name == "FromElementsOperation":
+            elif class_name == "TensorFromElementsOp":
                 return self._parse_from_elements_operation(op_node)
-            elif class_name == "GenerateOperation":
+            elif class_name == "TensorGenerateOp":
                 return self._parse_generate_operation(op_node)
-            elif class_name == "PadOperation":
+            elif class_name == "TensorPadOp":
                 return self._parse_pad_operation(op_node)
-            elif class_name == "RankOperation":
+            elif class_name == "TensorRankOp":
                 return self._parse_rank_operation(op_node)
-            elif class_name == "ReshapeOperation":
+            elif class_name == "TensorReshapeOp":
                 return self._parse_reshape_operation(op_node)
-            elif class_name == "ScatterOperation":
+            elif class_name == "TensorScatterOp":
                 return self._parse_scatter_operation(op_node)
-            elif class_name == "GatherOperation":
+            elif class_name == "TensorGatherOp":
                 return self._parse_gather_operation(op_node)
-            elif class_name == "YieldOperation":
+            elif class_name == "TensorYieldOp":
                 return self._parse_yield_operation(op_node)
-            elif class_name == "ConcatOperation":
+            elif class_name == "TensorConcatOp":
                 return self._parse_concat_operation(op_node)
 
         # No handler found
