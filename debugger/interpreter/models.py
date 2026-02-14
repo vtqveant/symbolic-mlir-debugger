@@ -20,9 +20,10 @@ class MLIRValue:
     name: str
     expr: Optional[z3.ExprRef] = None
     type: Optional[str] = None
+    concrete: Optional[Any] = None
 
     def __repr__(self) -> str:
-        return f"MLIRValue({self.name}, expr={self.expr})"
+        return f"MLIRValue({self.name}, expr={self.expr}, concrete={self.concrete})"
 
 
 @dataclass
@@ -203,7 +204,7 @@ class SymbolicState:
         memory_cells_copy = {}
         for memref_name, cells in self.memory_cells.items():
             memory_cells_copy[memref_name] = {
-                idx: MLIRValue(val.name, val.expr, val.type)
+                idx: MLIRValue(val.name, val.expr, val.type, val.concrete)
                 for idx, val in cells.items()
             }
 
@@ -215,11 +216,13 @@ class SymbolicState:
             pc=self.pc,
             path_condition=list(self.path_condition),
             values={
-                k: MLIRValue(v.name, v.expr, v.type) for k, v in self.values.items()
+                k: MLIRValue(v.name, v.expr, v.type, v.concrete)
+                for k, v in self.values.items()
             },
             concrete_values=dict(self.concrete_values),
             memory={
-                k: MLIRValue(v.name, v.expr, v.type) for k, v in self.memory.items()
+                k: MLIRValue(v.name, v.expr, v.type, v.concrete)
+                for k, v in self.memory.items()
             },
             memory_cells=memory_cells_copy,
             memory_model=forked_memory_model,
