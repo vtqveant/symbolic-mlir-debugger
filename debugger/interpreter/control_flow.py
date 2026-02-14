@@ -158,9 +158,8 @@ class ControlFlowExecutor:
             for (arg_name, arg_type), (param_name, param_type) in zip(
                 op.args, target_block.parameters
             ):
-                # Verify type compatibility (simplistic check)
+                # Types must match in MLIR
                 if arg_type != param_type:
-                    # TODO: Handle type conversions
                     raise ValueError(
                         f"Type mismatch: argument {arg_name} has type {arg_type}, "
                         f"but parameter {param_name} expects {param_type}"

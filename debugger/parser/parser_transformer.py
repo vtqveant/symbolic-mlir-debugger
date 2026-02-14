@@ -91,7 +91,6 @@ class TreeToMlir(Transformer):
     def pretty_dialect_item(self, *args):
         # args: could be (dialect, type_name) or (dialect, dot, type_name) with optional body
         # dot is ignored if present
-        # print(f"DEBUG pretty_dialect_item args: {args}, len={len(args)}")
         if len(args) == 2:
             # No dot token: (dialect, type_name)
             dialect, type_name = args
@@ -205,7 +204,40 @@ class TreeToMlir(Transformer):
         return astnodes.BlockLabel(value[0], arg_ids, argtypes)
 
     block = astnodes.Block.from_lark
-    region = astnodes.Region
+
+    def region(self, blocks):
+        """Parse a region, merging labeled blocks with anonymous single-operation successors.
+
+        pymlir has a bug where labeled blocks with terminators are split into two blocks:
+        a labeled block with non-terminator operations and an anonymous block with only
+        the terminator. This method merges such anonymous blocks back into the preceding
+        labeled block to ensure each labeled block contains its terminator.
+        """
+        if not blocks:
+            return astnodes.Region([])
+        merged = []
+        i = 0
+        while i < len(blocks):
+            block = blocks[i]
+            # Check if this block has a label (i.e., not synthetic)
+            has_label = block.label and block.label.name
+            # Check if next block exists and is anonymous (no label)
+            if (
+                i + 1 < len(blocks)
+                and has_label
+                and not blocks[i + 1].label
+                and len(blocks[i + 1].body) == 1
+            ):
+                next_block = blocks[i + 1]
+                # Merge: append operation to current block's body
+                block.body.append(next_block.body[0])
+                merged.append(block)
+                i += 2  # skip next block
+                continue
+            merged.append(block)
+            i += 1
+        return astnodes.Region(merged)
+
     module = astnodes.Module.from_lark
     function = astnodes.Function.from_lark
     generic_module = astnodes.GenericModule.from_lark
