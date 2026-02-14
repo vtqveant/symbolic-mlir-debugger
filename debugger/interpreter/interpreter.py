@@ -221,7 +221,7 @@ class SymbolicInterpreter:
             branch_op = cast(UnconditionalBranchOperation, op_obj)
             self.cf_executor.execute_unconditional_branch(branch_op, state, func, self)
 
-        elif op_type == "builtin.return":
+        elif op_type == "func.return":
             # Function return
             from .operations import ReturnOperation
 

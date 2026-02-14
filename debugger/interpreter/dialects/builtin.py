@@ -77,57 +77,6 @@ class BuiltinUnrealizedConversionCastHandler(OperationHandler):
         return None
 
 
-class BuiltinReturnHandler(OperationHandler):
-    """Handler for builtin.return operation."""
-
-    def execute_symbolic(
-        self, op: Operation, state: SymbolicState, func: MLIRFunction, interpreter=None
-    ) -> None:
-        """Execute builtin.return symbolically."""
-        return_op = op
-        if not isinstance(return_op, ReturnOperation):
-            raise TypeError(f"Expected ReturnOperation, got {type(op)}")
-        # Store return value if present
-        if return_op.value is not None:
-            ret_expr = state.get_expr(return_op.value)
-            if ret_expr is not None:
-                result_type = "unknown"
-                if return_op.result_type:
-                    result_type = return_op.result_type
-                state.set_value("return", ret_expr, result_type)
-                # Also propagate concrete value if available
-                concrete_val = state.get_concrete_value(return_op.value)
-                if concrete_val is not None:
-                    state.set_concrete_value("return", concrete_val)
-            else:
-                # Create a fresh symbolic variable for the missing value
-                fresh_expr = z3.FreshConst(z3.IntSort(), f"ret_{return_op.value}")
-                result_type = "unknown"
-                if return_op.result_type:
-                    result_type = return_op.result_type
-                state.set_value("return", fresh_expr, result_type)
-        else:
-            # No return value (void return)
-            pass
-        state.pc = None  # Terminate state
-
-    def _try_concrete_evaluation(
-        self, op: Operation, state: SymbolicState, func: MLIRFunction
-    ) -> Any:
-        """Try to evaluate return operation concretely by extracting return value."""
-        return_op = op
-        if not isinstance(return_op, ReturnOperation):
-            return None
-
-        # Extract the concrete value of the return operand if available
-        if return_op.value is not None:
-            concrete_val = state.get_concrete_value(return_op.value)
-            if concrete_val is not None:
-                return concrete_val
-
-        return None
-
-
 # Function to register all builtin dialect handlers
 def register_handlers(registry) -> None:
     """Register builtin dialect handlers with registry."""
@@ -136,4 +85,3 @@ def register_handlers(registry) -> None:
     registry.register(
         "builtin.unrealized_conversion_cast", BuiltinUnrealizedConversionCastHandler()
     )
-    registry.register("func.return", BuiltinReturnHandler())

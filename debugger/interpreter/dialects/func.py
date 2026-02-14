@@ -59,7 +59,7 @@ class FuncCallIndirectHandler(OperationHandler):
 
 
 class FuncReturnHandler(OperationHandler):
-    """Handler for return operation."""
+    """Handler for func.return operation."""
 
     def execute_symbolic(
         self,
@@ -68,24 +68,29 @@ class FuncReturnHandler(OperationHandler):
         func: MLIRFunction,
         interpreter=None,
     ) -> None:
-        """Execute return symbolically."""
-        if not isinstance(op, ReturnOperation):
+        """Execute func.return symbolically."""
+        return_op = op
+        if not isinstance(return_op, ReturnOperation):
             raise TypeError(f"Expected ReturnOperation, got {type(op)}")
         # Store return value if present
-        if op.value is not None:
-            ret_expr = state.get_expr(op.value)
+        if return_op.value is not None:
+            ret_expr = state.get_expr(return_op.value)
             if ret_expr is not None:
-                state.set_value("return", ret_expr, op.result_type or "i32")
+                result_type = "unknown"
+                if return_op.result_type:
+                    result_type = return_op.result_type
+                state.set_value("return", ret_expr, result_type)
                 # Also propagate concrete value if available
-                concrete_val = state.get_concrete_value(op.value)
+                concrete_val = state.get_concrete_value(return_op.value)
                 if concrete_val is not None:
                     state.set_concrete_value("return", concrete_val)
             else:
                 # Create a fresh symbolic variable for the missing value
-                import z3
-
-                fresh_expr = z3.FreshConst(z3.IntSort(), f"ret_{op.value}")
-                state.set_value("return", fresh_expr, op.result_type or "i32")
+                fresh_expr = z3.FreshConst(z3.IntSort(), f"ret_{return_op.value}")
+                result_type = "unknown"
+                if return_op.result_type:
+                    result_type = return_op.result_type
+                state.set_value("return", fresh_expr, result_type)
         else:
             # No return value (void return)
             pass
@@ -94,7 +99,17 @@ class FuncReturnHandler(OperationHandler):
     def _try_concrete_evaluation(
         self, op: ReturnOperation, state: SymbolicState, func: MLIRFunction
     ) -> Any:
-        """Return operations don't produce values."""
+        """Try to evaluate return operation concretely by extracting return value."""
+        return_op = op
+        if not isinstance(return_op, ReturnOperation):
+            return None
+
+        # Extract the concrete value of the return operand if available
+        if return_op.value is not None:
+            concrete_val = state.get_concrete_value(return_op.value)
+            if concrete_val is not None:
+                return concrete_val
+
         return None
 
 
