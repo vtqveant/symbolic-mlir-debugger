@@ -87,7 +87,7 @@ def test_dap_session_step(test_data_dir):
 
     location = session.stepper.get_current_location()
     assert location["line"] == 7  # return operation is on line 7
-    assert location["operation"] == "return"
+    assert location["operation"] == "func.return"
 
     # Step again (should terminate)
     still_running = session.step_next()
