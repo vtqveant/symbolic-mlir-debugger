@@ -17,13 +17,13 @@ class BuiltinModuleHandler(OperationHandler):
     """Handler for builtin.module operation (structural)."""
 
     def execute_symbolic(
-        self, op: Any, state: SymbolicState, func: MLIRFunction, interpreter=None
+        self, op: Operation, state: SymbolicState, func: MLIRFunction, interpreter=None
     ) -> None:
         """builtin.module is structural, not executable."""
         pass
 
     def _try_concrete_evaluation(
-        self, op: Any, state: SymbolicState, func: MLIRFunction
+        self, op: Operation, state: SymbolicState, func: MLIRFunction
     ) -> Any:
         """builtin.module doesn't produce a concrete value."""
         return None
@@ -33,13 +33,13 @@ class BuiltinFuncHandler(OperationHandler):
     """Handler for builtin.func operation (structural)."""
 
     def execute_symbolic(
-        self, op: Any, state: SymbolicState, func: MLIRFunction, interpreter=None
+        self, op: Operation, state: SymbolicState, func: MLIRFunction, interpreter=None
     ) -> None:
         """builtin.func is structural, not executable."""
         pass
 
     def _try_concrete_evaluation(
-        self, op: Any, state: SymbolicState, func: MLIRFunction
+        self, op: Operation, state: SymbolicState, func: MLIRFunction
     ) -> Any:
         """builtin.func doesn't produce a concrete value."""
         return None
@@ -49,7 +49,7 @@ class BuiltinUnrealizedConversionCastHandler(OperationHandler):
     """Handler for builtin.unrealized_conversion_cast operation."""
 
     def execute_symbolic(
-        self, op: Any, state: SymbolicState, func: MLIRFunction, interpreter=None
+        self, op: Operation, state: SymbolicState, func: MLIRFunction, interpreter=None
     ) -> None:
         """Execute builtin.unrealized_conversion_cast symbolically."""
         if not op.dest:
@@ -71,7 +71,7 @@ class BuiltinUnrealizedConversionCastHandler(OperationHandler):
             state.set_value(op.dest, expr, op.result_type or "i32")
 
     def _try_concrete_evaluation(
-        self, op: Any, state: SymbolicState, func: MLIRFunction
+        self, op: Operation, state: SymbolicState, func: MLIRFunction
     ) -> Any:
         """unrealized_conversion_cast doesn't produce a concrete value."""
         return None
@@ -81,7 +81,7 @@ class BuiltinReturnHandler(OperationHandler):
     """Handler for builtin.return operation."""
 
     def execute_symbolic(
-        self, op: Any, state: SymbolicState, func: MLIRFunction, interpreter=None
+        self, op: Operation, state: SymbolicState, func: MLIRFunction, interpreter=None
     ) -> None:
         """Execute builtin.return symbolically."""
         return_op = op
@@ -112,9 +112,19 @@ class BuiltinReturnHandler(OperationHandler):
         state.pc = None  # Terminate state
 
     def _try_concrete_evaluation(
-        self, op: Any, state: SymbolicState, func: MLIRFunction
+        self, op: Operation, state: SymbolicState, func: MLIRFunction
     ) -> Any:
-        """Return operations don't produce values."""
+        """Try to evaluate return operation concretely by extracting return value."""
+        return_op = op
+        if not isinstance(return_op, ReturnOperation):
+            return None
+
+        # Extract the concrete value of the return operand if available
+        if return_op.value is not None:
+            concrete_val = state.get_concrete_value(return_op.value)
+            if concrete_val is not None:
+                return concrete_val
+
         return None
 
 
