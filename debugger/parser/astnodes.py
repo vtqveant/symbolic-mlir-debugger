@@ -2,7 +2,7 @@
 MLIR."""
 
 from enum import Enum, auto
-from typing import Any, List, Union, Optional
+from typing import Any, List, Union, Optional, ClassVar
 from lark import Token
 from lark.tree import Tree
 from dataclasses import dataclass, field, is_dataclass
@@ -881,34 +881,152 @@ class AffineExpr(Node):
     # TODO: Inserts a lot of "AffineParens" that  leading to a generated with high
     # SNR. Should solve this by strategically placing the parens so that the
     # precedence isn't violated.
+
+    @property
+    def precedence(self) -> int:
+        """Return precedence level of this expression (higher = binds tighter)."""
+        # Default precedence for leaf nodes (dim, symbol, constant)
+        return 90  # Higher than all operators, lower than parentheses
+
+    def _needs_parens(self, parent_precedence: int, is_right: bool = False) -> bool:
+        """Check if this expression needs parentheses when used as an operand.
+
+        Args:
+            parent_precedence: Precedence of parent operation.
+            is_right: True if this is the right operand (for associativity).
+        """
+        if self.precedence < parent_precedence:
+            return True
+        # Handle associativity when precedences are equal
+        # All affine operators are left-associative (+, -, *, floordiv, ceildiv, mod)
+        if self.precedence == parent_precedence and is_right:
+            return True
+        return False
+
     def __add__(self, other: Union["AffineExpr", int]):
-        return AffineParens(AffineAdd(operand_a=self, operand_b=other))
+        # Get operation precedence from class
+        op_precedence = AffineAdd._precedence_
+        # Wrap left operand if needed
+        left = self
+        if self._needs_parens(op_precedence, is_right=False):
+            left = AffineParens(self)
+        # Wrap right operand if needed (only if it's an AffineExpr)
+        right = other
+        if isinstance(other, AffineExpr) and other._needs_parens(
+            op_precedence, is_right=True
+        ):
+            right = AffineParens(other)
+        return AffineAdd(operand_a=left, operand_b=right)
 
     def __sub__(self, other: Union["AffineExpr", int]):
-        return AffineParens(AffineSub(operand_a=self, operand_b=other))
+        # Get operation precedence from class
+        op_precedence = AffineSub._precedence_
+        # Wrap left operand if needed
+        left = self
+        if self._needs_parens(op_precedence, is_right=False):
+            left = AffineParens(self)
+        # Wrap right operand if needed (only if it's an AffineExpr)
+        right = other
+        if isinstance(other, AffineExpr) and other._needs_parens(
+            op_precedence, is_right=True
+        ):
+            right = AffineParens(other)
+        return AffineSub(operand_a=left, operand_b=right)
 
-    def __mul__(self, other: int):
-        return AffineParens(AffineMul(operand_a=self, operand_b=other))
+    def __mul__(self, other: Union["AffineExpr", int]):
+        # Get operation precedence from class
+        op_precedence = AffineMul._precedence_
+        # Wrap left operand if needed
+        left = self
+        if self._needs_parens(op_precedence, is_right=False):
+            left = AffineParens(self)
+        # Wrap right operand if needed (only if it's an AffineExpr)
+        right = other
+        if isinstance(other, AffineExpr) and other._needs_parens(
+            op_precedence, is_right=True
+        ):
+            right = AffineParens(other)
+        return AffineMul(operand_a=left, operand_b=right)
 
     def __neg__(self):
-        return AffineParens(AffineNeg(operand=self))
+        # Get operation precedence from class
+        op_precedence = AffineNeg._precedence_
+        # Wrap operand if needed
+        operand = self
+        if self._needs_parens(op_precedence, is_right=False):
+            operand = AffineParens(self)
+        return AffineNeg(operand=operand)
 
     def __radd__(self, other: Union["AffineExpr", int]):
-        return AffineParens(AffineAdd(operand_a=other, operand_b=self))
+        # Get operation precedence from class
+        op_precedence = AffineAdd._precedence_
+        # Wrap left operand if needed (only if it's an AffineExpr)
+        left = other
+        if isinstance(other, AffineExpr) and other._needs_parens(
+            op_precedence, is_right=False
+        ):
+            left = AffineParens(other)
+        # Wrap right operand if needed
+        right = self
+        if self._needs_parens(op_precedence, is_right=True):
+            right = AffineParens(self)
+        return AffineAdd(operand_a=left, operand_b=right)
 
     def __rsub__(self, other: Union["AffineExpr", int]):
-        return AffineParens(AffineSub(operand_a=other, operand_b=self))
+        # Get operation precedence from class
+        op_precedence = AffineSub._precedence_
+        # Wrap left operand if needed (only if it's an AffineExpr)
+        left = other
+        if isinstance(other, AffineExpr) and other._needs_parens(
+            op_precedence, is_right=False
+        ):
+            left = AffineParens(other)
+        # Wrap right operand if needed
+        right = self
+        if self._needs_parens(op_precedence, is_right=True):
+            right = AffineParens(self)
+        return AffineSub(operand_a=left, operand_b=right)
 
     def __rmul__(self, other: int):
-        return AffineParens(AffineMul(operand_a=other, operand_b=self))
+        # Get operation precedence from class
+        op_precedence = AffineMul._precedence_
+        # Wrap right operand if needed (left operand is integer, no parentheses needed)
+        right = self
+        if self._needs_parens(op_precedence, is_right=True):
+            right = AffineParens(self)
+        return AffineMul(operand_a=other, operand_b=right)
 
 
 class SemiAffineExpr(AffineExpr):
-    def __floordiv__(self, other: int):
-        return AffineParens(AffineFloorDiv(operand_a=self, operand_b=other))
+    def __floordiv__(self, other: Union["AffineExpr", int]):
+        # Get operation precedence from class
+        op_precedence = AffineFloorDiv._precedence_
+        # Wrap left operand if needed
+        left = self
+        if self._needs_parens(op_precedence, is_right=False):
+            left = AffineParens(self)
+        # Wrap right operand if needed (only if it's an AffineExpr)
+        right = other
+        if isinstance(other, AffineExpr) and other._needs_parens(
+            op_precedence, is_right=True
+        ):
+            right = AffineParens(other)
+        return AffineFloorDiv(operand_a=left, operand_b=right)
 
-    def __mod__(self, other: int):
-        return AffineParens(AffineMod(operand_a=self, operand_b=other))
+    def __mod__(self, other: Union["AffineExpr", int]):
+        # Get operation precedence from class
+        op_precedence = AffineMod._precedence_
+        # Wrap left operand if needed
+        left = self
+        if self._needs_parens(op_precedence, is_right=False):
+            left = AffineParens(self)
+        # Wrap right operand if needed (only if it's an AffineExpr)
+        right = other
+        if isinstance(other, AffineExpr) and other._needs_parens(
+            op_precedence, is_right=True
+        ):
+            right = AffineParens(other)
+        return AffineMod(operand_a=left, operand_b=right)
 
 
 @dataclass
@@ -949,6 +1067,11 @@ class AffineDimOrSymbol(AffineExpr):
 class AffineUnaryOp(AffineExpr):
     operand: AffineExpr
     _op_: str = field(init=False, repr=False)
+    _precedence_: ClassVar[int] = 80  # Default precedence for unary operators
+
+    @property
+    def precedence(self) -> int:
+        return self.__class__._precedence_
 
     def dump(self, indent: int = 0) -> str:
         return self._op_ % dump_or_value(self.operand, indent)
@@ -959,6 +1082,11 @@ class AffineBinaryOp(AffineExpr):
     operand_a: Union[AffineExpr, int]
     operand_b: Union[AffineExpr, int]
     _op_: str = field(init=False, repr=False)
+    _precedence_: ClassVar[int] = 60  # Default precedence for binary operators
+
+    @property
+    def precedence(self) -> int:
+        return self.__class__._precedence_
 
     def dump(self, indent: int = 0) -> str:
         return "%s %s %s" % (
@@ -970,10 +1098,22 @@ class AffineBinaryOp(AffineExpr):
 
 class AffineNeg(AffineUnaryOp):
     _op_ = "-%s"
+    _precedence_: ClassVar[int] = (
+        80  # Unary negation has higher precedence than multiplication
+    )
+
+    @property
+    def precedence(self) -> int:
+        return self.__class__._precedence_
 
 
 class AffineParens(AffineUnaryOp):
     _op_ = "(%s)"
+    _precedence_: ClassVar[int] = 1000  # Parentheses have highest precedence
+
+    @property
+    def precedence(self) -> int:
+        return self.__class__._precedence_
 
 
 class AffineExplicitSymbol(AffineUnaryOp):
@@ -982,26 +1122,50 @@ class AffineExplicitSymbol(AffineUnaryOp):
 
 class AffineAdd(AffineBinaryOp):
     _op_ = "+"
+    _precedence_: ClassVar[int] = 60  # Same as default binary op precedence
 
 
 class AffineSub(AffineBinaryOp):
     _op_ = "-"
+    _precedence_: ClassVar[int] = 60  # Same as default binary op precedence
 
 
 class AffineMul(AffineBinaryOp):
     _op_ = "*"
+    _precedence_: ClassVar[int] = (
+        70  # Multiplication has higher precedence than addition
+    )
+
+    @property
+    def precedence(self) -> int:
+        return self.__class__._precedence_
 
 
 class AffineFloorDiv(AffineBinaryOp):
     _op_ = "floordiv"
+    _precedence_: ClassVar[int] = 70  # Same precedence as multiplication
+
+    @property
+    def precedence(self) -> int:
+        return self.__class__._precedence_
 
 
 class AffineCeilDiv(AffineBinaryOp):
     _op_ = "ceildiv"
+    _precedence_: ClassVar[int] = 70  # Same precedence as multiplication
+
+    @property
+    def precedence(self) -> int:
+        return self.__class__._precedence_
 
 
 class AffineMod(AffineBinaryOp):
     _op_ = "mod"
+    _precedence_: ClassVar[int] = 70  # Same precedence as multiplication
+
+    @property
+    def precedence(self) -> int:
+        return self.__class__._precedence_
 
 
 ##############################################################################
