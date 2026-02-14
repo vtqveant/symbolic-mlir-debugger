@@ -12,7 +12,7 @@ from dap_server import MLIRDebugSession
 def test_shape_dialect_variables(test_data_dir):
     """Test variable formatting for shape dialect operations."""
     session = MLIRDebugSession()
-    program = test_data_dir / "dialect_examples" / "shape_example.mlir"
+    program = test_data_dir / "shape_example.mlir"
     if not os.path.exists(program):
         pytest.skip(f"Test file not found: {program}")
 
