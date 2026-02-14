@@ -3,9 +3,12 @@
 Symbolic and concolic interpreters for MLIR programs.
 """
 
+import logging
 import random
 from typing import Dict, List, Optional, Any, Tuple, cast
 import z3
+
+logger = logging.getLogger(__name__)
 
 from .models import MLIRFunction, SymbolicState
 from .dialects import get_handler
@@ -103,14 +106,16 @@ class SymbolicInterpreter:
             # Try to get handler
             handler = get_handler(op_obj.full_name)
             if handler:
-                print(
-                    f"DEBUG: Registry handler found for {op_obj.full_name}, handler={handler.__class__.__name__}"
+                logger.debug(
+                    "Registry handler found for %s, handler=%s",
+                    op_obj.full_name,
+                    handler.__class__.__name__,
                 )
                 handler.execute_symbolic(op_obj, state, func, self)
-                print(f"DEBUG: Handler executed successfully for {op_obj.full_name}")
+                logger.debug("Handler executed successfully for %s", op_obj.full_name)
                 return True
             else:
-                print(f"DEBUG: No handler found for {op_obj.full_name}")
+                logger.debug("No handler found for %s", op_obj.full_name)
                 pass
         except Exception:
             # Registry execution failed, fall back to legacy handler
@@ -340,23 +345,25 @@ class ConcolicInterpreter(SymbolicInterpreter):
         op_type = f"{op_obj.dialect}.{op_obj.name}"
 
         if op_type in legacy_ops:
-            print(f"DEBUG concolic: Skipping registry for legacy op {op_type}")
+            logger.debug("concolic: Skipping registry for legacy op %s", op_type)
             return False
 
         try:
             # Try to get handler
             handler = get_handler(op_obj.full_name)
             if handler:
-                print(
-                    f"DEBUG concolic: Registry handler found for {op_obj.full_name}, handler={handler.__class__.__name__}"
+                logger.debug(
+                    "concolic: Registry handler found for %s, handler=%s",
+                    op_obj.full_name,
+                    handler.__class__.__name__,
                 )
                 handler.execute_concolic(op_obj, state, func, self)
-                print(
-                    f"DEBUG concolic: Handler executed successfully for {op_obj.full_name}"
+                logger.debug(
+                    "concolic: Handler executed successfully for %s", op_obj.full_name
                 )
                 return True
             else:
-                print(f"DEBUG concolic: No handler found for {op_obj.full_name}")
+                logger.debug("concolic: No handler found for %s", op_obj.full_name)
         except Exception as e:
             # Registry execution failed, fall back to legacy handler
             print(f"Registry execution failed for {op_type}: {e}")
@@ -405,11 +412,13 @@ class ConcolicInterpreter(SymbolicInterpreter):
 
             # Get the completed state (there should be exactly one for deterministic execution)
             completed_states = [s for s in states if s.get_value("return") is not None]
-            print(
-                f"DEBUG explore_paths: states count={len(states)}, completed_states count={len(completed_states)}"
+            logger.debug(
+                "explore_paths: states count=%s, completed_states count=%s",
+                len(states),
+                len(completed_states),
             )
             if not completed_states:
-                print("DEBUG explore_paths: no completed states, skipping")
+                logger.debug("explore_paths: no completed states, skipping")
                 continue
 
             state = completed_states[0]

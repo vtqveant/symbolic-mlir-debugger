@@ -5,8 +5,11 @@ SCF dialect execution handlers.
 Handles operations: for, if, yield, condition, etc.
 """
 
+import logging
 import z3
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from .base import OperationHandler
 from ..operations import Operation, LoopOperation
@@ -48,8 +51,11 @@ class ScfForHandler(OperationHandler):
         lb_concrete = interpreter._try_get_concrete_value(lb_expr, state)
         ub_concrete = interpreter._try_get_concrete_value(ub_expr, state)
         step_concrete = interpreter._try_get_concrete_value(step_expr, state)
-        print(
-            f"DEBUG ScfForHandler: lb_concrete={lb_concrete}, ub_concrete={ub_concrete}, step_concrete={step_concrete}"
+        logger.debug(
+            "ScfForHandler: lb_concrete=%s, ub_concrete=%s, step_concrete=%s",
+            lb_concrete,
+            ub_concrete,
+            step_concrete,
         )
 
         if (
@@ -57,15 +63,18 @@ class ScfForHandler(OperationHandler):
             and ub_concrete is not None
             and step_concrete is not None
         ):
-            print("DEBUG ScfForHandler: Concrete bounds, unrolling loop")
+            logger.debug("ScfForHandler: Concrete bounds, unrolling loop")
             # Concrete bounds, unroll loop
             current_acc = init_expr
             i = 0
             max_iterations = 100  # safety bound
             while True:
                 iv_val = lb_concrete + i * step_concrete
-                print(
-                    f"DEBUG ScfForHandler: iteration i={i}, iv_val={iv_val}, current_acc={current_acc}"
+                logger.debug(
+                    "ScfForHandler: iteration i=%s, iv_val=%s, current_acc=%s",
+                    i,
+                    iv_val,
+                    current_acc,
                 )
                 if step_concrete > 0 and iv_val >= ub_concrete:
                     break
@@ -83,8 +92,10 @@ class ScfForHandler(OperationHandler):
                 iv_name = iv[1:] if iv.startswith("%") else iv
                 iter_state.set_value(iv_name, z3.IntVal(iv_val), "i32")
                 iter_state.set_concrete_value(iv_name, iv_val)
-                print(
-                    f"DEBUG ScfForHandler: expr for iv_name {iv_name} = {iter_state.get_expr(iv_name)}"
+                logger.debug(
+                    "ScfForHandler: expr for iv_name %s = %s",
+                    iv_name,
+                    iter_state.get_expr(iv_name),
                 )
                 # Set iteration argument value
                 if iter_arg and init_expr is not None:
@@ -106,7 +117,7 @@ class ScfForHandler(OperationHandler):
                             body_op.value, iter_state
                         )
                         yield_value = yield_expr
-                        print(f"DEBUG ScfForHandler: yield_expr={yield_expr}")
+                        logger.debug("ScfForHandler: yield_expr=%s", yield_expr)
                         # Don't execute further operations after yield
                         break
                     else:

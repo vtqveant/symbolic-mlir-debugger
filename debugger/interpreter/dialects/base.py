@@ -6,8 +6,11 @@ Provides common patterns for operation handling while preserving
 dialect boundaries and operation semantics.
 """
 
+import logging
 from typing import Any, Dict, Optional, Callable
 import z3
+
+logger = logging.getLogger(__name__)
 
 from ..models import SymbolicState, MLIRFunction
 from ..operations import (
@@ -47,7 +50,7 @@ class OperationHandler:
         Default implementation tries concrete evaluation first,
         falls back to symbolic execution.
         """
-        print(f"DEBUG OperationHandler.execute_concolic: op={op}, type={type(op)}")
+        logger.debug("OperationHandler.execute_concolic: op=%s, type=%s", op, type(op))
         # Try to evaluate concretely if possible
         concrete_result = self._try_concrete_evaluation(op, state, func)
         if concrete_result is not None:
@@ -102,19 +105,24 @@ class BinaryOperationHandler(OperationHandler):
         """Try concrete evaluation of binary operation."""
         lhs_concrete = state.get_concrete_value(op.lhs)
         rhs_concrete = state.get_concrete_value(op.rhs)
-        print(
-            f"DEBUG BinaryOperationHandler._try_concrete_evaluation: op={op.dest}, lhs={op.lhs}={lhs_concrete}, rhs={op.rhs}={rhs_concrete}"
+        logger.debug(
+            "BinaryOperationHandler._try_concrete_evaluation: op=%s, lhs=%s=%s, rhs=%s=%s",
+            op.dest,
+            op.lhs,
+            lhs_concrete,
+            op.rhs,
+            rhs_concrete,
         )
 
         if lhs_concrete is not None and rhs_concrete is not None:
             # Use the operator lambda with concrete values
             try:
                 result = self.operator(lhs_concrete, rhs_concrete)
-                print(f"DEBUG BinaryOperationHandler: concrete result={result}")
+                logger.debug("BinaryOperationHandler: concrete result=%s", result)
                 return result
             except Exception:
                 # Operator may not work with concrete values (should not happen)
-                print("DEBUG BinaryOperationHandler: operator failed")
+                logger.debug("BinaryOperationHandler: operator failed")
                 return None
         return None
 
