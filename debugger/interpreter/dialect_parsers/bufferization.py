@@ -28,19 +28,19 @@ class BufferizationDialectParser(BaseDialectParser):
         if hasattr(op_obj, "__class__"):
             class_name = op_obj.__class__.__name__
 
-            if class_name == "AllocTensorOperation":
+            if class_name == "BufferizationAllocTensorOp":
                 return self._parse_alloc_tensor_operation(op_node)
-            elif class_name == "CloneOperation":
+            elif class_name == "BufferizationCloneOp":
                 return self._parse_clone_operation(op_node)
-            elif class_name == "DeallocOperation":
+            elif class_name == "BufferizationDeallocOp":
                 return self._parse_dealloc_operation(op_node)
-            elif class_name == "DeallocTensorOperation":
+            elif class_name == "BufferizationDeallocTensorOp":
                 return self._parse_dealloc_tensor_operation(op_node)
-            elif class_name == "MaterializeInDestinationOperation":
+            elif class_name == "BufferizationMaterializeInDestinationOp":
                 return self._parse_materialize_in_destination_operation(op_node)
-            elif class_name == "ToBufferOperation":
+            elif class_name == "BufferizationToBufferOp":
                 return self._parse_to_buffer_operation(op_node)
-            elif class_name == "ToTensorOperation":
+            elif class_name == "BufferizationToTensorOp":
                 return self._parse_to_tensor_operation(op_node)
 
         return None

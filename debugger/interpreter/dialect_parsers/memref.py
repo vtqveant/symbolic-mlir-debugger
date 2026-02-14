@@ -36,35 +36,35 @@ class MemrefDialectParser(BaseDialectParser):
             class_name = op_obj.__class__.__name__
 
             # Map operation class names to parser methods
-            if class_name == "LoadOperation":
+            if class_name == "MemRefLoadOp":
                 return self._parse_load_operation(op_node)
-            elif class_name == "StoreOperation":
+            elif class_name == "MemRefStoreOp":
                 return self._parse_store_operation(op_node)
-            elif class_name == "DimOperation":
+            elif class_name == "MemRefDimOp":
                 return self._parse_dim_operation(op_node)
-            elif class_name == "AllocOperation":
+            elif class_name == "MemRefAllocOp":
                 return self._parse_alloc_operation(op_node)
-            elif class_name == "AllocaOperation":
+            elif class_name == "MemRefAllocaOp":
                 return self._parse_alloca_operation(op_node)
-            elif class_name == "DeallocOperation":
+            elif class_name == "MemRefDeallocOp":
                 return self._parse_dealloc_operation(op_node)
-            elif class_name == "SubviewOperation":
+            elif class_name == "MemRefSubviewOp":
                 return self._parse_subview_operation(op_node)
-            elif class_name == "ViewOperation":
+            elif class_name == "MemRefViewOp":
                 return self._parse_view_operation(op_node)
-            elif class_name == "CastOperation":
+            elif class_name == "MemRefCastOp":
                 return self._parse_cast_operation(op_node)
-            elif class_name == "CollapseShapeOperation":
+            elif class_name == "MemRefCollapseShapeOp":
                 return self._parse_collapse_shape_operation(op_node)
-            elif class_name == "ExpandShapeOperation":
+            elif class_name == "MemRefExpandShapeOp":
                 return self._parse_expand_shape_operation(op_node)
-            elif class_name == "ReinterpretCastOperation":
+            elif class_name == "MemRefReinterpretCastOp":
                 return self._parse_reinterpret_cast_operation(op_node)
-            elif class_name == "MemorySpaceCastOperation":
+            elif class_name == "MemRefMemorySpaceCastOp":
                 return self._parse_memory_space_cast_operation(op_node)
-            elif class_name == "DmaStartOperation":
+            elif class_name == "MemRefDmaStartOp":
                 return self._parse_dma_start_operation(op_node)
-            elif class_name == "DmaWaitOperation":
+            elif class_name == "MemRefDmaWaitOp":
                 return self._parse_dma_wait_operation(op_node)
 
         # No handler found

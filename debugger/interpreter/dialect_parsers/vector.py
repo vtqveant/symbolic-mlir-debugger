@@ -29,56 +29,56 @@ class VectorDialectParser(BaseDialectParser):
             class_name = op_obj.__class__.__name__
 
             # Special handling for constant mask operation (has mask_dimensions)
-            if class_name == "ConstantMaskOperation":
+            if class_name == "VectorConstantMaskOp":
                 return self._parse_constant_mask_operation(op_node)
             # Special handling for constant-like operations with value field
-            elif class_name == "ConstantMaskOperation":
+            elif class_name == "VectorConstantMaskOp":
                 # Already handled above
                 pass
             # Special handling for contract operation (complex attributes)
-            elif class_name == "ContractOperation":
+            elif class_name == "VectorContractOp":
                 return self._parse_contract_operation(op_node)
             # Special handling for gather operation (complex)
-            elif class_name == "GatherOperation":
+            elif class_name == "VectorGatherOp":
                 return self._parse_gather_operation(op_node)
             # Special handling for compress store (store-like)
-            elif class_name == "CompressStoreOperation":
+            elif class_name == "VectorCompressStoreOp":
                 return self._parse_compress_store_operation(op_node)
             # Special handling for expand load (load-like)
-            elif class_name == "ExpandLoadOperation":
+            elif class_name == "VectorExpandLoadOp":
                 return self._parse_expand_load_operation(op_node)
             # Special handling for extract strided slice (complex)
-            elif class_name == "ExtractStridedSliceOperation":
+            elif class_name == "VectorExtractStridedSliceOp":
                 return self._parse_extract_strided_slice_operation(op_node)
             # Special handling for insert strided slice (complex)
-            elif class_name == "InsertStridedSliceOperation":
+            elif class_name == "VectorInsertStridedSliceOp":
                 return self._parse_insert_strided_slice_operation(op_node)
             # Special handling for fma (ternary)
-            elif class_name == "FmaOperation":
+            elif class_name == "VectorFmaOp":
                 return self._parse_fma_operation(op_node)
 
             # Binary operations (InterleaveOperation has lhs, rhs)
             elif (
-                class_name.endswith("Operation")
+                class_name.endswith("Op")
                 and hasattr(op_obj, "lhs")
                 and hasattr(op_obj, "rhs")
             ):
                 return self._parse_binary_operation(op_node)
 
             # Unary operations (BroadcastOperation, DeinterleaveOperation have source)
-            elif class_name.endswith("Operation") and hasattr(op_obj, "source"):
+            elif class_name.endswith("Op") and hasattr(op_obj, "source"):
                 return self._parse_unary_operation(op_node)
 
             # Unary operations with operand field
-            elif class_name.endswith("Operation") and hasattr(op_obj, "operand"):
+            elif class_name.endswith("Op") and hasattr(op_obj, "operand"):
                 return self._parse_unary_operation(op_node)
 
             # Operations with vector field (ExtractOperation)
-            elif class_name.endswith("Operation") and hasattr(op_obj, "vector"):
+            elif class_name.endswith("Op") and hasattr(op_obj, "vector"):
                 return self._parse_generic_operation(op_node)
 
             # Operations with elements field (FromElementsOperation)
-            elif class_name.endswith("Operation") and hasattr(op_obj, "elements"):
+            elif class_name.endswith("Op") and hasattr(op_obj, "elements"):
                 return self._parse_generic_operation(op_node)
 
             # Operations with base field (CompressStore, ExpandLoad already handled)
