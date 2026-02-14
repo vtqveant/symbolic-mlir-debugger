@@ -136,4 +136,4 @@ def register_handlers(registry) -> None:
     registry.register(
         "builtin.unrealized_conversion_cast", BuiltinUnrealizedConversionCastHandler()
     )
-    registry.register("builtin.return", BuiltinReturnHandler())
+    registry.register("func.return", BuiltinReturnHandler())

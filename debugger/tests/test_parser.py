@@ -22,7 +22,7 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     assert bb.operations[0].full_name == "arith.cmpi"
-    assert bb.operations[1].full_name == "builtin.return"
+    assert bb.operations[1].full_name == "func.return"
 
 
 @pytest.mark.parser
@@ -42,7 +42,7 @@ module {
     bb = list(func.basic_blocks.values())[0]
     assert len(bb.operations) == 2
     assert bb.operations[0].full_name == "arith.addi"
-    assert bb.operations[1].full_name == "builtin.return"
+    assert bb.operations[1].full_name == "func.return"
 
 
 @pytest.mark.parser

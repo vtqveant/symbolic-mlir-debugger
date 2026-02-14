@@ -68,47 +68,4 @@ def register_default_parsers(registry: DialectParserRegistry) -> None:
     builtin_parser = BuiltinDialectParser()
     registry.register_dialect("builtin", builtin_parser)
     registry.register_dialect("emitc", EmitcDialectParser())
-    # Register operation handlers for builtin operations
-    registry.register_operation(
-        "ReturnOperation", builtin_parser._parse_return_operation
-    )
-    # Register operation handlers for scf operations
-    registry.register_operation("SCFForOp", scf_parser._parse_scf_for_operation)
-    registry.register_operation("SCFIfOp", scf_parser._parse_scf_if_operation)
-    registry.register_operation("SCFYield", scf_parser._parse_scf_yield_operation)
-    registry.register_operation(
-        "SCFConditionOp", scf_parser._parse_scf_condition_operation
-    )
-    # Register operation handlers for affine operations (since they lack _opname_)
-    registry.register_operation(
-        "AffineForOp", affine_parser._parse_affine_for_operation
-    )
-    registry.register_operation("AffineIfOp", affine_parser._parse_affine_if_operation)
-    registry.register_operation(
-        "AffineLoadOp", affine_parser._parse_affine_load_operation
-    )
-    registry.register_operation(
-        "AffineStoreOp", affine_parser._parse_affine_store_operation
-    )
-    # Register operation handlers for func operations (since they lack _opname_)
-    registry.register_operation("CallOperation", func_parser._parse_call_operation)
-    registry.register_operation(
-        "CallIndirectOperation", func_parser._parse_call_indirect_operation
-    )
-    # Register operation handlers for linalg operations (since they lack _opname_)
-    registry.register_operation(
-        "LinalgGeneric", linalg_parser._parse_linalg_generic_operation
-    )
-    registry.register_operation(
-        "LinalgMatmul", linalg_parser._parse_linalg_matmul_operation
-    )
-    registry.register_operation(
-        "LinalgBatchMatmul", linalg_parser._parse_linalg_batch_matmul_operation
-    )
-    registry.register_operation(
-        "LinalgYield", linalg_parser._parse_linalg_yield_operation
-    )
-    # Register operation handlers for cf operations
-    registry.register_operation("BrOperation", cf_parser._parse_br_operation)
-    registry.register_operation("CondBrOperation", cf_parser._parse_cond_br_operation)
     # Add more default parsers here as they are implemented

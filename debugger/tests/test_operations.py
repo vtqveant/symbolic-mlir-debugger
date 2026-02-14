@@ -225,7 +225,7 @@ module {
     ops = [op.full_name for op in bb.operations]
     assert "arith.cmpi" in ops
     assert "arith.cmpf" in ops
-    assert "builtin.return" in ops
+    assert "func.return" in ops
 
 
 @pytest.mark.parser
@@ -250,7 +250,7 @@ module {
     # Should have scf.for and return
     assert len(bb.operations) == 2
     assert bb.operations[0].full_name == "scf.for"
-    assert bb.operations[1].full_name == "builtin.return"
+    assert bb.operations[1].full_name == "func.return"
 
     # Check scf.for has expected fields
     for_op = bb.operations[0]
@@ -289,7 +289,7 @@ module {
 
     assert len(bb.operations) == 2
     assert bb.operations[0].full_name == "scf.if"
-    assert bb.operations[1].full_name == "builtin.return"
+    assert bb.operations[1].full_name == "func.return"
 
 
 @pytest.mark.parser
