@@ -20,6 +20,7 @@ class BrOperation(DialectOp):
         "cf.br {block.block_id}",
         "cf.br {block.block_id} {args.block_arg_list}",
     ]
+    _opname_ = "cf.br"
 
 
 @dataclass
@@ -30,6 +31,7 @@ class CondBrOperation(DialectOp):
     _syntax_ = [
         "cf.cond_br {cond.ssa_use} , {block_true.block_id} , {block_false.block_id}"
     ]
+    _opname_ = "cf.cond_br"
 
 
 # Inspect current module to get all classes defined above

@@ -1,4 +1,4 @@
-""" Implementation of the Affine dialect. """
+"""Implementation of the Affine dialect."""
 
 import inspect
 import sys
@@ -15,7 +15,8 @@ SsaUse = Union[mast.SsaId, Literal]
 class AffineApplyOp(DialectOp):
     map: mast.AffineMap
     args: mast.DimAndSymbolList
-    _syntax_ = 'affine.apply {map.affine_map} {args.dim_and_symbol_use_list}'
+    _syntax_ = "affine.apply {map.affine_map} {args.dim_and_symbol_use_list}"
+    _opname_ = "affine.apply"
 
 
 @dataclass
@@ -28,11 +29,12 @@ class AffineForOp(DialectOp):
     attributes: Optional[mast.Attribute] = None
 
     _syntax_ = [
-        'affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} {region.region}',
-        'affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} step {step.symbol_or_const} {region.region}',
-        'affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} {region.region} {attributes.attribute_dict}',
-        'affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} step {step.symbol_or_const} {region.region} {attributes.attribute_dict}'
+        "affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} {region.region}",
+        "affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} step {step.symbol_or_const} {region.region}",
+        "affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} {region.region} {attributes.attribute_dict}",
+        "affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} step {step.symbol_or_const} {region.region} {attributes.attribute_dict}",
     ]
+    _opname_ = "affine.for"
 
 
 @dataclass
@@ -42,8 +44,11 @@ class AffineIfOp(DialectOp):
     body: mast.Region
     elsebody: Optional[mast.Region] = None
 
-    _syntax_ = ['affine.if {cond.map_or_set_id} ( {operands.ssa_use_list} ) {body.region}',
-                'affine.if {cond.map_or_set_id} ( {operands.ssa_use_list} ) {body.region} else {elsebody.region}']
+    _syntax_ = [
+        "affine.if {cond.map_or_set_id} ( {operands.ssa_use_list} ) {body.region}",
+        "affine.if {cond.map_or_set_id} ( {operands.ssa_use_list} ) {body.region} else {elsebody.region}",
+    ]
+    _opname_ = "affine.if"
 
 
 @dataclass
@@ -51,7 +56,8 @@ class AffineLoadOp(DialectOp):
     arg: SsaUse
     index: mast.MultiDimAffineExpr
     type: mast.MemRefType
-    _syntax_ = 'affine.load {arg.ssa_use} [ {index.multi_dim_affine_expr_no_parens} ] : {type.memref_type}'
+    _syntax_ = "affine.load {arg.ssa_use} [ {index.multi_dim_affine_expr_no_parens} ] : {type.memref_type}"
+    _opname_ = "affine.load"
 
 
 @dataclass
@@ -60,14 +66,16 @@ class AffineStoreOp(DialectOp):
     ref: SsaUse
     index: mast.MultiDimAffineExpr
     type: mast.MemRefType
-    _syntax_ = 'affine.store {addr.ssa_use} , {ref.ssa_use} [ {index.multi_dim_affine_expr_no_parens} ] : {type.memref_type}'
+    _syntax_ = "affine.store {addr.ssa_use} , {ref.ssa_use} [ {index.multi_dim_affine_expr_no_parens} ] : {type.memref_type}"
+    _opname_ = "affine.store"
 
 
 @dataclass
 class AffineMinOp(DialectOp):
     map: mast.AffineMap
     operands: mast.DimAndSymbolList
-    _syntax_ = 'affine.min {map.affine_map_inline} {operands.dim_and_symbol_use_list}'
+    _syntax_ = "affine.min {map.affine_map_inline} {operands.dim_and_symbol_use_list}"
+    _opname_ = "affine.min"
 
 
 @dataclass
@@ -78,7 +86,8 @@ class AffinePrefetchOp(DialectOp):
     locality: int
     cachetype: mast.Identifier
     type: mast.Type
-    _syntax_ = 'affine.prefetch {arg.ssa_use} [ {index.multi_dim_affine_expr_no_parens} ] , {specifier.bare_id} , locality < {locality.integer_literal} > , {cachetype.bare_id} : {type.type}'
+    _syntax_ = "affine.prefetch {arg.ssa_use} [ {index.multi_dim_affine_expr_no_parens} ] , {specifier.bare_id} , locality < {locality.integer_literal} > , {cachetype.bare_id} : {type.type}"
+    _opname_ = "affine.prefetch"
 
 
 @dataclass
@@ -97,9 +106,10 @@ class AffineDmaStartOperation(DialectOp):
     transfer_per_stride: Optional[SsaUse] = None
 
     _syntax_ = [
-        'affine.dma_start {src.ssa_use} [ {src_index.multi_dim_affine_expr_no_parens} ] , {dst.ssa_use} [ {dst_index.multi_dim_affine_expr_no_parens} ] , {tag.ssa_use} [ {tag_index.multi_dim_affine_expr_no_parens} ] , {size.ssa_use} : {src_type.memref_type} , {dst_type.memref_type} , {tag_type.memref_type}',
-        'affine.dma_start {src.ssa_use} [ {src_index.multi_dim_affine_expr_no_parens} ] , {dst.ssa_use} [ {dst_index.multi_dim_affine_expr_no_parens} ] , {tag.ssa_use} [ {tag_index.multi_dim_affine_expr_no_parens} ] , {size.ssa_use} , {stride.ssa_use} , {transfer_per_stride.ssa_use} : {src_type.memref_type} , {dst_type.memref_type} , {tag_type.memref_type}'
+        "affine.dma_start {src.ssa_use} [ {src_index.multi_dim_affine_expr_no_parens} ] , {dst.ssa_use} [ {dst_index.multi_dim_affine_expr_no_parens} ] , {tag.ssa_use} [ {tag_index.multi_dim_affine_expr_no_parens} ] , {size.ssa_use} : {src_type.memref_type} , {dst_type.memref_type} , {tag_type.memref_type}",
+        "affine.dma_start {src.ssa_use} [ {src_index.multi_dim_affine_expr_no_parens} ] , {dst.ssa_use} [ {dst_index.multi_dim_affine_expr_no_parens} ] , {tag.ssa_use} [ {tag_index.multi_dim_affine_expr_no_parens} ] , {size.ssa_use} , {stride.ssa_use} , {transfer_per_stride.ssa_use} : {src_type.memref_type} , {dst_type.memref_type} , {tag_type.memref_type}",
     ]
+    _opname_ = "affine.dma_start"
 
 
 @dataclass
@@ -109,9 +119,17 @@ class AffineDmaWaitOperation(DialectOp):
     size: SsaUse
     type: mast.MemRefType
 
-    _syntax_ = 'affine.dma_wait {tag.ssa_use} [ {tag_index.multi_dim_affine_expr_no_parens} ] , {size.ssa_use} : {type.memref_type}'
+    _syntax_ = "affine.dma_wait {tag.ssa_use} [ {tag_index.multi_dim_affine_expr_no_parens} ] , {size.ssa_use} : {type.memref_type}"
+    _opname_ = "affine.dma_wait"
 
 
 # Inspect current module to get all classes defined above
-affine = Dialect('affine', ops=[m[1] for m in inspect.getmembers(
-    sys.modules[__name__], lambda obj: is_op(obj, __name__))])
+affine = Dialect(
+    "affine",
+    ops=[
+        m[1]
+        for m in inspect.getmembers(
+            sys.modules[__name__], lambda obj: is_op(obj, __name__)
+        )
+    ],
+)
