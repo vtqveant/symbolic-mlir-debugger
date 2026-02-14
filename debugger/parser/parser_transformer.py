@@ -199,8 +199,10 @@ class TreeToMlir(Transformer):
         if value[1] is None:
             arg_ids, argtypes = None, None
         else:
-            arg_ids, argtypes = list(zip(*value[1]))
-            return astnodes.BlockLabel(value[0], arg_ids, argtypes)
+            # value[1] is a list of (SsaId, Type) pairs
+            arg_ids = [pair[0] for pair in value[1]]
+            argtypes = [pair[1] for pair in value[1]]
+        return astnodes.BlockLabel(value[0], arg_ids, argtypes)
 
     block = astnodes.Block.from_lark
     region = astnodes.Region

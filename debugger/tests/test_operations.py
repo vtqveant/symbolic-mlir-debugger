@@ -134,9 +134,10 @@ module {
     assert "cf.cond_br" in preprocessed
     # Should NOT have generic operation syntax with quotes
     assert '"cf.cond_br"' not in preprocessed
-    # Block labels should be normalized (^true -> ^block1, ^false -> ^block2)
-    # Check that normalized labels appear
-    assert re.search(r"\^block\d", preprocessed) is not None
+    # Block labels are no longer normalized (pymlir now exposes real labels)
+    # Original labels should remain
+    assert "^true" in preprocessed
+    assert "^false" in preprocessed
 
 
 @pytest.mark.parser
