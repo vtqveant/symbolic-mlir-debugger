@@ -211,34 +211,6 @@ class MLIRParser:
         """Preprocess MLIR code to handle operations with comma syntax for attributes."""
         import re
 
-        # Normalize block labels to synthetic labels (^block1, ^block2, ...)
-        # because pymlir doesn't expose block labels
-        # Find all block label definitions (^label:)
-        block_label_pattern = r"^\s*\^([a-zA-Z0-9_]+):"
-        labels_found = []
-        for match in re.finditer(block_label_pattern, mlir_code, re.MULTILINE):
-            label = match.group(1)
-            if label not in labels_found:
-                labels_found.append(label)
-
-        # Create mapping from original label to synthetic label
-        # Skip entry block (implicit) - we'll handle it separately
-        label_map = {}
-        for i, label in enumerate(labels_found):
-            synthetic = f"^block{i + 1}"
-            label_map[label] = synthetic
-
-        # Replace label definitions and references
-        for orig, synthetic in label_map.items():
-            # Replace label definition: ^orig: -> ^blockN:
-            # Keep indentation (spaces before caret)
-            mlir_code = re.sub(
-                rf"^\s*\^{orig}:", f"  {synthetic}:", mlir_code, flags=re.MULTILINE
-            )
-            # Replace label references: ^orig (not followed by colon or alnum)
-            # Use word boundary? Simple global replace of ^orig with ^blockN
-            mlir_code = re.sub(rf"\^{orig}(?![a-zA-Z0-9_:])", synthetic, mlir_code)
-
         # Mapping of predicate strings to integer values for arith.cmpi
 
         # Pattern for cf.cond_br or std.cond_br or bare cond_br
