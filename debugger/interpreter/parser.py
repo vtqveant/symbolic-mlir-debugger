@@ -7,18 +7,6 @@ import sys
 import os
 from typing import Dict, Optional, Any, List, Tuple
 
-# Type checking: LSP type errors in parser.py are reproducible from main branch
-# See issue: "LSP type errors in parser.py after class-based refactoring"
-# Errors include:
-# - Lines 70: operation_positions needs type annotation
-# - Lines 162-173, 181: Incompatible types in assignment for location dict
-# - Line 301: Argument type incompatibility in _parse_ast call
-# - Line 305: functions needs type annotation
-# - Lines 330, 334, 335, 343, 349, 351: "Op" has no attribute errors
-# - Lines 410, 411: Incompatible types in assignment
-# - Lines 490, 492: IntegerType has no attribute "signedness"
-# Runtime functionality works correctly despite these type checking warnings.
-
 # Add project root to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
