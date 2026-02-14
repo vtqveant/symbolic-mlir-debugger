@@ -5,8 +5,11 @@ EmitC dialect execution handlers.
 Handles operations: constant, add, bitwise operations, cmp, conditional, cast, etc.
 """
 
+import logging
 import z3
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from .base import (
     BinaryOperationHandler,
@@ -49,26 +52,22 @@ class EmitCConstantHandler(ConstantOperationHandler):
         # Create Z3 constant from value
         if isinstance(value, int):
             expr = z3.IntVal(value)
-            print(f"DEBUG EmitCConstantHandler: value={value}, expr={expr}")
+            logger.debug("EmitCConstantHandler: value=%s, expr=%s", value, expr)
         elif isinstance(value, float):
             expr = z3.RealVal(value)
-            print(f"DEBUG EmitCConstantHandler: value={value}, expr={expr}")
+            logger.debug("EmitCConstantHandler: value=%s, expr=%s", value, expr)
         else:
             # Fallback to symbolic variable
             expr = z3.FreshConst(z3.IntSort(), f"emitc_const_{op.dest}")
-            print(f"DEBUG EmitCConstantHandler: value={value}, fallback expr={expr}")
+            logger.debug("EmitCConstantHandler: value=%s, fallback expr=%s", value, expr)
 
         state.set_value(op.dest, expr, op.result_type or "i32")
-        print(
-            f"DEBUG after set_value: state.get_value({op.dest}) = {state.get_value(op.dest)}"
-        )
+        logger.debug("after set_value: state.get_value(%s) = %s", op.dest, state.get_value(op.dest))
 
         # Also store concrete value if we have it
         if isinstance(value, (int, float)):
             state.set_concrete_value(op.dest, value)
-            print(
-                f"DEBUG after set_concrete_value: state.get_concrete_value({op.dest}) = {state.get_concrete_value(op.dest)}"
-            )
+            logger.debug("after set_concrete_value: state.get_concrete_value(%s) = %s", op.dest, state.get_concrete_value(op.dest))
 
     def _try_concrete_evaluation(
         self, op: ConstantOperation, state: SymbolicState, func: MLIRFunction
