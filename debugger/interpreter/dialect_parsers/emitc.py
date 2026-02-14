@@ -403,6 +403,122 @@ class EmitcDialectParser(BaseDialectParser):
         if dest is None:
             return None
 
+        # Handle GenericOperation (quoted operation names in MLIR)
+        if isinstance(op_obj, mast.GenericOperation):
+            # Get full operation name (e.g., "emitc.constant")
+            name_obj = op_obj.name
+            if hasattr(name_obj, "value"):
+                full_name = name_obj.value
+            else:
+                full_name = str(name_obj)
+
+            # Strip dialect prefix
+            if "." in full_name:
+                dialect, name = full_name.split(".", 1)
+            else:
+                dialect = "emitc"
+                name = full_name
+
+            # Determine if binary or unary based on args length
+            args = (
+                op_obj.args
+                if hasattr(op_obj, "args") and op_obj.args is not None
+                else []
+            )
+            num_args = len(args)
+
+            # Extract result type
+            result_type = None
+            if hasattr(op_obj, "type"):
+                result_type = self._type_to_string(op_obj.type)
+
+            # Parse attributes if present
+            attributes = {}
+            if hasattr(op_obj, "attributes") and op_obj.attributes is not None:
+                attributes = self._parse_attribute(op_obj.attributes)
+
+            line = self._extract_line_number(op_node)
+
+            # Special handling for specific operation types
+            if name == "constant":
+                # Extract value from attributes
+                value = attributes.get("value")
+                return ConstantOperation(
+                    dialect=dialect,
+                    name=name,
+                    line=line,
+                    dest=dest,
+                    result_type=result_type,
+                    value=value,
+                    attributes=attributes,
+                )
+            elif name == "cmp":
+                # For cmp, we need pred, lhs, rhs
+                # args length should be 2
+                if num_args == 2:
+                    lhs = self._ssa_use_to_string(args[0])
+                    rhs = self._ssa_use_to_string(args[1])
+                    pred = attributes.get("predicate")
+                    return CompareOperation(
+                        dialect=dialect,
+                        name=name,
+                        line=line,
+                        dest=dest,
+                        result_type=result_type,
+                        pred=pred or "",
+                        lhs=lhs,
+                        rhs=rhs,
+                        attributes=attributes,
+                    )
+                else:
+                    # Fallback to generic operation
+                    return Operation(
+                        dialect=dialect,
+                        name=name,
+                        line=line,
+                        dest=dest,
+                        result_type=result_type,
+                        attributes=attributes,
+                    )
+
+            # Handle binary operations (add, etc.)
+            if num_args == 2:
+                lhs = self._ssa_use_to_string(args[0])
+                rhs = self._ssa_use_to_string(args[1])
+                return BinaryOperation(
+                    dialect=dialect,
+                    name=name,
+                    line=line,
+                    dest=dest,
+                    result_type=result_type,
+                    lhs=lhs,
+                    rhs=rhs,
+                    attributes=attributes,
+                )
+            # Handle unary operations (cast, etc.)
+            elif num_args == 1:
+                operand = self._ssa_use_to_string(args[0])
+                return UnaryOperation(
+                    dialect=dialect,
+                    name=name,
+                    line=line,
+                    dest=dest,
+                    result_type=result_type,
+                    operand=operand,
+                    attributes=attributes,
+                )
+            else:
+                # Generic operation with attributes (constant already handled)
+                return Operation(
+                    dialect=dialect,
+                    name=name,
+                    line=line,
+                    dest=dest,
+                    result_type=result_type,
+                    attributes=attributes,
+                )
+
+        # Original logic for non-GenericOperation
         # Extract operation name
         if hasattr(op_obj.__class__, "_opname_"):
             full_name = op_obj.__class__._opname_

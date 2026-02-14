@@ -38,11 +38,11 @@ class FuncDialectParser(BaseDialectParser):
                 return self._parse_call_operation(op_node)
             elif class_name == "CallIndirectOp":
                 return self._parse_call_indirect_operation(op_node)
-            # Note: ReturnOp is a builtin operation, not part of func dialect
-            # but handled by generic parser or builtin handler.
+            elif class_name == "ReturnOperation":
+                return self._parse_return_operation(op_node)
 
         # No handler found
-        print(f"DEBUG FuncDialectParser: class {op_obj.__class__.__name__} not handled")
+
         return None
 
     # Individual operation parsers
@@ -53,20 +53,31 @@ class FuncDialectParser(BaseDialectParser):
         dest = self._extract_destination(op_node)
         # func.call may not have a destination (void)
 
-        # Extract callee
+        # Extract callee (SymbolRefId)
         callee = None
         if hasattr(op_obj, "func"):
-            callee = self._ssa_use_to_string(op_obj.func)
+            func_obj = op_obj.func
+            if hasattr(func_obj, "value"):
+                callee = func_obj.value
+            else:
+                callee = str(func_obj)
 
         # Extract arguments
         args = []
         if hasattr(op_obj, "args") and op_obj.args:
             args = [self._ssa_use_to_string(arg) for arg in op_obj.args]
 
-        # Extract result type
+        # Extract result type from FunctionType
         result_type = None
         if hasattr(op_obj, "type"):
-            result_type = self._type_to_string(op_obj.type)
+            type_obj = op_obj.type
+            # Check if it's a FunctionType
+            if isinstance(type_obj, mast.FunctionType):
+                # Extract first result type
+                if type_obj.result_types:
+                    result_type = self._type_to_string(type_obj.result_types[0])
+            else:
+                result_type = self._type_to_string(type_obj)
 
         line = self._extract_line_number(op_node)
 
@@ -113,4 +124,27 @@ class FuncDialectParser(BaseDialectParser):
             result_type=result_type,
             callee=callee or "",
             args=args,
+        )
+
+    def _parse_return_operation(
+        self, op_node: mast.Operation
+    ) -> Optional[ReturnOperation]:
+        """Parse func.return operation."""
+        op_obj = op_node.op
+
+        dest = self._extract_destination(op_node)
+
+        # Extract the return value (first value if multiple)
+        value = None
+        if hasattr(op_obj, "values") and op_obj.values:
+            value = self._ssa_use_to_string(op_obj.values[0])
+
+        line = self._extract_line_number(op_node)
+
+        return ReturnOperation(
+            dialect="func",
+            name="return",
+            line=line,
+            dest=dest,
+            value=value,
         )
