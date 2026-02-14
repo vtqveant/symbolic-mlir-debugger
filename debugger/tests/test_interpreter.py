@@ -372,6 +372,37 @@ def test_scf_for_symbolic(symbolic_interpreter, parser, test_data_dir):
 
 
 @pytest.mark.interpreter
+def test_affine_for_iter_args(symbolic_interpreter, parser):
+    """Test symbolic execution of affine.for with iter_args."""
+    mlir_code = """
+module {
+  func.func @sum_first_n(%n: index) -> index {
+    %zero = arith.constant 0 : index
+    %result = affine.for %i = %zero to %n step %zero iter_args(%sum = %zero) -> index {
+      %new_sum = arith.addi %sum, %i : index
+      affine.yield %new_sum : index
+    }
+    return %result : index
+  }
+}
+"""
+    functions = parser.parse_string(mlir_code)
+    assert len(functions) == 1
+    func = functions["sum_first_n"]
+
+    states = symbolic_interpreter.execute_function(func)
+    completed_states = [s for s in states if s.get_value("return") is not None]
+    # Should have at least one terminal state
+    assert len(completed_states) >= 1
+
+    # Return value should be symbolic expression involving n
+    state = completed_states[0]
+    ret_value = state.get_value("return")
+    assert ret_value is not None
+    assert "n" in str(ret_value.expr) or isinstance(ret_value.expr, z3.IntNumRef)
+
+
+@pytest.mark.interpreter
 def test_concolic_max_function(concolic_interpreter, parser, test_data_dir):
     """Test concolic exploration of max function."""
     mlir_file = test_data_dir / "conditional_branch.mlir"
