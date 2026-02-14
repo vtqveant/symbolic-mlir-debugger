@@ -173,8 +173,7 @@ class ControlFlowExecutor:
                     concrete_val = state.concrete_values.get(arg_name)
                     if concrete_val is not None:
                         # Create MLIRValue with concrete value
-                        mlir_value = MLIRValue(name=arg_name, type=arg_type)
-                        # TODO: Set concrete value expression
+                        mlir_value = MLIRValue(name=arg_name, type=arg_type, concrete=concrete_val)
                     else:
                         raise ValueError(f"Cannot find value for argument {arg_name}")
 
