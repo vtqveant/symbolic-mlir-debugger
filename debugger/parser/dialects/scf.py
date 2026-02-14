@@ -49,6 +49,8 @@ class SCFIfOp(DialectOp):
     _syntax_ = [
         "scf.if {cond.ssa_id} {body.region}",
         "scf.if {cond.ssa_id} {body.region} else {elsebody.region}",
+        "scf.if {cond.ssa_id} -> {out_types.type_list_no_parens} {body.region}",
+        "scf.if {cond.ssa_id} -> {out_types.type_list_no_parens} {body.region} else {elsebody.region}",
         "scf.if {cond.ssa_id} -> ( {out_types.type_list_no_parens} ) {body.region}",
         "scf.if {cond.ssa_id} -> ( {out_types.type_list_no_parens} ) {body.region} else {elsebody.region}",
     ]
