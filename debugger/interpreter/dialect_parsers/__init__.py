@@ -50,7 +50,8 @@ def register_default_parsers(registry: DialectParserRegistry) -> None:
     registry.register_dialect("arith", ArithDialectParser())
     registry.register_dialect("memref", MemrefDialectParser())
     registry.register_dialect("tensor", TensorDialectParser())
-    registry.register_dialect("affine", AffineDialectParser())
+    affine_parser = AffineDialectParser()
+    registry.register_dialect("affine", affine_parser)
     cf_parser = CfDialectParser()
     registry.register_dialect("cf", cf_parser)
     scf_parser = ScfDialectParser()
@@ -77,6 +78,17 @@ def register_default_parsers(registry: DialectParserRegistry) -> None:
     registry.register_operation("SCFYield", scf_parser._parse_scf_yield_operation)
     registry.register_operation(
         "SCFConditionOp", scf_parser._parse_scf_condition_operation
+    )
+    # Register operation handlers for affine operations (since they lack _opname_)
+    registry.register_operation(
+        "AffineForOp", affine_parser._parse_affine_for_operation
+    )
+    registry.register_operation("AffineIfOp", affine_parser._parse_affine_if_operation)
+    registry.register_operation(
+        "AffineLoadOp", affine_parser._parse_affine_load_operation
+    )
+    registry.register_operation(
+        "AffineStoreOp", affine_parser._parse_affine_store_operation
     )
     # Register operation handlers for func operations (since they lack _opname_)
     registry.register_operation("CallOperation", func_parser._parse_call_operation)
