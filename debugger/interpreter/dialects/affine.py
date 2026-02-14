@@ -30,6 +30,8 @@ class AffineForHandler(OperationHandler):
         lb_expr = interpreter._get_operand_expr(op.lb, state)
         ub_expr = interpreter._get_operand_expr(op.ub, state)
         step_expr = interpreter._get_operand_expr(op.step, state) if op.step else None
+        iter_arg = op.iter_arg  # with %
+        init_expr = interpreter._get_operand_expr(op.init, state) if op.init else None
 
         # Default step is 1 if not provided
         if step_expr is None:
@@ -46,6 +48,7 @@ class AffineForHandler(OperationHandler):
             and step_concrete is not None
         ):
             # Concrete bounds, unroll loop
+            current_acc = init_expr
             i = 0
             max_iterations = 100  # safety bound
             while True:
@@ -67,26 +70,63 @@ class AffineForHandler(OperationHandler):
                     iv_name = iv[1:] if iv.startswith("%") else iv
                     iter_state.set_value(iv_name, z3.IntVal(iv_val), "index")
                     iter_state.set_concrete_value(iv_name, iv_val)
+                # Set iteration argument value
+                if iter_arg and init_expr is not None:
+                    iter_arg_name = (
+                        iter_arg[1:] if iter_arg.startswith("%") else iter_arg
+                    )
+                    if current_acc is not None:
+                        iter_state.set_value(
+                            iter_arg_name, current_acc, op.result_type or "index"
+                        )
 
                 # Execute body operations
+                yield_value = None
                 for body_op in op.body:
-                    interpreter._execute_operation(body_op, iter_state, func)
+                    if body_op.dialect == "affine" and body_op.name == "yield":
+                        # This is the yield operation - get its value
+                        if hasattr(body_op, "value") and body_op.value is not None:
+                            yield_expr = interpreter._get_operand_expr(
+                                body_op.value, iter_state
+                            )
+                            yield_value = yield_expr
+                        else:
+                            # yield with no value (loop without iter_args)
+                            yield_value = None
+                        # Don't execute further operations after yield
+                        break
+                    else:
+                        # Execute the operation in the temporary state
+                        interpreter._execute_operation(body_op, iter_state, func)
 
-                # Merge state changes? For affine.for without accumulator, just continue
-                # For now, discard iter_state after execution
+                if yield_value is None:
+                    # No yield found - error (but maybe loop without iter_args)
+                    # For loops without iter_args, we can continue
+                    if iter_arg is None:
+                        # No accumulator, just discard iter_state
+                        pass
+                    else:
+                        print("Error: Loop body missing affine.yield")
+                        break
+
+                current_acc = yield_value
                 i += 1
 
-            # affine.for doesn't produce a value (unless with iter_args)
-            # If dest exists, it's the result of the loop
-            if dest:
-                # TODO: Handle affine.for with iter_args and results
-                # For now, create symbolic result
+            # Set destination value if loop has result
+            if dest and current_acc is not None:
+                state.set_value(dest, current_acc, op.result_type or "index")
+            elif dest and iter_arg is None:
+                # Loop without iter_args but with destination? Should not happen
+                # Create symbolic result for compatibility
                 expr = z3.Int(f"affine_for_{dest}")
                 state.set_value(dest, expr, op.result_type or "index")
         else:
             # Symbolic bounds - assume loop runs 0 times
             print("Warning: Symbolic affine loop bounds, assuming zero iterations")
-            if dest:
+            if dest and init_expr is not None:
+                # Set destination to initial value
+                state.set_value(dest, init_expr, op.result_type or "index")
+            elif dest:
                 # Create symbolic result
                 expr = z3.Int(f"affine_for_{dest}")
                 state.set_value(dest, expr, op.result_type or "index")
@@ -156,6 +196,23 @@ class AffineStoreHandler(OperationHandler):
         return None
 
 
+class AffineYieldHandler(OperationHandler):
+    """Handler for affine.yield operation."""
+
+    def execute_symbolic(
+        self, op: Operation, state: SymbolicState, func: MLIRFunction, interpreter=None
+    ) -> None:
+        """Execute affine.yield symbolically."""
+        # Yield value from loop body - handled during loop unrolling
+        pass
+
+    def _try_concrete_evaluation(
+        self, op: Operation, state: SymbolicState, func: MLIRFunction
+    ) -> Any:
+        """affine.yield doesn't produce a concrete value."""
+        return None
+
+
 # Function to register all affine dialect handlers
 def register_handlers(registry) -> None:
     """Register affine dialect handlers with registry."""
@@ -163,3 +220,4 @@ def register_handlers(registry) -> None:
     registry.register("affine.if", AffineIfHandler())
     registry.register("affine.load", AffineLoadHandler())
     registry.register("affine.store", AffineStoreHandler())
+    registry.register("affine.yield", AffineYieldHandler())

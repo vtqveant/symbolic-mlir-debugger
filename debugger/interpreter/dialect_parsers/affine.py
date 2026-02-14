@@ -17,6 +17,7 @@ from ..operations import (
     LoopOperation,
     LoadOperation,
     StoreOperation,
+    YieldOperation,
 )
 
 
@@ -43,6 +44,8 @@ class AffineDialectParser(BaseDialectParser):
                 return self._parse_affine_load_operation(op_node)
             elif class_name == "AffineStoreOp":
                 return self._parse_affine_store_operation(op_node)
+            elif class_name == "AffineYieldOp":
+                return self._parse_affine_yield_operation(op_node)
             # Add other affine operations as needed
 
         # No handler found
@@ -66,6 +69,25 @@ class AffineDialectParser(BaseDialectParser):
         if hasattr(op_obj, "step") and op_obj.step is not None:
             step = self._ssa_use_to_string(op_obj.step)
 
+        # Handle iteration arguments if present
+        iter_arg = None
+        init = None
+        result_type = None
+        if hasattr(op_obj, "iter_args") and op_obj.iter_args:
+            # For now, assume single iteration argument (follows scf.for pattern)
+            if len(op_obj.iter_args) > 0:
+                iter_arg_assignment = op_obj.iter_args[0]
+                # iter_args is list of ArgumentAssignment objects with name/value fields
+                iter_arg = self._ssa_use_to_string(iter_arg_assignment.name)
+                init = self._ssa_use_to_string(iter_arg_assignment.value)
+
+        # Determine result type
+        if hasattr(op_obj, "iter_args_types") and op_obj.iter_args_types:
+            # Use first iter_arg type as result type
+            result_type = self._type_to_string(op_obj.iter_args_types[0])
+        elif hasattr(op_obj, "out_type") and op_obj.out_type:
+            result_type = self._type_to_string(op_obj.out_type)
+
         # Parse body region
         body_ops = []
         if hasattr(op_obj, "region") and op_obj.region is not None:
@@ -78,13 +100,13 @@ class AffineDialectParser(BaseDialectParser):
             name="for",
             line=line,
             dest=dest or "",
-            result_type=None,
+            result_type=result_type,
             index=index,
             lb=lb,
             ub=ub,
             step=step,
-            iter_arg=None,
-            init=None,
+            iter_arg=iter_arg,
+            init=init,
             body=body_ops,
             attributes={},
         )
@@ -200,6 +222,31 @@ class AffineDialectParser(BaseDialectParser):
             attributes={
                 "affine_index": index,
             },
+        )
+
+    def _parse_affine_yield_operation(
+        self, op_node: mast.Operation
+    ) -> Optional[YieldOperation]:
+        """Parse affine.yield operation."""
+        op_obj = op_node.op
+
+        dest = self._extract_destination(op_node)
+
+        # Extract yield value if present
+        value = None
+        if hasattr(op_obj, "results") and op_obj.results:
+            # Assume single result for now
+            value = self._ssa_use_to_string(op_obj.results[0])
+
+        line = self._extract_line_number(op_node)
+
+        return YieldOperation(
+            dialect="affine",
+            name="yield",
+            line=line,
+            dest=dest or "",
+            result_type=None,
+            value=value,
         )
 
     # Helper methods

@@ -4,7 +4,7 @@ import inspect
 import sys
 from .. import astnodes as mast
 from ..dialect import Dialect, DialectOp, is_op
-from typing import Union, Optional, List
+from typing import Union, Optional, List, Tuple
 from dataclasses import dataclass
 
 Literal = Union[mast.StringLiteral, float, int, bool]
@@ -27,12 +27,19 @@ class AffineForOp(DialectOp):
     region: mast.Region
     step: Optional[Union[mast.SsaId, int]] = None
     attributes: Optional[mast.Attribute] = None
+    iter_args: Optional[List[Tuple[mast.SsaId, mast.SsaId]]] = None
+    iter_args_types: Optional[List[mast.Type]] = None
+    out_type: Optional[mast.Type] = None
 
     _syntax_ = [
         "affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} {region.region}",
         "affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} step {step.symbol_or_const} {region.region}",
         "affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} {region.region} {attributes.attribute_dict}",
         "affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} step {step.symbol_or_const} {region.region} {attributes.attribute_dict}",
+        "affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} step {step.symbol_or_const} iter_args ( {iter_args.argument_assignment_list_no_parens} ) -> {iter_args_types.type_list_no_parens} {region.region}",
+        "affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} step {step.symbol_or_const} iter_args ( {iter_args.argument_assignment_list_no_parens} ) -> {iter_args_types.type_list_no_parens} : {out_type.type} {region.region}",
+        "affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} step {step.symbol_or_const} iter_args ( {iter_args.argument_assignment_list_no_parens} ) -> ( {iter_args_types.type_list_no_parens} ) {region.region}",
+        "affine.for {index.ssa_id} = {begin.symbol_or_const} to {end.symbol_or_const} step {step.symbol_or_const} iter_args ( {iter_args.argument_assignment_list_no_parens} ) -> ( {iter_args_types.type_list_no_parens} ) : {out_type.type} {region.region}",
     ]
     _opname_ = "affine.for"
 
@@ -121,6 +128,17 @@ class AffineDmaWaitOperation(DialectOp):
 
     _syntax_ = "affine.dma_wait {tag.ssa_use} [ {tag_index.multi_dim_affine_expr_no_parens} ] , {size.ssa_use} : {type.memref_type}"
     _opname_ = "affine.dma_wait"
+
+
+@dataclass
+class AffineYieldOp(DialectOp):
+    results: Optional[List[mast.SsaId]] = None
+    result_types: Optional[List[mast.Type]] = None
+    _syntax_ = [
+        "affine.yield",
+        "affine.yield {results.ssa_id_list} : {result_types.type_list_no_parens}",
+    ]
+    _opname_ = "affine.yield"
 
 
 # Inspect current module to get all classes defined above
