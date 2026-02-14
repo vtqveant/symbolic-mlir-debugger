@@ -372,7 +372,7 @@ class ExecutionStepper:
             "line": line,
             "column": column,
             "block": current_block,
-            "operation": current_op,
+            "operation": current_op.full_name if current_op else None,
             "operation_index": current_op_index,
         }
 
