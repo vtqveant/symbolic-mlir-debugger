@@ -1,5 +1,4 @@
-"""Classes containing MLIR AST node types, fields, and conversion back to
-MLIR."""
+"""Classes containing MLIR AST node types, fields, and conversion back to MLIR."""
 
 from enum import Enum, auto
 from typing import Any, List, Union, Optional, ClassVar
@@ -878,9 +877,6 @@ class MLIRFile(Node):
 # Types of affine expressions
 # Contents of single/multi-dimensional (semi-)affine expressions
 class AffineExpr(Node):
-    # TODO: Inserts a lot of "AffineParens" that  leading to a generated with high
-    # SNR. Should solve this by strategically placing the parens so that the
-    # precedence isn't violated.
 
     @property
     def precedence(self) -> int:
@@ -1132,9 +1128,7 @@ class AffineSub(AffineBinaryOp):
 
 class AffineMul(AffineBinaryOp):
     _op_ = "*"
-    _precedence_: ClassVar[int] = (
-        70  # Multiplication has higher precedence than addition
-    )
+    _precedence_: ClassVar[int] = 70  # Multiplication has higher precedence than addition
 
     @property
     def precedence(self) -> int:
