@@ -2,7 +2,7 @@
 """
 Control Flow dialect execution handlers.
 
-Handles operations: cond_br, br, br_args, etc.
+Handles operations: cond_br, br, etc. Note: cf.br supports arguments via cf.br ^block(%arg : type) syntax.
 """
 
 from typing import Any
@@ -85,26 +85,8 @@ class BrHandler(OperationHandler):
         return None
 
 
-class BrArgsHandler(OperationHandler):
-    """Handler for cf.br_args operation (branch with arguments)."""
-
-    def execute_symbolic(
-        self, op: Operation, state: SymbolicState, func: MLIRFunction, interpreter=None
-    ) -> None:
-        """Execute branch with arguments symbolically."""
-        # For now, treat same as unconditional branch
-        # TODO: Handle argument passing between blocks
-        state.pc = None  # Will be set by interpreter based on operation dict
-
-    def _try_concrete_evaluation(
-        self, op: Operation, state: SymbolicState, func: MLIRFunction
-    ) -> Any:
-        return None
-
-
 # Function to register all cf dialect handlers
 def register_handlers(registry) -> None:
     """Register cf dialect handlers with registry."""
     registry.register("cf.cond_br", CondBrHandler())
     registry.register("cf.br", BrHandler())
-    registry.register("cf.br_args", BrArgsHandler())
