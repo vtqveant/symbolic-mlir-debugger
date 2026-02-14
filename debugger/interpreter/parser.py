@@ -5,7 +5,7 @@ MLIR parser using pymlir as backend.
 
 import sys
 import os
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List, Tuple
 
 # Add project root to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -58,6 +58,12 @@ class MLIRParser:
         # Set parser context for all dialect parsers to enable region parsing
         for parser in self.dialect_parser_registry.parsers.values():
             parser.parser_context = self
+        # Type-annotated instance variables
+        self.operation_positions: List[Tuple[int, int]] = []
+        self._op_pos_index: int = 0
+        self.functions: Dict[str, MLIRFunction] = {}
+        self.current_block_label: Optional[str] = None
+        self.current_func: Optional[MLIRFunction] = None
 
     def _extract_operation_positions(self, mlir_code: str) -> None:
         """Extract line and column positions for operations from raw parse tree.
@@ -124,14 +130,14 @@ class MLIRParser:
         if op.location is not None:
             # Check for FileLineColLoc type
             if hasattr(op.location, "line"):
-                return op.location.line
+                return op.location.line  # type: ignore
 
             # Check for StrLocation type (e.g., "loc(unknown)")
             # Try to parse line number from string if possible
             if hasattr(op.location, "value"):
                 import re
 
-                match = re.search(r"loc\([^:]*:(\d+):", op.location.value)
+                match = re.search(r"loc\([^:]*:(\d+):", op.location.value)  # type: ignore
                 if match:
                     try:
                         return int(match.group(1))
@@ -298,7 +304,7 @@ class MLIRParser:
         # Extract operation positions from raw parse tree for line tracking
         self._extract_operation_positions(mlir_code)
         ast = parser.parse_string(mlir_code)
-        return self._parse_ast(ast)
+        return self._parse_ast(ast)  # type: ignore
 
     def _parse_ast(self, ast: mast.MLIRFile) -> Dict[str, MLIRFunction]:
         """Parse pymlir AST into MLIRFunction objects."""
@@ -327,12 +333,12 @@ class MLIRParser:
         func = func_op.op  # mast.Function
 
         # Extract function name
-        func_name = func.name.value if hasattr(func.name, "value") else str(func.name)
+        func_name = func.name.value if hasattr(func.name, "value") else str(func.name)  # type: ignore
 
         # Extract arguments
         args = []
-        if func.args:
-            for arg in func.args:
+        if func.args:  # type: ignore
+            for arg in func.args:  # type: ignore
                 arg_name = (
                     arg.name.value if hasattr(arg.name, "value") else str(arg.name)
                 )
@@ -340,15 +346,15 @@ class MLIRParser:
                 args.append((arg_name, arg_type))
 
         # Extract return type
-        return_type = self._type_to_string(func.result_types)
+        return_type = self._type_to_string(func.result_types)  # type: ignore
 
         # Create MLIRFunction
         mlir_func = MLIRFunction(func_name, args, return_type)
 
         # Parse function body (region)
-        if func.region and func.region.body:
+        if func.region and func.region.body:  # type: ignore
             # Function region has blocks (usually one)
-            for i, block in enumerate(func.region.body):
+            for i, block in enumerate(func.region.body):  # type: ignore
                 self._parse_block(block, mlir_func, block_index=i)
             # Compute exit blocks after all edges added
             mlir_func.cfg.compute_exits()
@@ -430,9 +436,9 @@ class MLIRParser:
 
         # Extract destination if possible
         dest = None
-        if hasattr(op_obj, "result_list") and op_obj.result_list:
+        if hasattr(op_obj, "result_list") and op_obj.result_list:  # type: ignore
             # Assume single result
-            result_item = op_obj.result_list[0]
+            result_item = op_obj.result_list[0]  # type: ignore
             if hasattr(result_item, "value") and hasattr(result_item.value, "value"):
                 dest = result_item.value.value
 
@@ -444,10 +450,10 @@ class MLIRParser:
             and hasattr(op_obj, "namespace")
             and hasattr(op_obj, "name")
         ):
-            dialect = op_obj.namespace
-            name = op_obj.name
+            dialect = op_obj.namespace  # type: ignore
+            name = op_obj.name  # type: ignore
         elif class_name == "GenericOperation" and hasattr(op_obj, "name"):
-            name_obj = op_obj.name
+            name_obj = op_obj.name  # type: ignore
             if hasattr(name_obj, "value"):
                 full_name = name_obj.value
             else:
@@ -460,13 +466,13 @@ class MLIRParser:
 
         # Parse attributes if present
         attributes = {}
-        if hasattr(op_obj, "attributes") and op_obj.attributes is not None:
-            attributes = self._parse_attribute_dict(op_obj.attributes)
+        if hasattr(op_obj, "attributes") and op_obj.attributes is not None:  # type: ignore
+            attributes = self._parse_attribute_dict(op_obj.attributes)  # type: ignore
 
         # Extract result type
         result_type = None
         if hasattr(op_obj, "type"):
-            result_type = self._type_to_string(op_obj.type)
+            result_type = self._type_to_string(op_obj.type)  # type: ignore
 
         line = self._extract_line_number(op)
 
@@ -483,16 +489,13 @@ class MLIRParser:
         """Convert a type AST node to string representation."""
         if isinstance(type_node, mast.SignlessIntegerType):
             return f"i{type_node.width}"
+        elif isinstance(type_node, mast.SignedIntegerType):
+            return f"si{type_node.width}"
+        elif isinstance(type_node, mast.UnsignedIntegerType):
+            return f"ui{type_node.width}"
         elif isinstance(type_node, mast.IntegerType):
-            # Signed/unsigned integer type
-            prefix = (
-                "i"
-                if type_node.signedness == "signless"
-                else "si"
-                if type_node.signedness == "signed"
-                else "ui"
-            )
-            return f"{prefix}{type_node.width}"
+            # Fallback for generic IntegerType (should not happen)
+            return f"i{type_node.width}"
         elif isinstance(type_node, mast.IndexType):
             return "index"
         elif isinstance(type_node, mast.FloatType):
