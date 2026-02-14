@@ -163,22 +163,8 @@ module {
   }
 }
 """
-    functions = None
-    try:
-        functions = parser.parse_string(mlir_code)
-    except lark.exceptions.UnexpectedCharacters:
-        pytest.skip("cf.cond_br parsing failed (known limitation)")
-    if not functions:
-        pytest.skip("cf.cond_br parsing failed (known limitation)")
-
+    functions = parser.parse_string(mlir_code)
     func = functions["nested"]
-    # Skip if block structure is malformed due to pymlir limitations
-    # Expected: entry block + 4 labeled blocks = 5 blocks
-    if len(func.basic_blocks) != 5:
-        pytest.skip(
-            f"Block structure malformed due to pymlir limitations: got {len(func.basic_blocks)} blocks, expected 5"
-        )
-
     states = symbolic_interpreter.execute_function(func)
 
     # Should have 3 terminal states (3 leaf paths)
