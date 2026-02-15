@@ -21,17 +21,15 @@ This command generates a .vsix file in the current directory (e.g., my-extension
 
 Configuration:
 
-The extension includes automatic DAP server path detection. It searches for `dap_server.py` in common locations including:
-- `debugger/dap_server.py` (relative to workspace)
-- `symbolic_mlir_debugger/dap_server.py` (relative to workspace)
+DAP Server Path: Extension automatically detects `dap_server.py` in:
+- `debugger/dap_server.py` (workspace relative)
+- `symbolic_mlir_debugger/dap_server.py` (workspace relative)
 - Parent directories (up to 10 levels)
 
-If auto-detection fails, you can manually configure the path in VS Code settings:
+Manual override:
 ```json
 {
   "mlir-debug.dapServerPath": "custom/path/to/dap_server.py",
   "mlir-debug.pythonPath": "python3"
 }
-```
-
-See DAP_SERVER_DETECTION.md for detailed information. 
+``` 
