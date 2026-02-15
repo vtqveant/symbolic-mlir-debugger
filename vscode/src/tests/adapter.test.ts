@@ -8,9 +8,9 @@ import assert = require('assert');
 import * as Path from 'path';
 import {DebugClient} from '@vscode/debugadapter-testsupport';
 import {DebugProtocol} from '@vscode/debugprotocol';
+import { suite, test, setup, teardown } from 'mocha';
 
 suite('Node Debug Adapter', () => {
-
 	const DEBUG_ADAPTER = './out/debugAdapter.js';
 
 	const PROJECT_ROOT = Path.join(__dirname, '../../');
@@ -26,8 +26,7 @@ suite('Node Debug Adapter', () => {
 
 	teardown( () => dc.stop() );
 
-
-	suite('basic', () => {
+		suite('basic', () => {
 
 		test('unknown request should produce error', done => {
 			dc.send('illegal_request').then(() => {

@@ -41,7 +41,7 @@
     "publish": "vsce publish",
     "publish-pre-release": "vsce publish --pre-release",
     "vscode:prepublish": "rimraf dist && npm run -S esbuild-base -- --minify && npm run -S esbuild-web -- --minify",
-    "test": "npm run typecheck"
+	"test": "mocha src/tests/**/*.ts --require ts-node/register"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",

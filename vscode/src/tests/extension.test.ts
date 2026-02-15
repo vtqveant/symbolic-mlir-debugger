@@ -7,11 +7,10 @@
 import assert = require('assert');
 import * as Path from 'path';
 import * as fs from 'fs';
-import { existsSync } from 'fs';
-import { resolveDapServerPath, defaultPaths } from '../pathResolver';
+import { resolveDapServerPath } from '../pathResolver';
+import { suite, test, setup } from 'mocha';
 
 suite('DAP Server Path Resolution', () => {
-
 	const TEST_FIXTURE_ROOT = Path.join(__dirname, '../../tests/fixtures/dap_server_resolution/');
 
 	setup(() => {

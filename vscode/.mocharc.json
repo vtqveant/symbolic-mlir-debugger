@@ -1,5 +1,11 @@
 {
 	"require": "ts-node/register",
+	"ts-node": {
+		"compilerOptions": {
+			"module": "commonjs",
+			"types": ["mocha", "node"]
+		}
+	},
 	"watch-files": ["src/tests/**/*.ts"],
 	"watch-ignore": ["node_modules", "src/tests/fixtures/**/*"],
 	"reporter": "spec",
