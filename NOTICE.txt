@@ -8,11 +8,6 @@ This project includes code derived from third-party sources:
    - Substantially modified and integrated into the debugger/parser directory
    - Original license preserved in LICENSE-PYMLIR.txt
 
-2. VS Code Debug Adapter Template (MIT License)
-   - Copyright (c) Microsoft Corporation
-   - Used as basis for vscode/ extension components
-   - Original license preserved in vscode/LICENSE.txt
-
 The main project code is licensed under MIT License (see LICENSE file).
 
 Third-party dependencies are licensed under their respective open-source licenses
@@ -20,5 +15,4 @@ Third-party dependencies are licensed under their respective open-source license
 
 Attribution Requirements:
 - For pymlir-derived code: retain BSD 3-Clause notice
-- For VS Code template code: retain MIT notice
 - For original code: MIT license applies

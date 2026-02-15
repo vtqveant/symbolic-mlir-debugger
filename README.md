@@ -1,20 +1,23 @@
 # Symbolic MLIR Debugger
 
 <div align="center">
-  <img src="vscode/images/mlir-debug-icon.jpg" alt="MLIR Debug Logo" width="200" height="200">
+  <img src="mlir-debug-icon.jpg" alt="MLIR Debug Logo" width="200" height="200">
 </div>
 
-A symbolic and concolic execution engine for MLIR (Multi-Level Intermediate Representation) programs with full Debug Adapter Protocol (DAP) support for Visual Studio Code integration.
+A symbolic and concolic execution engine for MLIR (Multi-Level Intermediate Representation) programs 
+with Debug Adapter Protocol (DAP) support for automated human-free debugging.
 
 ## Overview
 
-The Symbolic MLIR Debugger enables advanced debugging and analysis of MLIR programs through symbolic execution. It transforms MLIR operations into SMT constraints using the Z3 solver, allowing for path exploration, constraint solving, and automated test generation.
+The Symbolic MLIR Debugger enables advanced debugging and analysis of MLIR programs through symbolic execution. 
+It transforms MLIR operations into SMT constraints using the Z3 solver, allowing for path exploration, 
+constraint solving, and automated test generation.
 
 ### Key Features
 
 - **Symbolic & Concolic Execution**: Execute MLIR programs with symbolic inputs, exploring multiple execution paths simultaneously
 - **SMT Integration**: Leverages Z3 theorem prover for constraint solving and path feasibility analysis
-- **VS Code Integration**: Full DAP implementation with debugging UI, breakpoints, variable inspection, and step-through execution
+- **DAP Integration**: Extended DAP implementation for debugging automation with breakpoints, variable inspection, and step-through execution
 - **Modular Architecture**: Extensible dialect support, memory models, and hardware descriptions
 - **Path Exploration**: Automatically discovers and analyzes all feasible execution paths
 - **Test Generation**: Generates concrete test cases covering different execution paths
@@ -23,7 +26,7 @@ The Symbolic MLIR Debugger enables advanced debugging and analysis of MLIR progr
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    VS Code Extension                        │
+│                       Coding Agent                          │
 │                  (Debug Adapter Protocol)                   │
 └────────────────────────────┬────────────────────────────────┘
                              │
@@ -72,7 +75,6 @@ Generate comprehensive test suites by:
 ### Prerequisites
 - Python 3.8+
 - Z3 solver (`pip install z3-solver`)
-- VS Code (for debugging interface)
 
 ### Installation
 
@@ -84,12 +86,6 @@ cd symbolic-mlir-debugger
 # Install Python dependencies
 cd debugger
 pip install -r requirements.txt
-
-# Install VS Code extension dependencies
-cd ../vscode
-npm install
-
-# Note: See "Building and Installing the VS Code Extension" section below for build instructions
 ```
 
 ### Running Tests
@@ -100,58 +96,6 @@ python -m pytest                         # Run all tests
 python -m pytest tests/test_parser.py    # Run parser tests
 python -m pytest -m interpreter          # Run interpreter tests
 ```
-
-### Building and Installing the VS Code Extension
-
-The VS Code extension provides a complete debugging interface for MLIR programs. Follow these steps to build and install it:
-
-#### Building the Extension
-
-```bash
-cd vscode
-
-# Install dependencies
-npm install
-
-# Build the extension (compiles TypeScript to JavaScript)
-npm run build
-
-# Package the extension into a .vsix file
-npm run package  # or: vsce package --no-yarn
-```
-
-This generates a `.vsix` file (e.g., `mlir-debug-0.1.0.vsix`) that can be installed in VS Code.
-
-#### Installing the Extension
-
-**Option 1: Install from VSIX file**
-1. In VS Code, go to Extensions (Ctrl+Shift+X)
-2. Click the "..." menu and select "Install from VSIX..."
-3. Navigate to the generated `.vsix` file and install it
-
-**Option 2: Install for development**
-```bash
-# From the vscode/ directory
-npm run watch  # Starts TypeScript compilation in watch mode
-```
-
-Then in VSCode:
-1. First install the [official MLIR extension](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-mlir) for MLIR filetype and language server support.
-2. Configure MLIR debugger extension and specify DAP server location.
-![VS Code Extension Settings](vscode_settings.png)
-
-### Using the VS Code Extension
-
-1. Open an MLIR file (`.mlir` extension) in VS Code
-2. Set breakpoints by clicking in the gutter next to line numbers
-3. Start debugging with F5 or click the debug icon in the activity bar
-4. Use the debug toolbar to:
-   - Step through execution (F10)
-   - Step into functions (F11)
-   - Continue execution (F5)
-   - Restart debugging (Ctrl+Shift+F5)
-5. Inspect variables in the debug sidebar
-6. View the call stack and navigate between stack frames
 
 ## Extending the Debugger
 
@@ -170,8 +114,10 @@ Override memory operations in `debugger/interpreter/memory.py` to implement:
 ### Hardware-Specific Extensions
 Implement backend-specific operations for:
 - GPU/accelerator memory operations
+- Complex SoC data paths
+- Intra-core ILP synchronization constraints
 - Vector/SIMD instructions
-- Custom arithmetic types
+- Custom arithmetic types for quantized and mixed-precision computation
 
 ## License
 
@@ -179,14 +125,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Third-Party Components:**
 - pymlir parser (BSD 3-Clause License) - see [LICENSE-PYMLIR.txt](LICENSE-PYMLIR.txt)
-- VS Code Debug Adapter Template (MIT License) - see [vscode/LICENSE.txt](vscode/LICENSE.txt)
 
 Full attribution details in [NOTICE.txt](NOTICE.txt).
 
 ## Acknowledgments
 
 - Based on pymlir from ETH Zurich's Scalable Parallel Computing Lab
-- Uses VS Code Debug Adapter Protocol template
+- Relies on Debug Adapter Protocol from Microsoft
 - Built with Z3 theorem prover from Microsoft Research
 - MLIR community for the intermediate representation framework
 
