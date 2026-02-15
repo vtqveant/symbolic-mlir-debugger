@@ -35,9 +35,9 @@ class CfDialectParser(BaseDialectParser):
             class_name = op_obj.__class__.__name__
 
             # Map operation class names to parser methods
-            if class_name == "BrOperation":
+            if class_name == "CfBrOp":
                 return self._parse_br_operation(op_node)
-            elif class_name == "CondBrOperation":
+            elif class_name == "CfCondBrOp":
                 return self._parse_cond_br_operation(op_node)
             # Add other cf operations as needed
 

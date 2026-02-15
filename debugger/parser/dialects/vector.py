@@ -14,7 +14,7 @@ SsaUse = Union[mast.SsaId, Literal]
 
 # Vector operations
 @dataclass
-class BitcastOperation(DialectOp):
+class VectorBitcastOp(DialectOp):
     source: SsaUse
     source_type: mast.Type
     result_type: mast.Type
@@ -25,7 +25,7 @@ class BitcastOperation(DialectOp):
 
 
 @dataclass
-class BroadcastOperation(DialectOp):
+class VectorBroadcastOp(DialectOp):
     source: SsaUse
     result_type: mast.Type
     _syntax_ = "vector.broadcast {source.ssa_use} : {result_type.type}"
@@ -33,7 +33,7 @@ class BroadcastOperation(DialectOp):
 
 
 @dataclass
-class CompressStoreOperation(DialectOp):
+class VectorCompressStoreOp(DialectOp):
     base: SsaUse
     indices: List[SsaUse]
     mask: SsaUse
@@ -46,7 +46,7 @@ class CompressStoreOperation(DialectOp):
 
 
 @dataclass
-class ConstantMaskOperation(DialectOp):
+class VectorConstantMaskOp(DialectOp):
     mask_dimensions: List[int]
     result_type: mast.Type
     _syntax_ = "vector.constant_mask {mask_dimensions.int_list} : {result_type.type}"
@@ -54,7 +54,7 @@ class ConstantMaskOperation(DialectOp):
 
 
 @dataclass
-class ContractOperation(DialectOp):
+class VectorContractOp(DialectOp):
     lhs: SsaUse
     rhs: SsaUse
     acc: SsaUse
@@ -69,7 +69,7 @@ class ContractOperation(DialectOp):
 
 
 @dataclass
-class CreateMaskOperation(DialectOp):
+class VectorCreateMaskOp(DialectOp):
     operands: List[SsaUse]
     result_type: mast.Type
     _syntax_ = "vector.create_mask {operands.ssa_use_list} : {result_type.type}"
@@ -77,7 +77,7 @@ class CreateMaskOperation(DialectOp):
 
 
 @dataclass
-class DeinterleaveOperation(DialectOp):
+class VectorDeinterleaveOp(DialectOp):
     source: SsaUse
     result_type: mast.Type
     _syntax_ = "vector.deinterleave {source.ssa_use} : {result_type.type}"
@@ -85,7 +85,7 @@ class DeinterleaveOperation(DialectOp):
 
 
 @dataclass
-class ExpandLoadOperation(DialectOp):
+class VectorExpandLoadOp(DialectOp):
     base: SsaUse
     indices: List[SsaUse]
     mask: SsaUse
@@ -99,7 +99,7 @@ class ExpandLoadOperation(DialectOp):
 
 
 @dataclass
-class ExtractOperation(DialectOp):
+class VectorExtractOp(DialectOp):
     vector: SsaUse
     position: List[SsaUse]
     vector_type: mast.Type
@@ -109,7 +109,7 @@ class ExtractOperation(DialectOp):
 
 
 @dataclass
-class ExtractStridedSliceOperation(DialectOp):
+class VectorExtractStridedSliceOp(DialectOp):
     vector: SsaUse
     offsets: List[SsaUse]
     sizes: List[SsaUse]
@@ -121,7 +121,7 @@ class ExtractStridedSliceOperation(DialectOp):
 
 
 @dataclass
-class FmaOperation(DialectOp):
+class VectorFmaOp(DialectOp):
     lhs: SsaUse
     rhs: SsaUse
     acc: SsaUse
@@ -134,7 +134,7 @@ class FmaOperation(DialectOp):
 
 
 @dataclass
-class FromElementsOperation(DialectOp):
+class VectorFromElementsOp(DialectOp):
     elements: List[SsaUse]
     result_type: mast.Type
     _syntax_ = "vector.from_elements {elements.ssa_use_list} : {result_type.type}"
@@ -142,7 +142,7 @@ class FromElementsOperation(DialectOp):
 
 
 @dataclass
-class GatherOperation(DialectOp):
+class VectorGatherOp(DialectOp):
     base: SsaUse
     indices: List[SsaUse]
     index_vec: SsaUse
@@ -158,7 +158,7 @@ class GatherOperation(DialectOp):
 
 
 @dataclass
-class InsertOperation(DialectOp):
+class VectorInsertOp(DialectOp):
     source: SsaUse
     dest: SsaUse
     position: List[SsaUse]
@@ -170,7 +170,7 @@ class InsertOperation(DialectOp):
 
 
 @dataclass
-class InsertStridedSliceOperation(DialectOp):
+class VectorInsertStridedSliceOp(DialectOp):
     source: SsaUse
     dest: SsaUse
     offsets: List[SsaUse]
@@ -183,7 +183,7 @@ class InsertStridedSliceOperation(DialectOp):
 
 
 @dataclass
-class InterleaveOperation(DialectOp):
+class VectorInterleaveOp(DialectOp):
     lhs: SsaUse
     rhs: SsaUse
     result_type: mast.Type

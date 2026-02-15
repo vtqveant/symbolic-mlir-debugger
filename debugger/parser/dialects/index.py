@@ -13,61 +13,61 @@ SsaUse = Union[mast.SsaId, Literal]
 
 
 # Binary Operations
-class AddOperation(BinaryOperation):
+class IndexAddOp(BinaryOperation):
     _opname_ = "index.add"
 
 
-class SubOperation(BinaryOperation):
+class IndexSubOp(BinaryOperation):
     _opname_ = "index.sub"
 
 
-class MulOperation(BinaryOperation):
+class IndexMulOp(BinaryOperation):
     _opname_ = "index.mul"
 
 
-class DivSOperation(BinaryOperation):
+class IndexDivSOp(BinaryOperation):
     _opname_ = "index.divs"
 
 
-class DivUOperation(BinaryOperation):
+class IndexDivUOp(BinaryOperation):
     _opname_ = "index.divu"
 
 
-class RemSOperation(BinaryOperation):
+class IndexRemSOp(BinaryOperation):
     _opname_ = "index.rems"
 
 
-class RemUOperation(BinaryOperation):
+class IndexRemUOp(BinaryOperation):
     _opname_ = "index.remu"
 
 
-class AndOperation(BinaryOperation):
+class IndexAndOp(BinaryOperation):
     _opname_ = "index.and"
 
 
-class OrOperation(BinaryOperation):
+class IndexOrOp(BinaryOperation):
     _opname_ = "index.or"
 
 
-class XorOperation(BinaryOperation):
+class IndexXorOp(BinaryOperation):
     _opname_ = "index.xor"
 
 
-class ShiftLeftOperation(BinaryOperation):
+class IndexShiftLeftOp(BinaryOperation):
     _opname_ = "index.shl"
 
 
-class ShiftRightSignedOperation(BinaryOperation):
+class IndexShiftRightSignedOp(BinaryOperation):
     _opname_ = "index.shrs"
 
 
-class ShiftRightUnsignedOperation(BinaryOperation):
+class IndexShiftRightUnsignedOp(BinaryOperation):
     _opname_ = "index.shru"
 
 
 # Comparison Operation
 @dataclass
-class CmpOperation(DialectOp):
+class IndexCmpOp(DialectOp):
     predicate: str
     operand_a: mast.SsaId
     operand_b: mast.SsaId
@@ -78,7 +78,7 @@ class CmpOperation(DialectOp):
 
 # Constant Operations
 @dataclass
-class ConstantOperation(DialectOp):
+class IndexConstantOp(DialectOp):
     value: Literal
     type: mast.Type
     _syntax_ = "index.constant {value.constant_literal} : {type.type}"
@@ -86,7 +86,7 @@ class ConstantOperation(DialectOp):
 
 
 @dataclass
-class BoolConstantOperation(DialectOp):
+class IndexBoolConstantOp(DialectOp):
     value: bool
     type: mast.Type
     _syntax_ = "index.bool.constant {value.constant_literal} : {type.type}"
@@ -95,7 +95,7 @@ class BoolConstantOperation(DialectOp):
 
 # Cast Operations
 @dataclass
-class CastSOperation(DialectOp):
+class IndexCastSOp(DialectOp):
     arg: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
@@ -104,7 +104,7 @@ class CastSOperation(DialectOp):
 
 
 @dataclass
-class CastUOperation(DialectOp):
+class IndexCastUOp(DialectOp):
     arg: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
@@ -113,37 +113,37 @@ class CastUOperation(DialectOp):
 
 
 # Additional binary operations
-class CeilDivSOperation(BinaryOperation):
+class IndexCeilDivSOp(BinaryOperation):
     _opname_ = "index.ceildivs"
 
 
-class CeilDivUOperation(BinaryOperation):
+class IndexCeilDivUOp(BinaryOperation):
     _opname_ = "index.ceildivu"
 
 
-class FloorDivSOperation(BinaryOperation):
+class IndexFloorDivSOp(BinaryOperation):
     _opname_ = "index.floordivs"
 
 
-class MaxSOperation(BinaryOperation):
+class IndexMaxSOp(BinaryOperation):
     _opname_ = "index.maxs"
 
 
-class MaxUOperation(BinaryOperation):
+class IndexMaxUOp(BinaryOperation):
     _opname_ = "index.maxu"
 
 
-class MinSOperation(BinaryOperation):
+class IndexMinSOp(BinaryOperation):
     _opname_ = "index.mins"
 
 
-class MinUOperation(BinaryOperation):
+class IndexMinUOp(BinaryOperation):
     _opname_ = "index.minu"
 
 
 # SizeOf operation (unary)
 @dataclass
-class SizeOfOperation(DialectOp):
+class IndexSizeOfOp(DialectOp):
     arg: SsaUse
     type: mast.Type
     _syntax_ = "index.sizeof {arg.ssa_use} : {type.type}"

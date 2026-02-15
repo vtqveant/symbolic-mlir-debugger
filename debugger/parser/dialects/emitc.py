@@ -14,7 +14,7 @@ SsaUse = Union[mast.SsaId, Literal]
 
 # EmitC operations
 @dataclass
-class AddOperation(DialectOp):
+class EmitCAddOp(DialectOp):
     lhs: SsaUse
     rhs: SsaUse
     type: mast.Type
@@ -23,7 +23,7 @@ class AddOperation(DialectOp):
 
 
 @dataclass
-class AddressOfOperation(DialectOp):
+class EmitCAddressOfOp(DialectOp):
     operand: SsaUse
     type: mast.Type
     _syntax_ = "emitc.address_of {operand.ssa_use} : {type.type}"
@@ -31,7 +31,7 @@ class AddressOfOperation(DialectOp):
 
 
 @dataclass
-class ApplyOperation(DialectOp):
+class EmitCApplyOp(DialectOp):
     callee: str
     args: List[SsaUse]
     type: mast.Type
@@ -40,7 +40,7 @@ class ApplyOperation(DialectOp):
 
 
 @dataclass
-class AssignOperation(DialectOp):
+class EmitCAssignOp(DialectOp):
     lhs: SsaUse
     rhs: SsaUse
     type: mast.Type
@@ -49,7 +49,7 @@ class AssignOperation(DialectOp):
 
 
 @dataclass
-class BitwiseAndOperation(DialectOp):
+class EmitCBitwiseAndOp(DialectOp):
     lhs: SsaUse
     rhs: SsaUse
     type: mast.Type
@@ -58,7 +58,7 @@ class BitwiseAndOperation(DialectOp):
 
 
 @dataclass
-class BitwiseLeftShiftOperation(DialectOp):
+class EmitCBitwiseLeftShiftOp(DialectOp):
     lhs: SsaUse
     rhs: SsaUse
     type: mast.Type
@@ -67,7 +67,7 @@ class BitwiseLeftShiftOperation(DialectOp):
 
 
 @dataclass
-class BitwiseNotOperation(DialectOp):
+class EmitCBitwiseNotOp(DialectOp):
     operand: SsaUse
     type: mast.Type
     _syntax_ = "emitc.bitwise_not {operand.ssa_use} : {type.type}"
@@ -75,7 +75,7 @@ class BitwiseNotOperation(DialectOp):
 
 
 @dataclass
-class BitwiseOrOperation(DialectOp):
+class EmitCBitwiseOrOp(DialectOp):
     lhs: SsaUse
     rhs: SsaUse
     type: mast.Type
@@ -84,7 +84,7 @@ class BitwiseOrOperation(DialectOp):
 
 
 @dataclass
-class BitwiseRightShiftOperation(DialectOp):
+class EmitCBitwiseRightShiftOp(DialectOp):
     lhs: SsaUse
     rhs: SsaUse
     type: mast.Type
@@ -93,7 +93,7 @@ class BitwiseRightShiftOperation(DialectOp):
 
 
 @dataclass
-class BitwiseXorOperation(DialectOp):
+class EmitCBitwiseXorOp(DialectOp):
     lhs: SsaUse
     rhs: SsaUse
     type: mast.Type
@@ -102,7 +102,7 @@ class BitwiseXorOperation(DialectOp):
 
 
 @dataclass
-class CallOperation(DialectOp):
+class EmitCCallOp(DialectOp):
     callee: str
     args: List[SsaUse]
     type: mast.Type
@@ -111,7 +111,7 @@ class CallOperation(DialectOp):
 
 
 @dataclass
-class CallOpaqueOperation(DialectOp):
+class EmitCCallOpaqueOp(DialectOp):
     callee: str
     args: List[SsaUse]
     type: mast.Type
@@ -120,7 +120,7 @@ class CallOpaqueOperation(DialectOp):
 
 
 @dataclass
-class CastOperation(DialectOp):
+class EmitCCastOp(DialectOp):
     operand: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
@@ -129,14 +129,14 @@ class CastOperation(DialectOp):
 
 
 @dataclass
-class ClassOperation(DialectOp):
+class EmitCClassOp(DialectOp):
     name: str
     _syntax_ = "emitc.class {name.string}"
     _opname_ = "emitc.class"
 
 
 @dataclass
-class CmpOperation(DialectOp):
+class EmitCCmpOp(DialectOp):
     predicate: str
     lhs: SsaUse
     rhs: SsaUse
@@ -148,7 +148,7 @@ class CmpOperation(DialectOp):
 
 
 @dataclass
-class ConditionalOperation(DialectOp):
+class EmitCConditionalOp(DialectOp):
     condition: SsaUse
     true_value: SsaUse
     false_value: SsaUse
@@ -158,7 +158,7 @@ class ConditionalOperation(DialectOp):
 
 
 @dataclass
-class ConstantOperation(DialectOp):
+class EmitCConstantOp(DialectOp):
     value: str
     type: mast.Type
     _syntax_ = "emitc.constant {value.string} : {type.type}"

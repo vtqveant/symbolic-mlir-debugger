@@ -14,7 +14,7 @@ SsaUse = Union[mast.SsaId, Literal]
 
 # Builtin operations
 @dataclass
-class ModuleOperation(DialectOp):
+class BuiltinModuleOp(DialectOp):
     """Represents a builtin.module operation."""
 
     _syntax_ = "builtin.module"
@@ -22,7 +22,7 @@ class ModuleOperation(DialectOp):
 
 
 @dataclass
-class UnrealizedConversionCastOperation(DialectOp):
+class BuiltinUnrealizedConversionCastOp(DialectOp):
     inputs: List[SsaUse]
     outputs: List[mast.Type]
     _syntax_ = (

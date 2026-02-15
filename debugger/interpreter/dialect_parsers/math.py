@@ -36,22 +36,22 @@ class MathDialectParser(BaseDialectParser):
             class_name = op_obj.__class__.__name__
 
             # Special handling for known operation classes (must come before generic checks)
-            if class_name == "CmpfOperation":
+            if class_name == "MathCmpFOp":
                 return self._parse_cmpf_operation(op_node)
-            elif class_name == "ConstantOperation":
+            elif class_name == "MathConstantOp":
                 return self._parse_constant_operation(op_node)
 
             # Binary operations (Atan2Operation, FmaOperation, PowfOperation)
             elif (
-                class_name.endswith("Operation")
+                class_name.endswith("Op")
                 and hasattr(op_obj, "operand_a")
                 and hasattr(op_obj, "operand_b")
-                and class_name != "CmpfOperation"
+                and class_name != "MathCmpFOp"
             ):
                 return self._parse_binary_operation(op_node)
 
             # Unary operations (AbsfOperation, CosOperation, etc.)
-            elif class_name.endswith("Operation") and hasattr(op_obj, "operand"):
+            elif class_name.endswith("Op") and hasattr(op_obj, "operand"):
                 return self._parse_unary_operation(op_node)
 
         # No handler found

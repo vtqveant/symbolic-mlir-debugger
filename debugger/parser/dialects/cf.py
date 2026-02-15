@@ -13,7 +13,7 @@ SsaUse = Union[mast.SsaId, Literal]
 
 
 @dataclass
-class BrOperation(DialectOp):
+class CfBrOp(DialectOp):
     block: mast.BlockId
     args: Optional[List[Tuple[mast.SsaId, mast.Type]]] = None
     _syntax_ = [
@@ -24,7 +24,7 @@ class BrOperation(DialectOp):
 
 
 @dataclass
-class CondBrOperation(DialectOp):
+class CfCondBrOp(DialectOp):
     cond: SsaUse
     block_true: mast.BlockId
     block_false: mast.BlockId

@@ -14,7 +14,7 @@ SsaUse = Union[mast.SsaId, Literal]
 
 # Allocate a tensor with buffer semantics
 @dataclass
-class AllocTensorOperation(DialectOp):
+class BufferizationAllocTensorOp(DialectOp):
     shape: List[SsaUse]
     type: mast.TensorType
     _syntax_ = "bufferization.alloc_tensor {shape.ssa_use_list} : {type.tensor_type}"
@@ -23,7 +23,7 @@ class AllocTensorOperation(DialectOp):
 
 # Clone a buffer (deep copy)
 @dataclass
-class CloneOperation(DialectOp):
+class BufferizationCloneOp(DialectOp):
     src: SsaUse
     type: mast.Type
     _syntax_ = "bufferization.clone {src.ssa_use} : {type.type}"
@@ -32,7 +32,7 @@ class CloneOperation(DialectOp):
 
 # Deallocate a buffer
 @dataclass
-class DeallocOperation(DialectOp):
+class BufferizationDeallocOp(DialectOp):
     buffer: SsaUse
     type: mast.Type
     _syntax_ = "bufferization.dealloc {buffer.ssa_use} : {type.type}"
@@ -41,7 +41,7 @@ class DeallocOperation(DialectOp):
 
 # Deallocate a tensor
 @dataclass
-class DeallocTensorOperation(DialectOp):
+class BufferizationDeallocTensorOp(DialectOp):
     tensor: SsaUse
     type: mast.TensorType
     _syntax_ = "bufferization.dealloc_tensor {tensor.ssa_use} : {type.tensor_type}"
@@ -50,7 +50,7 @@ class DeallocTensorOperation(DialectOp):
 
 # Materialize a tensor into a destination buffer
 @dataclass
-class MaterializeInDestinationOperation(DialectOp):
+class BufferizationMaterializeInDestinationOp(DialectOp):
     src: SsaUse
     dst: SsaUse
     src_type: mast.Type
@@ -61,7 +61,7 @@ class MaterializeInDestinationOperation(DialectOp):
 
 # Convert tensor to buffer
 @dataclass
-class ToBufferOperation(DialectOp):
+class BufferizationToBufferOp(DialectOp):
     tensor: SsaUse
     tensor_type: mast.TensorType
     buffer_type: mast.MemRefType
@@ -71,7 +71,7 @@ class ToBufferOperation(DialectOp):
 
 # Convert buffer to tensor
 @dataclass
-class ToTensorOperation(DialectOp):
+class BufferizationToTensorOp(DialectOp):
     buffer: SsaUse
     buffer_type: mast.MemRefType
     tensor_type: mast.TensorType

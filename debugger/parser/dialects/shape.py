@@ -14,7 +14,7 @@ SsaUse = Union[mast.SsaId, Literal]
 
 # Shape operations
 @dataclass
-class AddOperation(DialectOp):
+class ShapeAddOp(DialectOp):
     lhs: SsaUse
     rhs: SsaUse
     type: mast.Type
@@ -23,7 +23,7 @@ class AddOperation(DialectOp):
 
 
 @dataclass
-class AnyOperation(DialectOp):
+class ShapeAnyOp(DialectOp):
     shape: SsaUse
     type: mast.Type
     _syntax_ = "shape.any {shape.ssa_use} : {type.type}"
@@ -31,28 +31,28 @@ class AnyOperation(DialectOp):
 
 
 @dataclass
-class AssumingOperation(DialectOp):
+class ShapeAssumingOp(DialectOp):
     condition: SsaUse
     _syntax_ = "shape.assuming {condition.ssa_use}"
     _opname_ = "shape.assuming"
 
 
 @dataclass
-class AssumingAllOperation(DialectOp):
+class ShapeAssumingAllOp(DialectOp):
     conditions: List[SsaUse]
     _syntax_ = "shape.assuming_all {conditions.ssa_use_list}"
     _opname_ = "shape.assuming_all"
 
 
 @dataclass
-class AssumingYieldOperation(DialectOp):
+class ShapeAssumingYieldOp(DialectOp):
     values: List[SsaUse]
     _syntax_ = "shape.assuming_yield {values.ssa_use_list}"
     _opname_ = "shape.assuming_yield"
 
 
 @dataclass
-class BroadcastOperation(DialectOp):
+class ShapeBroadcastOp(DialectOp):
     shapes: List[SsaUse]
     type: mast.Type
     _syntax_ = "shape.broadcast {shapes.ssa_use_list} : {type.type}"
@@ -60,7 +60,7 @@ class BroadcastOperation(DialectOp):
 
 
 @dataclass
-class ConcatOperation(DialectOp):
+class ShapeConcatOp(DialectOp):
     shapes: List[SsaUse]
     type: mast.Type
     _syntax_ = "shape.concat {shapes.ssa_use_list} : {type.type}"
@@ -68,7 +68,7 @@ class ConcatOperation(DialectOp):
 
 
 @dataclass
-class ConstShapeOperation(DialectOp):
+class ShapeConstShapeOp(DialectOp):
     shape: List[SsaUse]
     type: mast.Type
     _syntax_ = "shape.const_shape {shape.ssa_use_list} : {type.type}"
@@ -76,7 +76,7 @@ class ConstShapeOperation(DialectOp):
 
 
 @dataclass
-class ConstSizeOperation(DialectOp):
+class ShapeConstSizeOp(DialectOp):
     value: Literal
     type: mast.Type
     _syntax_ = "shape.const_size {value.constant_literal} : {type.type}"
@@ -84,7 +84,7 @@ class ConstSizeOperation(DialectOp):
 
 
 @dataclass
-class ConstWitnessOperation(DialectOp):
+class ShapeConstWitnessOp(DialectOp):
     value: Literal
     type: mast.Type
     _syntax_ = "shape.const_witness {value.constant_literal} : {type.type}"
@@ -92,14 +92,14 @@ class ConstWitnessOperation(DialectOp):
 
 
 @dataclass
-class CstrBroadcastableOperation(DialectOp):
+class ShapeCstrBroadcastableOp(DialectOp):
     shapes: List[SsaUse]
     _syntax_ = "shape.cstr_broadcastable {shapes.ssa_use_list}"
     _opname_ = "shape.cstr_broadcastable"
 
 
 @dataclass
-class CstrEqOperation(DialectOp):
+class ShapeCstrEqOp(DialectOp):
     lhs: SsaUse
     rhs: SsaUse
     _syntax_ = "shape.cstr_eq {lhs.ssa_use} , {rhs.ssa_use}"
@@ -107,21 +107,21 @@ class CstrEqOperation(DialectOp):
 
 
 @dataclass
-class CstrRequireOperation(DialectOp):
+class ShapeCstrRequireOp(DialectOp):
     condition: SsaUse
     _syntax_ = "shape.cstr_require {condition.ssa_use}"
     _opname_ = "shape.cstr_require"
 
 
 @dataclass
-class DebugPrintOperation(DialectOp):
+class ShapeDebugPrintOp(DialectOp):
     value: SsaUse
     _syntax_ = "shape.debug_print {value.ssa_use}"
     _opname_ = "shape.debug_print"
 
 
 @dataclass
-class DimOperation(DialectOp):
+class ShapeDimOp(DialectOp):
     shape: SsaUse
     index: SsaUse
     type: mast.Type
@@ -130,7 +130,7 @@ class DimOperation(DialectOp):
 
 
 @dataclass
-class DivOperation(DialectOp):
+class ShapeDivOp(DialectOp):
     lhs: SsaUse
     rhs: SsaUse
     type: mast.Type
@@ -139,7 +139,7 @@ class DivOperation(DialectOp):
 
 
 @dataclass
-class FromExtentTensorOperation(DialectOp):
+class ShapeFromExtentTensorOp(DialectOp):
     tensor: SsaUse
     type: mast.Type
     _syntax_ = "shape.from_extent_tensor {tensor.ssa_use} : {type.type}"
@@ -147,7 +147,7 @@ class FromExtentTensorOperation(DialectOp):
 
 
 @dataclass
-class FromExtentsOperation(DialectOp):
+class ShapeFromExtentsOp(DialectOp):
     extents: List[SsaUse]
     type: mast.Type
     _syntax_ = "shape.from_extents {extents.ssa_use_list} : {type.type}"

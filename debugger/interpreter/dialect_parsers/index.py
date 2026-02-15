@@ -36,31 +36,30 @@ class IndexDialectParser(BaseDialectParser):
             class_name = op_obj.__class__.__name__
 
             # Special handling for known operation classes
-            if class_name == "CmpOperation":
+            if class_name == "IndexCmpOp":
                 return self._parse_cmp_operation(op_node)
-            elif class_name == "ConstantOperation":
+            elif class_name == "IndexConstantOp":
                 return self._parse_constant_operation(op_node)
-            elif class_name == "BoolConstantOperation":
+            elif class_name == "IndexBoolConstantOp":
                 return self._parse_bool_constant_operation(op_node)
-            elif class_name == "CastSOperation":
+            elif class_name == "IndexCastSOp":
                 return self._parse_cast_s_operation(op_node)
-            elif class_name == "CastUOperation":
+            elif class_name == "IndexCastUOp":
                 return self._parse_cast_u_operation(op_node)
-            elif class_name == "SizeOfOperation":
+            elif class_name == "IndexSizeOfOp":
                 return self._parse_size_of_operation(op_node)
 
             # Binary operations (AddOperation, SubOperation, etc.)
             elif (
-                class_name.endswith("Operation")
+                class_name.endswith("Op")
                 and hasattr(op_obj, "operand_a")
                 and hasattr(op_obj, "operand_b")
-                and class_name
-                not in ("CmpOperation", "CastSOperation", "CastUOperation")
+                and class_name not in ("IndexCmpOp", "IndexCastSOp", "IndexCastUOp")
             ):
                 return self._parse_binary_operation(op_node)
 
             # Unary operations (none currently, but handle if any)
-            elif class_name.endswith("Operation") and hasattr(op_obj, "operand"):
+            elif class_name.endswith("Op") and hasattr(op_obj, "operand"):
                 return self._parse_unary_operation(op_node)
 
         # No handler found
@@ -82,7 +81,7 @@ class IndexDialectParser(BaseDialectParser):
             full_name = op_obj.__class__._opname_
         else:
             class_name = op_obj.__class__.__name__
-            full_name = f"index.{class_name[:-9].lower()}"  # Remove 'Operation' suffix
+            full_name = f"index.{class_name[:-2].lower()}"  # Remove 'Op' suffix
 
         # Parse dialect and name
         if "." in full_name:
@@ -128,7 +127,7 @@ class IndexDialectParser(BaseDialectParser):
             full_name = op_obj.__class__._opname_
         else:
             class_name = op_obj.__class__.__name__
-            full_name = f"index.{class_name[:-9].lower()}"
+            full_name = f"index.{class_name[:-2].lower()}"
 
         if "." in full_name:
             dialect, name = full_name.split(".", 1)

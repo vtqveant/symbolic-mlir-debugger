@@ -14,7 +14,7 @@ SsaUse = Union[mast.SsaId, Literal]
 
 # Dimension operation
 @dataclass
-class DimOperation(DialectOp):
+class MemRefDimOp(DialectOp):
     operand: mast.SsaId
     index: mast.SsaId
     type: mast.Type
@@ -24,7 +24,7 @@ class DimOperation(DialectOp):
 
 # Memory allocation operations
 @dataclass
-class AllocOperation(DialectOp):
+class MemRefAllocOp(DialectOp):
     args: mast.DimAndSymbolList
     type: mast.MemRefType
     _syntax_ = "memref.alloc {args.dim_and_symbol_use_list} : {type.memref_type}"
@@ -32,7 +32,7 @@ class AllocOperation(DialectOp):
 
 
 @dataclass
-class AllocaOperation(DialectOp):
+class MemRefAllocaOp(DialectOp):
     args: mast.DimAndSymbolList
     type: mast.MemRefType
     _syntax_ = "memref.alloca {args.dim_and_symbol_use_list} : {type.memref_type}"
@@ -40,7 +40,7 @@ class AllocaOperation(DialectOp):
 
 
 @dataclass
-class DeallocOperation(DialectOp):
+class MemRefDeallocOp(DialectOp):
     arg: SsaUse
     type: mast.MemRefType
     _syntax_ = "memref.dealloc {arg.ssa_use} : {type.memref_type}"
@@ -49,7 +49,7 @@ class DeallocOperation(DialectOp):
 
 # DMA operations
 @dataclass
-class DmaStartOperation(DialectOp):
+class MemRefDmaStartOp(DialectOp):
     src: SsaUse
     src_index: List[SsaUse]
     dst: SsaUse
@@ -70,7 +70,7 @@ class DmaStartOperation(DialectOp):
 
 
 @dataclass
-class DmaWaitOperation(DialectOp):
+class MemRefDmaWaitOp(DialectOp):
     tag: SsaUse
     tag_index: List[SsaUse]
     size: SsaUse
@@ -81,7 +81,7 @@ class DmaWaitOperation(DialectOp):
 
 # Load/store operations
 @dataclass
-class LoadOperation(DialectOp):
+class MemRefLoadOp(DialectOp):
     arg: SsaUse
     index: List[SsaUse]
     type: mast.MemRefType
@@ -90,7 +90,7 @@ class LoadOperation(DialectOp):
 
 
 @dataclass
-class StoreOperation(DialectOp):
+class MemRefStoreOp(DialectOp):
     value: SsaUse
     memref: SsaUse
     index: List[SsaUse]
@@ -101,7 +101,7 @@ class StoreOperation(DialectOp):
 
 # View operations
 @dataclass
-class SubviewOperation(DialectOp):
+class MemRefSubviewOp(DialectOp):
     operand: SsaUse
     offsets: List[SsaUse]
     sizes: List[SsaUse]
@@ -113,7 +113,7 @@ class SubviewOperation(DialectOp):
 
 
 @dataclass
-class ViewOperation(DialectOp):
+class MemRefViewOp(DialectOp):
     operand: SsaUse
     offset: SsaUse
     src_type: mast.Type
@@ -128,7 +128,7 @@ class ViewOperation(DialectOp):
 
 # Additional memref operations from ops.md (stubs for now)
 @dataclass
-class CastOperation(DialectOp):
+class MemRefCastOp(DialectOp):
     arg: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
@@ -137,7 +137,7 @@ class CastOperation(DialectOp):
 
 
 @dataclass
-class CollapseShapeOperation(DialectOp):
+class MemRefCollapseShapeOp(DialectOp):
     operand: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
@@ -148,7 +148,7 @@ class CollapseShapeOperation(DialectOp):
 
 
 @dataclass
-class ExpandShapeOperation(DialectOp):
+class MemRefExpandShapeOp(DialectOp):
     operand: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
@@ -159,7 +159,7 @@ class ExpandShapeOperation(DialectOp):
 
 
 @dataclass
-class ReinterpretCastOperation(DialectOp):
+class MemRefReinterpretCastOp(DialectOp):
     operand: SsaUse
     offsets: List[SsaUse]
     sizes: List[SsaUse]
@@ -171,7 +171,7 @@ class ReinterpretCastOperation(DialectOp):
 
 
 @dataclass
-class MemorySpaceCastOperation(DialectOp):
+class MemRefMemorySpaceCastOp(DialectOp):
     operand: SsaUse
     src_type: mast.Type
     dst_type: mast.Type

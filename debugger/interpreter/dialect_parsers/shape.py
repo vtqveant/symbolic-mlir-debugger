@@ -56,47 +56,47 @@ class ShapeDialectParser(BaseDialectParser):
             class_name = op_obj.__class__.__name__
 
             # Special handling for operations with custom fields
-            if class_name == "ConstShapeOperation":
+            if class_name == "ShapeConstShapeOp":
                 return self._parse_const_shape_operation(op_node)
-            elif class_name == "ConstSizeOperation":
+            elif class_name == "ShapeConstSizeOp":
                 return self._parse_const_size_operation(op_node)
-            elif class_name == "ConstWitnessOperation":
+            elif class_name == "ShapeConstWitnessOp":
                 return self._parse_const_witness_operation(op_node)
-            elif class_name == "AssumingOperation":
+            elif class_name == "ShapeAssumingOp":
                 return self._parse_assuming_operation(op_node)
-            elif class_name == "AssumingAllOperation":
+            elif class_name == "ShapeAssumingAllOp":
                 return self._parse_assuming_all_operation(op_node)
-            elif class_name == "AssumingYieldOperation":
+            elif class_name == "ShapeAssumingYieldOp":
                 return self._parse_assuming_yield_operation(op_node)
-            elif class_name == "BroadcastOperation":
+            elif class_name == "ShapeBroadcastOp":
                 return self._parse_broadcast_operation(op_node)
-            elif class_name == "ConcatOperation":
+            elif class_name == "ShapeConcatOp":
                 return self._parse_concat_operation(op_node)
-            elif class_name == "CstrBroadcastableOperation":
+            elif class_name == "ShapeCstrBroadcastableOp":
                 return self._parse_cstr_broadcastable_operation(op_node)
-            elif class_name == "CstrEqOperation":
+            elif class_name == "ShapeCstrEqOp":
                 return self._parse_cstr_eq_operation(op_node)
-            elif class_name == "CstrRequireOperation":
+            elif class_name == "ShapeCstrRequireOp":
                 return self._parse_cstr_require_operation(op_node)
-            elif class_name == "DebugPrintOperation":
+            elif class_name == "ShapeDebugPrintOp":
                 return self._parse_debug_print_operation(op_node)
-            elif class_name == "DimOperation":
+            elif class_name == "ShapeDimOp":
                 return self._parse_dim_operation(op_node)
-            elif class_name == "FromExtentTensorOperation":
+            elif class_name == "ShapeFromExtentTensorOp":
                 return self._parse_from_extent_tensor_operation(op_node)
-            elif class_name == "FromExtentsOperation":
+            elif class_name == "ShapeFromExtentsOp":
                 return self._parse_from_extents_operation(op_node)
 
             # Binary operations (AddOperation, DivOperation) have lhs, rhs
             elif (
-                class_name.endswith("Operation")
+                class_name.endswith("Op")
                 and hasattr(op_obj, "lhs")
                 and hasattr(op_obj, "rhs")
             ):
                 return self._parse_binary_operation(op_node)
 
             # Unary operations (AnyOperation) have shape
-            elif class_name.endswith("Operation") and hasattr(op_obj, "shape"):
+            elif class_name.endswith("Op") and hasattr(op_obj, "shape"):
                 return self._parse_unary_operation(op_node)
 
             # Generic fallback

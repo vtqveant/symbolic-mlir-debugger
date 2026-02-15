@@ -54,31 +54,31 @@ class ArithDialectParser(BaseDialectParser):
                     return self._parse_generic_operation(op_node)
 
             # Special handling for known operation classes (must come before generic checks)
-            if class_name == "CmpiOperation":
+            if class_name == "ArithCmpIOp":
                 return self._parse_cmpi_operation(op_node)
-            elif class_name == "CmpfOperation":
+            elif class_name == "ArithCmpFOp":
                 return self._parse_cmpf_operation(op_node)
-            elif class_name == "ConstantOperation":
+            elif class_name == "ArithConstantOp":
                 return self._parse_constant_operation(op_node)
-            elif class_name == "SelectOperation":
+            elif class_name == "ArithSelectOp":
                 return self._parse_select_operation(op_node)
-            elif class_name == "IndexCastOperation":
+            elif class_name == "ArithIndexCastOp":
                 return self._parse_index_cast_operation(op_node)
 
             # Binary operations (AddiOperation, SubiOperation, etc.)
             # Exclude Cmpi/Cmpf which have operand_a/operand_b but are not binary arithmetic ops
             elif (
-                class_name.endswith("Operation")
+                class_name.endswith("Op")
                 and hasattr(op_obj, "operand_a")
                 and hasattr(op_obj, "operand_b")
-                and class_name not in ("CmpiOperation", "CmpfOperation")
+                and class_name not in ("ArithCmpIOp", "ArithCmpFOp")
             ):
                 # Check if it's a BinaryOperation subclass from pymlir
                 # We'll handle all binary ops with generic parser
                 return self._parse_binary_operation(op_node)
 
             # Unary operations (AbsfOperation, CeilfOperation, etc.)
-            elif class_name.endswith("Operation") and hasattr(op_obj, "operand"):
+            elif class_name.endswith("Op") and hasattr(op_obj, "operand"):
                 return self._parse_unary_operation(op_node)
 
         # No handler found
