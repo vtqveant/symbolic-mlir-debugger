@@ -84,7 +84,7 @@ class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFact
 		
 		// Always use extension configuration to create executable
 		const pythonPath = extensionPythonPath || 'python3';
-		const dapServerPath = extensionDapServerPath || 'symbolic_mlir_debugger/dap_server.py';
+		let dapServerPath = extensionDapServerPath || 'debugger/dap_server.py';
 		
 		// Create executable with extension configuration
 		executable = new vscode.DebugAdapterExecutable(
@@ -163,47 +163,21 @@ class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFact
 			const extensionDapServerPath = extensionConfig.get<string>('dapServerPath');
 			
 			let pythonPath = extensionPythonPath || 'python3';
-			let dapServerPath = extensionDapServerPath || 'symbolic_mlir_debugger/dap_server.py';
+			let dapServerPath = extensionDapServerPath || 'debugger/dap_server.py';
 			const workspaceFolder = session.workspaceFolder?.uri.fsPath;
 			
 			console.log(`MLIR Debug: Creating executable from extension configuration (fallback): pythonPath="${pythonPath}", dapServerPath="${dapServerPath}"`);
 			
-			// Resolve dapServerPath relative to workspace folder if needed
-			if (workspaceFolder && typeof dapServerPath === 'string') {
-				// Similar logic to the path resolution in the if block
-				let resolved = dapServerPath;
-				
-				// Handle case where ${workspaceFolder} wasn't expanded
-				if (dapServerPath.includes('${workspaceFolder}')) {
-					resolved = dapServerPath.replace('${workspaceFolder}', workspaceFolder);
-					console.log(`MLIR Debug: Resolved ${workspaceFolder} in arg: ${dapServerPath} -> ${resolved}`);
-				}
-				// Handle case where extension directory is prepended
-				else if (dapServerPath.includes('.vscode/extensions/')) {
-					// Try to extract the relative path after extension directory
-					const extensionDirPattern = /.*\/\.vscode\/extensions\/[^/]+\/(.+)/;
-					const match = dapServerPath.match(extensionDirPattern);
-					if (match) {
-						const relativePath = match[1];
-						const workspacePath = join(workspaceFolder, relativePath);
-						// Check if the workspace path exists
-						if (existsSync(workspacePath)) {
-							resolved = workspacePath;
-							console.log(`MLIR Debug: Fixed extension directory path: ${dapServerPath} -> ${resolved}`);
-						}
-					}
-				}
-				// Check if it's a relative path that doesn't exist
-				else if (!existsSync(dapServerPath) && !dapServerPath.startsWith('/') && !dapServerPath.startsWith('~')) {
-					// Try to resolve relative to workspace folder
-					const workspacePath = join(workspaceFolder, dapServerPath);
-					if (existsSync(workspacePath)) {
-						resolved = workspacePath;
-						console.log(`MLIR Debug: Resolved relative path: ${dapServerPath} -> ${resolved}`);
-					}
-				}
-				
-				dapServerPath = resolved;
+			// Try to automatically detect the DAP server path if not found
+			dapServerPath = resolveDapServerPath(workspaceFolder, dapServerPath);
+			
+			if (!dapServerPath) {
+				const errorMessage = `MLIR Debug: Could not locate DAP server (dap_server.py). Please ensure it exists in one of the following locations:
+  - Relative to workspace folder: debugger/dap_server.py
+  - Relative to workspace folder: symbolic_mlir_debugger/dap_server.py
+  - Absolute path (configure in settings: mlir-debug.dapServerPath)`;
+				console.error(errorMessage);
+				throw new Error(errorMessage);
 			}
 			
 			const options = workspaceFolder ? { cwd: workspaceFolder } : undefined;
@@ -214,6 +188,89 @@ class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFact
 		console.log(`MLIR Debug: Launching external debug adapter: command="${executable?.command}", args=${JSON.stringify(executable?.args)}`);
 		return executable;
 	}
+}
+
+/**
+ * Resolves the DAP server path by trying multiple common locations
+ * @param workspaceFolder The workspace folder path
+ * @param configuredPath The path configured by the user
+ * @returns The resolved path or null if not found
+ */
+function resolveDapServerPath(workspaceFolder: string | undefined, configuredPath: string): string | null {
+	if (!workspaceFolder) {
+		console.log('MLIR Debug: No workspace folder found, using configured path');
+		return existsSync(configuredPath) ? configuredPath : null;
+	}
+	
+	if (!configuredPath) {
+		console.log('MLIR Debug: No configured path, trying default locations');
+	}
+	
+	console.log(`MLIR Debug: Resolving DAP server path for workspace: ${workspaceFolder}`);
+	
+	// Try absolute path first if configured
+	if (configuredPath && existsSync(configuredPath)) {
+		console.log(`MLIR Debug: Using absolute path: ${configuredPath}`);
+		return configuredPath;
+	}
+	
+	// Try relative path from workspace folder
+	if (configuredPath) {
+		const workspaceRelativePath = join(workspaceFolder, configuredPath);
+		if (existsSync(workspaceRelativePath)) {
+			console.log(`MLIR Debug: Using workspace-relative path: ${workspaceRelativePath}`);
+			return workspaceRelativePath;
+		}
+	}
+	
+	// Try multiple common default locations
+	const defaultPaths = [
+		'debugger/dap_server.py',
+		'../debugger/dap_server.py',
+		'../../debugger/dap_server.py',
+		'./debugger/dap_server.py',
+		'symbolic_mlir_debugger/dap_server.py',
+		'../symbolic_mlir_debugger/dap_server.py',
+		'../../symbolic_mlir_debugger/dap_server.py',
+		'./symbolic_mlir_debugger/dap_server.py'
+	];
+	
+	for (const path of defaultPaths) {
+		const resolvedPath = join(workspaceFolder, path);
+		if (existsSync(resolvedPath)) {
+			console.log(`MLIR Debug: Found DAP server at: ${resolvedPath}`);
+			return resolvedPath;
+		}
+	}
+	
+	// Try parent directories recursively
+	let currentPath = workspaceFolder;
+	const depth = 10;
+	for (let i = 0; i < depth; i++) {
+		for (const path of defaultPaths) {
+			const candidatePath = join(currentPath, path);
+			if (existsSync(candidatePath)) {
+				console.log(`MLIR Debug: Found DAP server at (parent): ${candidatePath}`);
+				return candidatePath;
+			}
+		}
+		currentPath = dirname(currentPath);
+		if (currentPath === workspaceFolder || currentPath.length < 2) {
+			break;
+		}
+	}
+	
+	return null;
+}
+
+function dirname(path: string): string {
+	const lastSep = path.lastIndexOf('/');
+	const lastBackslash = path.lastIndexOf('\\');
+	const lastSepIndex = Math.max(lastSep, lastBackslash);
+	if (lastSepIndex === -1) {
+		return '.';
+	}
+	return path.substring(0, lastSepIndex);
 }
 
 class MLIRDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {

@@ -235,7 +235,7 @@
         "mlir-debug.dapServerPath": {
           "type": "string",
           "default": "debugger/dap_server.py",
-          "description": "Path to the Python DAP server script (dap_server.py)."
+          "description": "Path to the Python DAP server script (dap_server.py). If not specified, the extension will automatically search for it in common locations including debugger/dap_server.py and symbolic_mlir_debugger/dap_server.py relative to your workspace folder. Absolute paths are also supported."
         },
         "mlir-debug.pythonPath": {
           "type": "string",
