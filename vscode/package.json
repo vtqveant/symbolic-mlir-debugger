@@ -61,6 +61,7 @@
     "mocha": "^9.2.2",
     "path-browserify": "^1.0.1",
     "rimraf": "^3.0.2",
+    "ts-node": "^10.9.2",
     "typescript": "^4.6.3",
     "url": "^0.11.0",
     "vsce": "^2.7.0"
@@ -216,7 +217,7 @@
             "label": "MLIR Debug: Launch",
             "description": "A new configuration for debugging a user selected MLIR file.",
             "body": {
-        "type": "mlir",
+              "type": "mlir",
               "request": "launch",
               "name": "Ask for file name",
               "program": "^\"\\${workspaceFolder}/\\${command:AskForProgramName}\"",

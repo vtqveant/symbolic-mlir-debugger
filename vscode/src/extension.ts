@@ -26,6 +26,7 @@ import { platform } from 'process';
 import { ProviderResult } from 'vscode';
 import { MLIRDebugSession } from './mlirDebug';
 import { activateMLIRDebug, workspaceFileAccessor } from './activateMLIRDebug';
+import { resolveDapServerPath } from './pathResolver';
 
 /*
  * The compile time flag 'runMode' controls how the debug adapter is run.
@@ -161,16 +162,16 @@ class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFact
 			const extensionConfig = vscode.workspace.getConfiguration('mlir-debug');
 			const extensionPythonPath = extensionConfig.get<string>('pythonPath');
 			const extensionDapServerPath = extensionConfig.get<string>('dapServerPath');
-			
+
 			let pythonPath = extensionPythonPath || 'python3';
 			let dapServerPath = extensionDapServerPath || 'debugger/dap_server.py';
 			const workspaceFolder = session.workspaceFolder?.uri.fsPath;
-			
+
 			console.log(`MLIR Debug: Creating executable from extension configuration (fallback): pythonPath="${pythonPath}", dapServerPath="${dapServerPath}"`);
-			
+
 			// Try to automatically detect the DAP server path if not found
-			dapServerPath = resolveDapServerPath(workspaceFolder, dapServerPath);
-			
+			dapServerPath = resolveDapServerPath(workspaceFolder, dapServerPath) ?? '';
+
 			if (!dapServerPath) {
 				const errorMessage = `MLIR Debug: Could not locate DAP server (dap_server.py). Please ensure it exists in one of the following locations:
   - Relative to workspace folder: debugger/dap_server.py
@@ -179,7 +180,7 @@ class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFact
 				console.error(errorMessage);
 				throw new Error(errorMessage);
 			}
-			
+
 			const options = workspaceFolder ? { cwd: workspaceFolder } : undefined;
 			executable = new vscode.DebugAdapterExecutable(pythonPath, [dapServerPath], options);
 		}
@@ -188,89 +189,6 @@ class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFact
 		console.log(`MLIR Debug: Launching external debug adapter: command="${executable?.command}", args=${JSON.stringify(executable?.args)}`);
 		return executable;
 	}
-}
-
-/**
- * Resolves the DAP server path by trying multiple common locations
- * @param workspaceFolder The workspace folder path
- * @param configuredPath The path configured by the user
- * @returns The resolved path or null if not found
- */
-function resolveDapServerPath(workspaceFolder: string | undefined, configuredPath: string): string | null {
-	if (!workspaceFolder) {
-		console.log('MLIR Debug: No workspace folder found, using configured path');
-		return existsSync(configuredPath) ? configuredPath : null;
-	}
-	
-	if (!configuredPath) {
-		console.log('MLIR Debug: No configured path, trying default locations');
-	}
-	
-	console.log(`MLIR Debug: Resolving DAP server path for workspace: ${workspaceFolder}`);
-	
-	// Try absolute path first if configured
-	if (configuredPath && existsSync(configuredPath)) {
-		console.log(`MLIR Debug: Using absolute path: ${configuredPath}`);
-		return configuredPath;
-	}
-	
-	// Try relative path from workspace folder
-	if (configuredPath) {
-		const workspaceRelativePath = join(workspaceFolder, configuredPath);
-		if (existsSync(workspaceRelativePath)) {
-			console.log(`MLIR Debug: Using workspace-relative path: ${workspaceRelativePath}`);
-			return workspaceRelativePath;
-		}
-	}
-	
-	// Try multiple common default locations
-	const defaultPaths = [
-		'debugger/dap_server.py',
-		'../debugger/dap_server.py',
-		'../../debugger/dap_server.py',
-		'./debugger/dap_server.py',
-		'symbolic_mlir_debugger/dap_server.py',
-		'../symbolic_mlir_debugger/dap_server.py',
-		'../../symbolic_mlir_debugger/dap_server.py',
-		'./symbolic_mlir_debugger/dap_server.py'
-	];
-	
-	for (const path of defaultPaths) {
-		const resolvedPath = join(workspaceFolder, path);
-		if (existsSync(resolvedPath)) {
-			console.log(`MLIR Debug: Found DAP server at: ${resolvedPath}`);
-			return resolvedPath;
-		}
-	}
-	
-	// Try parent directories recursively
-	let currentPath = workspaceFolder;
-	const depth = 10;
-	for (let i = 0; i < depth; i++) {
-		for (const path of defaultPaths) {
-			const candidatePath = join(currentPath, path);
-			if (existsSync(candidatePath)) {
-				console.log(`MLIR Debug: Found DAP server at (parent): ${candidatePath}`);
-				return candidatePath;
-			}
-		}
-		currentPath = dirname(currentPath);
-		if (currentPath === workspaceFolder || currentPath.length < 2) {
-			break;
-		}
-	}
-	
-	return null;
-}
-
-function dirname(path: string): string {
-	const lastSep = path.lastIndexOf('/');
-	const lastBackslash = path.lastIndexOf('\\');
-	const lastSepIndex = Math.max(lastSep, lastBackslash);
-	if (lastSepIndex === -1) {
-		return '.';
-	}
-	return path.substring(0, lastSepIndex);
 }
 
 class MLIRDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
