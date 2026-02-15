@@ -13,7 +13,7 @@ from ..operations import Operation
 from ..models import SymbolicState, MLIRFunction
 
 
-class VectorBroadcastHandler(OperationHandler):
+class VectorBroadcastOpHandler(OperationHandler):
     """Handler for vector.broadcast operation."""
 
     def execute_symbolic(
@@ -42,7 +42,7 @@ class VectorBroadcastHandler(OperationHandler):
         return None
 
 
-class VectorBitcastHandler(OperationHandler):
+class VectorBitcastOpHandler(OperationHandler):
     """Handler for vector.bitcast operation."""
 
     def execute_symbolic(
@@ -71,7 +71,7 @@ class VectorBitcastHandler(OperationHandler):
         return None
 
 
-class VectorFmaHandler(OperationHandler):
+class VectorFmaOpHandler(OperationHandler):
     """Handler for vector.fma operation."""
 
     def execute_symbolic(
@@ -106,6 +106,6 @@ class VectorFmaHandler(OperationHandler):
 # Function to register all vector dialect handlers
 def register_handlers(registry) -> None:
     """Register vector dialect handlers with registry."""
-    registry.register("vector.broadcast", VectorBroadcastHandler())
-    registry.register("vector.bitcast", VectorBitcastHandler())
-    registry.register("vector.fma", VectorFmaHandler())
+    registry.register("vector.broadcast", VectorBroadcastOpHandler())
+    registry.register("vector.bitcast", VectorBitcastOpHandler())
+    registry.register("vector.fma", VectorFmaOpHandler())

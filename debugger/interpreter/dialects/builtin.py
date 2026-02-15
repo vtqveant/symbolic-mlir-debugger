@@ -13,7 +13,7 @@ from ..operations import Operation, CallOperation, ReturnOperation
 from ..models import SymbolicState, MLIRFunction
 
 
-class BuiltinModuleHandler(OperationHandler):
+class BuiltinModuleOpHandler(OperationHandler):
     """Handler for builtin.module operation (structural)."""
 
     def execute_symbolic(
@@ -29,7 +29,7 @@ class BuiltinModuleHandler(OperationHandler):
         return None
 
 
-class BuiltinFuncHandler(OperationHandler):
+class BuiltinFuncOpHandler(OperationHandler):
     """Handler for builtin.func operation (structural)."""
 
     def execute_symbolic(
@@ -45,7 +45,7 @@ class BuiltinFuncHandler(OperationHandler):
         return None
 
 
-class BuiltinUnrealizedConversionCastHandler(OperationHandler):
+class BuiltinUnrealizedConversionCastOpHandler(OperationHandler):
     """Handler for builtin.unrealized_conversion_cast operation."""
 
     def execute_symbolic(
@@ -80,8 +80,8 @@ class BuiltinUnrealizedConversionCastHandler(OperationHandler):
 # Function to register all builtin dialect handlers
 def register_handlers(registry) -> None:
     """Register builtin dialect handlers with registry."""
-    registry.register("builtin.module", BuiltinModuleHandler())
-    registry.register("builtin.func", BuiltinFuncHandler())
+    registry.register("builtin.module", BuiltinModuleOpHandler())
+    registry.register("builtin.func", BuiltinFuncOpHandler())
     registry.register(
-        "builtin.unrealized_conversion_cast", BuiltinUnrealizedConversionCastHandler()
+        "builtin.unrealized_conversion_cast", BuiltinUnrealizedConversionCastOpHandler()
     )

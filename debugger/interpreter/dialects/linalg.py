@@ -13,7 +13,7 @@ from ..operations import Operation
 from ..models import SymbolicState, MLIRFunction
 
 
-class LinalgGenericHandler(OperationHandler):
+class LinalgGenericOpHandler(OperationHandler):
     """Handler for linalg.generic operation."""
 
     def execute_symbolic(
@@ -33,7 +33,7 @@ class LinalgGenericHandler(OperationHandler):
         return None
 
 
-class LinalgMatmulHandler(OperationHandler):
+class LinalgMatmulOpHandler(OperationHandler):
     """Handler for linalg.matmul operation."""
 
     def execute_symbolic(
@@ -52,7 +52,7 @@ class LinalgMatmulHandler(OperationHandler):
         return None
 
 
-class LinalgBatchMatmulHandler(OperationHandler):
+class LinalgBatchMatmulOpHandler(OperationHandler):
     """Handler for linalg.batch_matmul operation."""
 
     def execute_symbolic(
@@ -71,7 +71,7 @@ class LinalgBatchMatmulHandler(OperationHandler):
         return None
 
 
-class LinalgConvWHandler(OperationHandler):
+class LinalgConvWOpHandler(OperationHandler):
     """Handler for linalg.conv_w operation."""
 
     def execute_symbolic(
@@ -90,7 +90,7 @@ class LinalgConvWHandler(OperationHandler):
         return None
 
 
-class LinalgConvHWHandler(OperationHandler):
+class LinalgConvHWOpHandler(OperationHandler):
     """Handler for linalg.conv_hw operation."""
 
     def execute_symbolic(
@@ -109,7 +109,7 @@ class LinalgConvHWHandler(OperationHandler):
         return None
 
 
-class LinalgYieldHandler(OperationHandler):
+class LinalgYieldOpHandler(OperationHandler):
     """Handler for linalg.yield operation."""
 
     def execute_symbolic(
@@ -129,9 +129,9 @@ class LinalgYieldHandler(OperationHandler):
 # Function to register all linalg dialect handlers
 def register_handlers(registry) -> None:
     """Register linalg dialect handlers with registry."""
-    registry.register("linalg.generic", LinalgGenericHandler())
-    registry.register("linalg.matmul", LinalgMatmulHandler())
-    registry.register("linalg.batch_matmul", LinalgBatchMatmulHandler())
-    registry.register("linalg.conv_w", LinalgConvWHandler())
-    registry.register("linalg.conv_hw", LinalgConvHWHandler())
-    registry.register("linalg.yield", LinalgYieldHandler())
+    registry.register("linalg.generic", LinalgGenericOpHandler())
+    registry.register("linalg.matmul", LinalgMatmulOpHandler())
+    registry.register("linalg.batch_matmul", LinalgBatchMatmulOpHandler())
+    registry.register("linalg.conv_w", LinalgConvWOpHandler())
+    registry.register("linalg.conv_hw", LinalgConvHWOpHandler())
+    registry.register("linalg.yield", LinalgYieldOpHandler())

@@ -16,7 +16,7 @@ from ..operations import (
 from ..models import SymbolicState, MLIRFunction
 
 
-class CondBrHandler(OperationHandler):
+class CondBrOpHandler(OperationHandler):
     """Handler for cf.cond_br operation."""
 
     def execute_symbolic(
@@ -59,7 +59,7 @@ class CondBrHandler(OperationHandler):
         )
 
 
-class BrHandler(OperationHandler):
+class BrOpHandler(OperationHandler):
     """Handler for cf.br operation."""
 
     def execute_symbolic(
@@ -88,5 +88,5 @@ class BrHandler(OperationHandler):
 # Function to register all cf dialect handlers
 def register_handlers(registry) -> None:
     """Register cf dialect handlers with registry."""
-    registry.register("cf.cond_br", CondBrHandler())
-    registry.register("cf.br", BrHandler())
+    registry.register("cf.cond_br", CondBrOpHandler())
+    registry.register("cf.br", BrOpHandler())

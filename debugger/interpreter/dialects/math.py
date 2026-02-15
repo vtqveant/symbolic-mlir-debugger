@@ -14,7 +14,7 @@ from ..models import SymbolicState, MLIRFunction
 
 
 # Math operations can reuse arithmetic handlers for now
-class MathAbsfHandler(UnaryOperationHandler):
+class MathAbsfOpHandler(UnaryOperationHandler):
     """Handler for math.absf operation."""
 
     def __init__(self):
@@ -37,7 +37,7 @@ class MathAbsfHandler(UnaryOperationHandler):
         return None
 
 
-class MathCosHandler(UnaryOperationHandler):
+class MathCosOpHandler(UnaryOperationHandler):
     """Handler for math.cos operation."""
 
     def __init__(self):
@@ -59,7 +59,7 @@ class MathCosHandler(UnaryOperationHandler):
         return None
 
 
-class MathSinHandler(UnaryOperationHandler):
+class MathSinOpHandler(UnaryOperationHandler):
     """Handler for math.sin operation."""
 
     def __init__(self):
@@ -81,7 +81,7 @@ class MathSinHandler(UnaryOperationHandler):
         return None
 
 
-class MathExpHandler(UnaryOperationHandler):
+class MathExpOpHandler(UnaryOperationHandler):
     """Handler for math.exp operation."""
 
     def __init__(self):
@@ -103,7 +103,7 @@ class MathExpHandler(UnaryOperationHandler):
         return None
 
 
-class MathLogHandler(UnaryOperationHandler):
+class MathLogOpHandler(UnaryOperationHandler):
     """Handler for math.log operation."""
 
     def __init__(self):
@@ -125,7 +125,7 @@ class MathLogHandler(UnaryOperationHandler):
         return None
 
 
-class MathSqrtHandler(UnaryOperationHandler):
+class MathSqrtOpHandler(UnaryOperationHandler):
     """Handler for math.sqrt operation."""
 
     def __init__(self):
@@ -147,21 +147,21 @@ class MathSqrtHandler(UnaryOperationHandler):
         return None
 
 
-class MathAtan2Handler(BinaryOperationHandler):
+class MathAtan2OpHandler(BinaryOperationHandler):
     """Handler for math.atan2 operation."""
 
     def __init__(self):
         super().__init__(operator=lambda l, r: z3.FreshConst(z3.IntSort(), "atan2"))
 
 
-class MathFmaHandler(BinaryOperationHandler):
+class MathFmaOpHandler(BinaryOperationHandler):
     """Handler for math.fma operation."""
 
     def __init__(self):
         super().__init__(operator=lambda l, r: z3.FreshConst(z3.IntSort(), "fma"))
 
 
-class MathPowfHandler(BinaryOperationHandler):
+class MathPowfOpHandler(BinaryOperationHandler):
     """Handler for math.powf operation."""
 
     def __init__(self):
@@ -171,12 +171,12 @@ class MathPowfHandler(BinaryOperationHandler):
 # Function to register all math dialect handlers
 def register_handlers(registry) -> None:
     """Register math dialect handlers with registry."""
-    registry.register("math.absf", MathAbsfHandler())
-    registry.register("math.cos", MathCosHandler())
-    registry.register("math.sin", MathSinHandler())
-    registry.register("math.exp", MathExpHandler())
-    registry.register("math.log", MathLogHandler())
-    registry.register("math.sqrt", MathSqrtHandler())
-    registry.register("math.atan2", MathAtan2Handler())
-    registry.register("math.fma", MathFmaHandler())
-    registry.register("math.powf", MathPowfHandler())
+    registry.register("math.absf", MathAbsfOpHandler())
+    registry.register("math.cos", MathCosOpHandler())
+    registry.register("math.sin", MathSinOpHandler())
+    registry.register("math.exp", MathExpOpHandler())
+    registry.register("math.log", MathLogOpHandler())
+    registry.register("math.sqrt", MathSqrtOpHandler())
+    registry.register("math.atan2", MathAtan2OpHandler())
+    registry.register("math.fma", MathFmaOpHandler())
+    registry.register("math.powf", MathPowfOpHandler())

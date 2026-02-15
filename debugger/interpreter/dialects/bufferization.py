@@ -13,7 +13,7 @@ from ..operations import Operation
 from ..models import SymbolicState, MLIRFunction
 
 
-class BufferizationAllocTensorHandler(OperationHandler):
+class BufferizationAllocTensorOpHandler(OperationHandler):
     """Handler for bufferization.alloc_tensor operation."""
 
     def execute_symbolic(
@@ -35,7 +35,7 @@ class BufferizationAllocTensorHandler(OperationHandler):
         return None
 
 
-class BufferizationToBufferHandler(OperationHandler):
+class BufferizationToBufferOpHandler(OperationHandler):
     """Handler for bufferization.to_buffer operation."""
 
     def execute_symbolic(
@@ -65,7 +65,7 @@ class BufferizationToBufferHandler(OperationHandler):
         return None
 
 
-class BufferizationToTensorHandler(OperationHandler):
+class BufferizationToTensorOpHandler(OperationHandler):
     """Handler for bufferization.to_tensor operation."""
 
     def execute_symbolic(
@@ -95,7 +95,7 @@ class BufferizationToTensorHandler(OperationHandler):
         return None
 
 
-class BufferizationCloneHandler(OperationHandler):
+class BufferizationCloneOpHandler(OperationHandler):
     """Handler for bufferization.clone operation."""
 
     def execute_symbolic(
@@ -130,7 +130,7 @@ class BufferizationCloneHandler(OperationHandler):
 # Function to register all bufferization dialect handlers
 def register_handlers(registry) -> None:
     """Register bufferization dialect handlers with registry."""
-    registry.register("bufferization.alloc_tensor", BufferizationAllocTensorHandler())
-    registry.register("bufferization.to_buffer", BufferizationToBufferHandler())
-    registry.register("bufferization.to_tensor", BufferizationToTensorHandler())
-    registry.register("bufferization.clone", BufferizationCloneHandler())
+    registry.register("bufferization.alloc_tensor", BufferizationAllocTensorOpHandler())
+    registry.register("bufferization.to_buffer", BufferizationToBufferOpHandler())
+    registry.register("bufferization.to_tensor", BufferizationToTensorOpHandler())
+    registry.register("bufferization.clone", BufferizationCloneOpHandler())

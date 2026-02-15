@@ -22,7 +22,7 @@ from ..models import SymbolicState, MLIRFunction
 
 
 # EmitC constant operation (similar to arith.constant)
-class EmitCConstantHandler(ConstantOperationHandler):
+class EmitCConstantOpHandler(ConstantOperationHandler):
     """Handler for emitc.constant operation."""
 
     def execute_symbolic(
@@ -88,28 +88,28 @@ class EmitCConstantHandler(ConstantOperationHandler):
 
 
 # EmitC arithmetic operations
-class EmitCAddHandler(BinaryOperationHandler):
+class EmitCAddOpHandler(BinaryOperationHandler):
     def __init__(self):
         super().__init__(operator=lambda l, r: l + r)
 
 
-class EmitCSubHandler(BinaryOperationHandler):
+class EmitCSubOpHandler(BinaryOperationHandler):
     def __init__(self):
         super().__init__(operator=lambda l, r: l - r)
 
 
-class EmitCMulHandler(BinaryOperationHandler):
+class EmitCMulOpHandler(BinaryOperationHandler):
     def __init__(self):
         super().__init__(operator=lambda l, r: l * r)
 
 
-class EmitCDivHandler(BinaryOperationHandler):
+class EmitCDivOpHandler(BinaryOperationHandler):
     def __init__(self):
         super().__init__(operator=lambda l, r: l / r)
 
 
 # EmitC bitwise operations (create fresh symbolic values since Z3 Int doesn't have bitwise ops)
-class EmitCBitwiseAndHandler(OperationHandler):
+class EmitCBitwiseAndOpHandler(OperationHandler):
     """Handler for emitc.bitwise_and operation."""
 
     def execute_symbolic(
@@ -131,7 +131,7 @@ class EmitCBitwiseAndHandler(OperationHandler):
         return None
 
 
-class EmitCBitwiseOrHandler(EmitCBitwiseAndHandler):
+class EmitCBitwiseOrOpHandler(EmitCBitwiseAndOpHandler):
     """Handler for emitc.bitwise_or operation."""
 
     def execute_symbolic(
@@ -143,7 +143,7 @@ class EmitCBitwiseOrHandler(EmitCBitwiseAndHandler):
         state.set_value(op.dest, expr, op.result_type or "i32")
 
 
-class EmitCBitwiseXorHandler(EmitCBitwiseAndHandler):
+class EmitCBitwiseXorOpHandler(EmitCBitwiseAndOpHandler):
     """Handler for emitc.bitwise_xor operation."""
 
     def execute_symbolic(
@@ -155,7 +155,7 @@ class EmitCBitwiseXorHandler(EmitCBitwiseAndHandler):
         state.set_value(op.dest, expr, op.result_type or "i32")
 
 
-class EmitCBitwiseLeftShiftHandler(EmitCBitwiseAndHandler):
+class EmitCBitwiseLeftShiftOpHandler(EmitCBitwiseAndOpHandler):
     """Handler for emitc.bitwise_left_shift operation."""
 
     def execute_symbolic(
@@ -167,7 +167,7 @@ class EmitCBitwiseLeftShiftHandler(EmitCBitwiseAndHandler):
         state.set_value(op.dest, expr, op.result_type or "i32")
 
 
-class EmitCBitwiseRightShiftHandler(EmitCBitwiseAndHandler):
+class EmitCBitwiseRightShiftOpHandler(EmitCBitwiseAndOpHandler):
     """Handler for emitc.bitwise_right_shift operation."""
 
     def execute_symbolic(
@@ -179,7 +179,7 @@ class EmitCBitwiseRightShiftHandler(EmitCBitwiseAndHandler):
         state.set_value(op.dest, expr, op.result_type or "i32")
 
 
-class EmitCAssignHandler(OperationHandler):
+class EmitCAssignOpHandler(OperationHandler):
     """Handler for emitc.assign operation."""
 
     def execute_symbolic(
@@ -208,7 +208,7 @@ class EmitCAssignHandler(OperationHandler):
         return None
 
 
-class EmitCBitwiseNotHandler(OperationHandler):
+class EmitCBitwiseNotOpHandler(OperationHandler):
     """Handler for emitc.bitwise_not operation."""
 
     def execute_symbolic(
@@ -250,7 +250,7 @@ EMITC_CMP_PREDICATE_MAP = {
 }
 
 
-class EmitCCmpHandler(CompareOperationHandler):
+class EmitCCmpOpHandler(CompareOperationHandler):
     def __init__(self):
         super().__init__(predicate_map=EMITC_CMP_PREDICATE_MAP)
 
@@ -274,7 +274,7 @@ class EmitCCmpHandler(CompareOperationHandler):
         super().execute_symbolic(op, state, func, interpreter)
 
 
-class EmitCConditionalHandler(OperationHandler):
+class EmitCConditionalOpHandler(OperationHandler):
     """Handler for emitc.conditional operation."""
 
     def execute_symbolic(
@@ -295,7 +295,7 @@ class EmitCConditionalHandler(OperationHandler):
         return None
 
 
-class EmitCCastHandler(OperationHandler):
+class EmitCCastOpHandler(OperationHandler):
     """Handler for emitc.cast operation."""
 
     def execute_symbolic(
@@ -330,18 +330,18 @@ class EmitCCastHandler(OperationHandler):
 # Function to register all emitc dialect handlers
 def register_handlers(registry) -> None:
     """Register emitc dialect handlers with registry."""
-    registry.register("emitc.constant", EmitCConstantHandler())
-    registry.register("emitc.add", EmitCAddHandler())
-    registry.register("emitc.sub", EmitCSubHandler())
-    registry.register("emitc.mul", EmitCMulHandler())
-    registry.register("emitc.div", EmitCDivHandler())
-    registry.register("emitc.bitwise_and", EmitCBitwiseAndHandler())
-    registry.register("emitc.bitwise_or", EmitCBitwiseOrHandler())
-    registry.register("emitc.bitwise_xor", EmitCBitwiseXorHandler())
-    registry.register("emitc.bitwise_left_shift", EmitCBitwiseLeftShiftHandler())
-    registry.register("emitc.bitwise_right_shift", EmitCBitwiseRightShiftHandler())
-    registry.register("emitc.assign", EmitCAssignHandler())
-    registry.register("emitc.bitwise_not", EmitCBitwiseNotHandler())
-    registry.register("emitc.cmp", EmitCCmpHandler())
-    registry.register("emitc.conditional", EmitCConditionalHandler())
-    registry.register("emitc.cast", EmitCCastHandler())
+    registry.register("emitc.constant", EmitCConstantOpHandler())
+    registry.register("emitc.add", EmitCAddOpHandler())
+    registry.register("emitc.sub", EmitCSubOpHandler())
+    registry.register("emitc.mul", EmitCMulOpHandler())
+    registry.register("emitc.div", EmitCDivOpHandler())
+    registry.register("emitc.bitwise_and", EmitCBitwiseAndOpHandler())
+    registry.register("emitc.bitwise_or", EmitCBitwiseOrOpHandler())
+    registry.register("emitc.bitwise_xor", EmitCBitwiseXorOpHandler())
+    registry.register("emitc.bitwise_left_shift", EmitCBitwiseLeftShiftOpHandler())
+    registry.register("emitc.bitwise_right_shift", EmitCBitwiseRightShiftOpHandler())
+    registry.register("emitc.assign", EmitCAssignOpHandler())
+    registry.register("emitc.bitwise_not", EmitCBitwiseNotOpHandler())
+    registry.register("emitc.cmp", EmitCCmpOpHandler())
+    registry.register("emitc.conditional", EmitCConditionalOpHandler())
+    registry.register("emitc.cast", EmitCCastOpHandler())
