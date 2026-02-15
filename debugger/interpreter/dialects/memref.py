@@ -71,7 +71,7 @@ def parse_memref_type(memref_type: str) -> Tuple[List[int], str]:
     return (shape, dtype)
 
 
-class MemrefAllocHandler(OperationHandler):
+class MemrefAllocOpHandler(OperationHandler):
     """Handler for memref.alloc operation."""
 
     def execute_symbolic(
@@ -107,7 +107,7 @@ class MemrefAllocHandler(OperationHandler):
         return None
 
 
-class MemrefLoadHandler(OperationHandler):
+class MemrefLoadOpHandler(OperationHandler):
     """Handler for memref.load operation."""
 
     def execute_symbolic(  # type: ignore[override]
@@ -195,7 +195,7 @@ class MemrefLoadHandler(OperationHandler):
         return tuple(concrete_indices)
 
 
-class MemrefStoreHandler(OperationHandler):
+class MemrefStoreOpHandler(OperationHandler):
     """Handler for memref.store operation."""
 
     def execute_symbolic(  # type: ignore[override]
@@ -262,13 +262,13 @@ class MemrefStoreHandler(OperationHandler):
         return tuple(concrete_indices)
 
 
-class MemrefAllocaHandler(MemrefAllocHandler):
+class MemrefAllocaOpHandler(MemrefAllocOpHandler):
     """Handler for memref.alloca operation (same as alloc for now)."""
 
     pass
 
 
-class MemrefReinterpretCastHandler(OperationHandler):
+class MemrefReinterpretCastOpHandler(OperationHandler):
     """Handler for memref.reinterpret_cast operation."""
 
     def execute_symbolic(  # type: ignore[override]
@@ -339,8 +339,8 @@ class MemrefReinterpretCastHandler(OperationHandler):
 # Function to register all memref dialect handlers
 def register_handlers(registry) -> None:
     """Register memref dialect handlers with registry."""
-    registry.register("memref.alloc", MemrefAllocHandler())
-    registry.register("memref.alloca", MemrefAllocaHandler())
-    registry.register("memref.load", MemrefLoadHandler())
-    registry.register("memref.store", MemrefStoreHandler())
-    registry.register("memref.reinterpret_cast", MemrefReinterpretCastHandler())
+    registry.register("memref.alloc", MemrefAllocOpHandler())
+    registry.register("memref.alloca", MemrefAllocaOpHandler())
+    registry.register("memref.load", MemrefLoadOpHandler())
+    registry.register("memref.store", MemrefStoreOpHandler())
+    registry.register("memref.reinterpret_cast", MemrefReinterpretCastOpHandler())

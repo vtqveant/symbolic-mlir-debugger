@@ -22,7 +22,7 @@ from ..models import SymbolicState, MLIRFunction
 
 
 # Shape constant operations are similar to arithmetic constants
-class ShapeConstSizeHandler(ConstantOperationHandler):
+class ShapeConstSizeOpHandler(ConstantOperationHandler):
     """Handler for shape.const_size operation."""
 
     def execute_symbolic(
@@ -86,7 +86,7 @@ class ShapeConstSizeHandler(ConstantOperationHandler):
         return value  # may be None or int
 
 
-class ShapeConstShapeHandler(OperationHandler):
+class ShapeConstShapeOpHandler(OperationHandler):
     """Handler for shape.const_shape operation."""
 
     def execute_symbolic(
@@ -109,17 +109,17 @@ class ShapeConstShapeHandler(OperationHandler):
 
 
 # Shape arithmetic operations (add, div) are binary operations
-class ShapeAddHandler(BinaryOperationHandler):
+class ShapeAddOpHandler(BinaryOperationHandler):
     def __init__(self):
         super().__init__(operator=lambda l, r: l + r)
 
 
-class ShapeDivHandler(BinaryOperationHandler):
+class ShapeDivOpHandler(BinaryOperationHandler):
     def __init__(self):
         super().__init__(operator=lambda l, r: l / r)
 
 
-class ShapeDimHandler(OperationHandler):
+class ShapeDimOpHandler(OperationHandler):
     """Handler for shape.dim operation."""
 
     def execute_symbolic(
@@ -145,7 +145,7 @@ class ShapeDimHandler(OperationHandler):
 
 
 # shape.get_extent is similar to shape.dim
-class ShapeGetExtentHandler(ShapeDimHandler):
+class ShapeGetExtentOpHandler(ShapeDimOpHandler):
     """Handler for shape.get_extent operation."""
 
     pass
@@ -154,9 +154,9 @@ class ShapeGetExtentHandler(ShapeDimHandler):
 # Function to register all shape dialect handlers
 def register_handlers(registry) -> None:
     """Register shape dialect handlers with registry."""
-    registry.register("shape.const_size", ShapeConstSizeHandler())
-    registry.register("shape.const_shape", ShapeConstShapeHandler())
-    registry.register("shape.add", ShapeAddHandler())
-    registry.register("shape.div", ShapeDivHandler())
-    registry.register("shape.dim", ShapeDimHandler())
-    registry.register("shape.get_extent", ShapeGetExtentHandler())
+    registry.register("shape.const_size", ShapeConstSizeOpHandler())
+    registry.register("shape.const_shape", ShapeConstShapeOpHandler())
+    registry.register("shape.add", ShapeAddOpHandler())
+    registry.register("shape.div", ShapeDivOpHandler())
+    registry.register("shape.dim", ShapeDimOpHandler())
+    registry.register("shape.get_extent", ShapeGetExtentOpHandler())

@@ -21,22 +21,22 @@ from ..models import SymbolicState, MLIRFunction
 
 
 # Binary arithmetic operations
-class ArithAddiHandler(BinaryOperationHandler):
+class ArithAddIOpHandler(BinaryOperationHandler):
     def __init__(self):
         super().__init__(operator=lambda left, right: left + right)
 
 
-class ArithSubiHandler(BinaryOperationHandler):
+class ArithSubIOpHandler(BinaryOperationHandler):
     def __init__(self):
         super().__init__(operator=lambda left, right: left - right)
 
 
-class ArithMuliHandler(BinaryOperationHandler):
+class ArithMulIOpHandler(BinaryOperationHandler):
     def __init__(self):
         super().__init__(operator=lambda left, right: left * right)
 
 
-class ArithDivsiHandler(BinaryOperationHandler):
+class ArithDivSIOpHandler(BinaryOperationHandler):
     def __init__(self):
         super().__init__(
             operator=lambda left, right: left / right
@@ -58,7 +58,7 @@ ARITH_CMPI_PREDICATE_MAP = {
 }
 
 
-class ArithCmpiHandler(CompareOperationHandler):
+class ArithCmpiOpHandler(CompareOperationHandler):
     def __init__(self):
         super().__init__(predicate_map=ARITH_CMPI_PREDICATE_MAP)
 
@@ -66,7 +66,7 @@ class ArithCmpiHandler(CompareOperationHandler):
 # Constant operation handler (already provided by base)
 
 
-class ArithIndexCastHandler(UnaryOperationHandler):
+class ArithIndexCastOpHandler(UnaryOperationHandler):
     """Handler for arith.index_cast operation."""
 
     def __init__(self):
@@ -91,23 +91,23 @@ class ArithIndexCastHandler(UnaryOperationHandler):
 def register_handlers(registry) -> None:
     """Register arithmetic dialect handlers with registry."""
     # print(f"DEBUG: Registering arithmetic dialect handlers")
-    registry.register("arith.addi", ArithAddiHandler())
-    registry.register("arith.subi", ArithSubiHandler())
-    registry.register("arith.muli", ArithMuliHandler())
-    registry.register("arith.divsi", ArithDivsiHandler())
-    registry.register("arith.divui", ArithDivsiHandler())  # Same handler for unsigned
-    registry.register("arith.divi", ArithDivsiHandler())  # Signed integer division
+    registry.register("arith.addi", ArithAddIOpHandler())
+    registry.register("arith.subi", ArithSubIOpHandler())
+    registry.register("arith.muli", ArithMulIOpHandler())
+    registry.register("arith.divsi", ArithDivSIOpHandler())
+    registry.register("arith.divui", ArithDivSIOpHandler())  # Same handler for unsigned
+    registry.register("arith.divi", ArithDivSIOpHandler())  # Signed integer division
     registry.register("arith.constant", ConstantOperationHandler())
-    registry.register("arith.index_cast", ArithIndexCastHandler())
-    registry.register("arith.cmpi", ArithCmpiHandler())
+    registry.register("arith.index_cast", ArithIndexCastOpHandler())
+    registry.register("arith.cmpi", ArithCmpiOpHandler())
 
     # Additional arithmetic operations
-    registry.register("arith.addf", ArithAddiHandler())  # Float addition (simplified)
-    registry.register("arith.subf", ArithSubiHandler())
-    registry.register("arith.mulf", ArithMuliHandler())
-    registry.register("arith.divf", ArithDivsiHandler())
+    registry.register("arith.addf", ArithAddIOpHandler())  # Float addition (simplified)
+    registry.register("arith.subf", ArithSubIOpHandler())
+    registry.register("arith.mulf", ArithMulIOpHandler())
+    registry.register("arith.divf", ArithDivSIOpHandler())
 
     # Bitwise operations (simplified to integer operations)
-    registry.register("arith.andi", ArithAddiHandler())  # Placeholder
-    registry.register("arith.ori", ArithAddiHandler())
-    registry.register("arith.xori", ArithAddiHandler())
+    registry.register("arith.andi", ArithAddIOpHandler())  # Placeholder
+    registry.register("arith.ori", ArithAddIOpHandler())
+    registry.register("arith.xori", ArithAddIOpHandler())
