@@ -16,7 +16,7 @@ from ..operations import Operation, LoopOperation
 from ..models import SymbolicState, MLIRFunction
 
 
-class ScfForHandler(OperationHandler):
+class ScfForOpHandler(OperationHandler):
     """Handler for scf.for operation."""
 
     def execute_symbolic(
@@ -147,7 +147,7 @@ class ScfForHandler(OperationHandler):
         return None
 
 
-class ScfIfHandler(OperationHandler):
+class ScfIfOpHandler(OperationHandler):
     """Handler for scf.if operation."""
 
     def execute_symbolic(
@@ -164,7 +164,7 @@ class ScfIfHandler(OperationHandler):
         return None
 
 
-class ScfYieldHandler(OperationHandler):
+class ScfYieldOpHandler(OperationHandler):
     """Handler for scf.yield operation."""
 
     def execute_symbolic(
@@ -181,7 +181,7 @@ class ScfYieldHandler(OperationHandler):
         return None
 
 
-class ScfConditionHandler(OperationHandler):
+class ScfConditionOpHandler(OperationHandler):
     """Handler for scf.condition operation."""
 
     def execute_symbolic(
@@ -200,7 +200,7 @@ class ScfConditionHandler(OperationHandler):
 # Function to register all scf dialect handlers
 def register_handlers(registry) -> None:
     """Register scf dialect handlers with registry."""
-    registry.register("scf.for", ScfForHandler())
-    registry.register("scf.if", ScfIfHandler())
-    registry.register("scf.yield", ScfYieldHandler())
-    registry.register("scf.condition", ScfConditionHandler())
+    registry.register("scf.for", ScfForOpHandler())
+    registry.register("scf.if", ScfIfOpHandler())
+    registry.register("scf.yield", ScfYieldOpHandler())
+    registry.register("scf.condition", ScfConditionOpHandler())

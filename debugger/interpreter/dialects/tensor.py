@@ -88,7 +88,7 @@ def extract_element_type(tensor_type: str) -> str:
     return inner[last_x_pos + 1 :].strip()
 
 
-class TensorExtractHandler(OperationHandler):
+class TensorExtractOpHandler(OperationHandler):
     """Handler for tensor.extract operation."""
 
     def execute_symbolic(
@@ -170,7 +170,7 @@ class TensorExtractHandler(OperationHandler):
         return tuple(concrete_indices)
 
 
-class TensorInsertHandler(OperationHandler):
+class TensorInsertOpHandler(OperationHandler):
     """Handler for tensor.insert operation."""
 
     def execute_symbolic(
@@ -298,7 +298,7 @@ class TensorInsertHandler(OperationHandler):
         return tuple(concrete_indices)
 
 
-class TensorSplatHandler(OperationHandler):
+class TensorSplatOpHandler(OperationHandler):
     """Handler for tensor.splat operation."""
 
     def execute_symbolic(
@@ -392,7 +392,7 @@ class TensorSplatHandler(OperationHandler):
         return None
 
 
-class TensorEmptyHandler(OperationHandler):
+class TensorEmptyOpHandler(OperationHandler):
     """Handler for tensor.empty operation."""
 
     def execute_symbolic(
@@ -449,7 +449,7 @@ class TensorEmptyHandler(OperationHandler):
         return None
 
 
-class TensorGenerateHandler(OperationHandler):
+class TensorGenerateOpHandler(OperationHandler):
     """Handler for tensor.generate operation."""
 
     def execute_symbolic(
@@ -509,8 +509,8 @@ class TensorGenerateHandler(OperationHandler):
 # Function to register all tensor dialect handlers
 def register_handlers(registry) -> None:
     """Register tensor dialect handlers with registry."""
-    registry.register("tensor.extract", TensorExtractHandler())
-    registry.register("tensor.insert", TensorInsertHandler())
-    registry.register("tensor.splat", TensorSplatHandler())
-    registry.register("tensor.empty", TensorEmptyHandler())
-    registry.register("tensor.generate", TensorGenerateHandler())
+    registry.register("tensor.extract", TensorExtractOpHandler())
+    registry.register("tensor.insert", TensorInsertOpHandler())
+    registry.register("tensor.splat", TensorSplatOpHandler())
+    registry.register("tensor.empty", TensorEmptyOpHandler())
+    registry.register("tensor.generate", TensorGenerateOpHandler())

@@ -13,7 +13,7 @@ from ..operations import Operation, CallOperation, ReturnOperation
 from ..models import SymbolicState, MLIRFunction
 
 
-class FuncCallHandler(OperationHandler):
+class FuncCallOpHandler(OperationHandler):
     """Handler for func.call operation."""
 
     def execute_symbolic(
@@ -39,7 +39,7 @@ class FuncCallHandler(OperationHandler):
         return None
 
 
-class FuncCallIndirectHandler(OperationHandler):
+class FuncCallIndirectOpHandler(OperationHandler):
     """Handler for func.call_indirect operation."""
 
     def execute_symbolic(
@@ -58,7 +58,7 @@ class FuncCallIndirectHandler(OperationHandler):
         return None
 
 
-class FuncReturnHandler(OperationHandler):
+class FuncReturnOpHandler(OperationHandler):
     """Handler for func.return operation."""
 
     def execute_symbolic(
@@ -118,9 +118,9 @@ def register_handlers(registry) -> None:
     """Register func dialect handlers with registry."""
     import sys
 
-    registry.register("func.call", FuncCallHandler())
-    registry.register("func.call_indirect", FuncCallIndirectHandler())
-    registry.register("func.return", FuncReturnHandler())
+    registry.register("func.call", FuncCallOpHandler())
+    registry.register("func.call_indirect", FuncCallIndirectOpHandler())
+    registry.register("func.return", FuncReturnOpHandler())
     # Also register generic return without dialect prefix
-    registry.register(".return", FuncReturnHandler())
-    registry.register("shape.custom", FuncReturnHandler())
+    registry.register(".return", FuncReturnOpHandler())
+    registry.register("shape.custom", FuncReturnOpHandler())

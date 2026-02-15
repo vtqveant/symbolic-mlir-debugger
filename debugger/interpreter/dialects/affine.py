@@ -13,7 +13,7 @@ from ..operations import Operation, LoopOperation
 from ..models import SymbolicState, MLIRFunction
 
 
-class AffineForHandler(OperationHandler):
+class AffineForOpHandler(OperationHandler):
     """Handler for affine.for operation."""
 
     def execute_symbolic(
@@ -138,7 +138,7 @@ class AffineForHandler(OperationHandler):
         return None
 
 
-class AffineIfHandler(OperationHandler):
+class AffineIfOpHandler(OperationHandler):
     """Handler for affine.if operation."""
 
     def execute_symbolic(
@@ -158,7 +158,7 @@ class AffineIfHandler(OperationHandler):
         return None
 
 
-class AffineLoadHandler(OperationHandler):
+class AffineLoadOpHandler(OperationHandler):
     """Handler for affine.load operation."""
 
     def execute_symbolic(
@@ -178,7 +178,7 @@ class AffineLoadHandler(OperationHandler):
         return None
 
 
-class AffineStoreHandler(OperationHandler):
+class AffineStoreOpHandler(OperationHandler):
     """Handler for affine.store operation."""
 
     def execute_symbolic(
@@ -196,7 +196,7 @@ class AffineStoreHandler(OperationHandler):
         return None
 
 
-class AffineYieldHandler(OperationHandler):
+class AffineYieldOpHandler(OperationHandler):
     """Handler for affine.yield operation."""
 
     def execute_symbolic(
@@ -216,8 +216,8 @@ class AffineYieldHandler(OperationHandler):
 # Function to register all affine dialect handlers
 def register_handlers(registry) -> None:
     """Register affine dialect handlers with registry."""
-    registry.register("affine.for", AffineForHandler())
-    registry.register("affine.if", AffineIfHandler())
-    registry.register("affine.load", AffineLoadHandler())
-    registry.register("affine.store", AffineStoreHandler())
-    registry.register("affine.yield", AffineYieldHandler())
+    registry.register("affine.for", AffineForOpHandler())
+    registry.register("affine.if", AffineIfOpHandler())
+    registry.register("affine.load", AffineLoadOpHandler())
+    registry.register("affine.store", AffineStoreOpHandler())
+    registry.register("affine.yield", AffineYieldOpHandler())
