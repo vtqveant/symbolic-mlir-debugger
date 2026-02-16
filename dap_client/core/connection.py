@@ -69,8 +69,10 @@ class DAPConnection:
 
         try:
             json_str = request.to_json()
+            # DAP protocol requires Content-Length header
+            message = f"Content-Length: {len(json_str)}\r\n\r\n{json_str}"
             logger.debug(f"Sending request: {json_str}")
-            self.socket.sendall(json_str.encode("utf-8"))
+            self.socket.sendall(message.encode("utf-8"))
         except socket.timeout:
             raise DAPConnectionError("Timeout while sending request")
         except Exception as e:
@@ -97,6 +99,80 @@ class DAPConnection:
             logger.error(f"Error receiving data: {e}")
             return None
 
+    def _parse_dap_message(self, buffer: bytes) -> tuple[Optional[Dict[str, Any]], bytes]:
+        """Parse a DAP message from buffer.
+
+        Returns (message_dict, remaining_buffer) or (None, buffer) if incomplete.
+        """
+        if not buffer:
+            return None, buffer
+
+        # Convert to string for line parsing
+        text = buffer.decode("utf-8")
+
+        # Check for Content-Length header
+        if text.startswith("Content-Length:"):
+            # Find first newline
+            newline_pos = text.find("\n")
+            if newline_pos == -1:
+                return None, buffer  # Incomplete header line
+
+            header_line = text[:newline_pos]
+            # Parse length
+            try:
+                length = int(header_line.split(":")[1].strip())
+            except (ValueError, IndexError):
+                logger.error(f"Invalid Content-Length header: {header_line}")
+                # Skip this line and try to recover?
+                # For now, raise error
+                raise DAPConnectionError(f"Invalid Content-Length header: {header_line}")
+
+            # Find end of headers (blank line)
+            # Skip the header line and the newline
+            rest = text[newline_pos + 1 :]
+            # Skip possible CR before LF
+            if header_line.endswith("\r"):
+                # Actually newline_pos is at LF, CR is part of header_line
+                pass
+
+            # Look for blank line
+            blank_line_end = rest.find("\n")
+            if blank_line_end == -1:
+                return None, buffer  # Incomplete headers
+
+            # Check if blank line is just "\n" or "\r\n"
+            blank_line = rest[:blank_line_end]
+            if blank_line not in ("", "\r"):
+                # Some servers might not send blank line? Skip anyway
+                logger.debug(f"Unexpected blank line content: {blank_line!r}")
+
+            # Skip blank line
+            headers_end = newline_pos + 1 + blank_line_end + 1
+            # Now we need 'length' bytes of content
+            content_start = headers_end
+            if len(buffer) < content_start + length:
+                return None, buffer  # Not enough content
+
+            content_bytes = buffer[content_start : content_start + length]
+            try:
+                content_str = content_bytes.decode("utf-8")
+                message = json.loads(content_str)
+                remaining = buffer[content_start + length :]
+                return message, remaining
+            except (json.JSONDecodeError, UnicodeDecodeError) as e:
+                logger.error(f"Failed to parse DAP message content: {e}")
+                raise DAPConnectionError(f"Failed to parse DAP message: {e}")
+
+        else:
+            # Try to parse as raw JSON (for backward compatibility)
+            try:
+                message = json.loads(text.strip())
+                # Consume the entire buffer (assuming one message)
+                return message, b""
+            except json.JSONDecodeError:
+                # Might be incomplete JSON
+                return None, buffer
+
     def receive_response(self) -> DAPResponse:
         """Receive a DAP response from server"""
         buffer = b""
@@ -108,35 +184,37 @@ class DAPConnection:
 
             buffer += data
 
-            try:
-                # Try to parse JSON from buffer
-                json_str = buffer.decode("utf-8").strip()
-                # Check if we have a complete JSON message
-                # DAP messages are JSON objects that may span multiple packets
-                obj = json.loads(json_str)
-
-                if "request_seq" in obj:
-                    # This is a response
-                    response = DAPResponse.from_dict(obj)
-                    logger.debug(f"Received response: {json.dumps(obj, indent=2)}")
-                    return response
-
-                # Handle events differently
-                if "event" in obj:
-                    if self.event_handler:
-                        self.event_handler(obj)
-                    else:
-                        logger.debug(f"Received event (no handler): {json.dumps(obj, indent=2)}")
-
-                # For now, assume it's a response
-                response = DAPResponse.from_dict(obj)
-                return response
-
-            except json.JSONDecodeError:
-                # Incomplete JSON, continue reading
+            # Try to parse a message from buffer
+            message, remaining = self._parse_dap_message(buffer)
+            if message is None:
+                # Incomplete message, continue reading
                 if len(data) == 0:
                     raise DAPConnectionError("Connection closed by server")
                 continue
+
+            # Update buffer with remaining data
+            buffer = remaining
+
+            # Handle the message
+            if "request_seq" in message:
+                # This is a response
+                response = DAPResponse.from_dict(message)
+                logger.debug(f"Received response: {json.dumps(message, indent=2)}")
+                return response
+
+            # Handle events
+            if "event" in message:
+                if self.event_handler:
+                    self.event_handler(message)
+                else:
+                    logger.debug(f"Received event (no handler): {json.dumps(message, indent=2)}")
+                # Continue to read next message (looking for response)
+                continue
+
+            # Unknown message type, assume it's a response
+            logger.warning(f"Unknown message type, assuming response: {message}")
+            response = DAPResponse.from_dict(message)
+            return response
 
     def request(
         self, request: DAPRequest, expect_response: bool = True

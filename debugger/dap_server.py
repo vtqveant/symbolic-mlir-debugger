@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional
 
 # Add project root to path for imports
 sys.path.insert(0, os.path.dirname(__file__))
-from interpreter.stepper import ExecutionStepper
+from interpreter.stepper import ExecutionStepper  # noqa: E402
 
 # Set up logging to stderr
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -384,7 +384,7 @@ class MLIRDebugSession:
                     "name": memref_name,
                     "value": f"{cell_count} cells",
                     "type": "memory_region_summary",
-                    "variablesReference": 0,  # Could make expandable but already have memory regions
+                    "variablesReference": 0,  # Not expandable (already have memory regions)
                     "presentationHint": "data",
                 }
                 result.append(var_entry)
@@ -429,8 +429,8 @@ class MLIRDebugSession:
         # Find all matches
         for match in re.finditer(pattern, expression):
             full_match = match.group(0)  # e.g., "mem[0][1]"
-            memref_name = match.group(1)  # e.g., "mem"
-            indices_str = match.group(2)  # e.g., "[0][1]"
+            _ = match.group(1)  # e.g., "mem"
+            _ = match.group(2)  # e.g., "[0][1]"
 
             # Check if this is a valid memory cell in variables
             # Memory cells are stored with names like "mem[0][1]"
@@ -461,7 +461,7 @@ class MLIRDebugSession:
                         if not placeholder[0].isalpha():
                             placeholder = "mem_" + placeholder
 
-                        # Replace in expression (but need to be careful with overlapping replacements)
+                        # Replace in expression (careful with overlapping replacements)
                         # We'll collect replacements and apply later
                         placeholder_values[full_match] = (placeholder, concrete_val)
 
@@ -614,7 +614,7 @@ class MLIRDebugSession:
         """Handle symbolic expression evaluation request."""
         try:
             expression = arguments.get("expression", "")
-            frame_id = arguments.get("frameId", 0)
+            _ = arguments.get("frameId", 0)  # unused, kept for protocol compatibility
 
             # Ensure symbolic components are initialized
             if not self._ensure_symbolic_components():
@@ -692,6 +692,7 @@ class DAPServer:
 
     def __init__(self):
         self.session = MLIRDebugSession()
+        self.session.set_server_ref(self)
         self.seq_counter = 0
         self.running = True
 
@@ -907,7 +908,7 @@ class DAPServer:
             elif command == "evaluate":
                 expression = arguments.get("expression", "")
                 frame_id = arguments.get("frameId", 0)
-                context = arguments.get("context", "hover")
+                _ = arguments.get("context", "hover")  # unused
 
                 result = self.session.evaluate_expression(expression)
                 self.send_response(request, result)

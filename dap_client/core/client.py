@@ -73,11 +73,11 @@ class DAPClient:
 
         request = InitializeRequest(adapter_id, client_id)
         result = self.connection.request(request)
-        self.session = DAPSession(self.host, self.port)
-        self.session.initialize(adapter_id, client_id)
+        self.session = DAPSession(self.host, self.port, connection=self.connection)
+        self.session.initialize(adapter_id, client_id, skip_request=True)
 
-        # Set up event handler for session
-        self.session.connection.set_event_handler(self._handle_event)
+        # Event handler already set up on client connection
+        # No need to set again on session's connection (same object)
 
         return result or {}
 
