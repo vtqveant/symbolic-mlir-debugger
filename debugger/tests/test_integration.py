@@ -3,8 +3,9 @@
 Integration tests for multi-dialect debugging with DAP server.
 """
 
-import pytest
 import os
+
+import pytest
 from dap_server import MLIRDebugSession
 
 
@@ -32,7 +33,9 @@ def test_shape_dialect_variables(test_data_dir):
 
     # Check variable formatting
     for var in variables:
-        print(f"  {var['name']}: {var.get('value', '?')} ({var.get('type', 'unknown')})")
+        print(
+            f"  {var['name']}: {var.get('value', '?')} ({var.get('type', 'unknown')})"
+        )
         if "presentationHint" in var:
             print(f"    hint: {var['presentationHint']}")
 
@@ -58,10 +61,14 @@ def test_memory_debugging(test_data_dir):
 
     # Find memory region
     memory_regions = [v for v in variables if v.get("type") == "memory_region"]
-    assert len(memory_regions) == 1, f"Expected 1 memory region, got {len(memory_regions)}"
+    assert len(memory_regions) == 1, (
+        f"Expected 1 memory region, got {len(memory_regions)}"
+    )
 
     mem_region = memory_regions[0]
-    assert mem_region["variablesReference"] > 0, "Memory region should have variablesReference > 0"
+    assert mem_region["variablesReference"] > 0, (
+        "Memory region should have variablesReference > 0"
+    )
 
     # Test expansion
     ref_id = mem_region["variablesReference"]
@@ -73,7 +80,9 @@ def test_memory_debugging(test_data_dir):
     assert cell["value"] == "5", f"Expected cell value '5', got {cell['value']}"
     assert cell["variablesReference"] == 0, "Memory cell should be leaf node"
 
-    print(f"Memory debugging test passed: {mem_region['name']} with {len(children)} cells")
+    print(
+        f"Memory debugging test passed: {mem_region['name']} with {len(children)} cells"
+    )
 
 
 @pytest.mark.integration
@@ -124,9 +133,9 @@ module {
         variables = session.get_variables()
         result_vars = [v for v in variables if v["name"] == "result"]
         if result_vars:
-            assert (
-                result_vars[0]["value"] == "30"
-            ), f"Expected result=30, got {result_vars[0]['value']}"
+            assert result_vars[0]["value"] == "30", (
+                f"Expected result=30, got {result_vars[0]['value']}"
+            )
 
         print(f"Multi-dialect debugging test passed")
 
@@ -136,7 +145,6 @@ module {
 
 if __name__ == "__main__":
     # Run tests directly
-    import sys
 
     test_dir = os.path.join(os.path.dirname(__file__), "..", "tests")
     test_data_dir = type(

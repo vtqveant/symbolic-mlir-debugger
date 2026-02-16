@@ -3,8 +3,9 @@
 Data models for symbolic MLIR interpreter.
 """
 
-from typing import Dict, List, Optional, Tuple, Any, Set, Union
 from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Tuple, Any, Set, Union
+
 import z3
 
 from .memory.base import MemoryModel

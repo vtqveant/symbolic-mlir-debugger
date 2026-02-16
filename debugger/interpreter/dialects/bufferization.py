@@ -5,12 +5,13 @@ Bufferization dialect execution handlers.
 Handles operations: alloc_tensor, to_buffer, to_tensor, clone, etc.
 """
 
-import z3
 from typing import Any
 
+import z3
+
 from .base import OperationHandler
-from ..operations import Operation
 from ..models import SymbolicState, MLIRFunction
+from ..operations import Operation
 
 
 class BufferizationAllocTensorOpHandler(OperationHandler):

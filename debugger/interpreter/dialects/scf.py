@@ -6,8 +6,9 @@ Handles operations: for, if, yield, condition, etc.
 """
 
 import logging
-import z3
 from typing import Any
+
+import z3
 
 logger = logging.getLogger(__name__)
 

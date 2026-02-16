@@ -7,10 +7,10 @@ interpreter Operation objects, skipping the intermediate dictionary
 representation.
 """
 
-from typing import Optional, Any, List
-import dataclasses
+from typing import Optional
 
 import parser.astnodes as mast
+
 from .base import BaseDialectParser
 from ..operations import Operation, BinaryOperation, UnaryOperation, ConstantOperation
 
@@ -578,7 +578,6 @@ class ShapeDialectParser(BaseDialectParser):
 
         # Extract value from attributes
         value = None
-        import sys
 
         if hasattr(op_obj, "attributes"):
             # attributes is a dictionary attribute

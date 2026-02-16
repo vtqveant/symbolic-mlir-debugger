@@ -6,10 +6,9 @@ Provides common patterns for parsing MLIR AST nodes into interpreter
 Operation objects, skipping the intermediate dictionary representation.
 """
 
-from typing import Any, Dict, Optional, Type
-import dataclasses
-import sys
 import os
+import sys
+from typing import Any, Dict, Optional
 
 # Add project root to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
@@ -17,12 +16,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 import parser.astnodes as mast
 from ..operations import (
     Operation,
-    BinaryOperation,
-    UnaryOperation,
-    CompareOperation,
-    ConstantOperation,
 )
-from ..models import MLIRFunction
 
 
 class BaseDialectParser:

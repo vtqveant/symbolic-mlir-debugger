@@ -5,12 +5,13 @@ Linalg dialect execution handlers.
 Handles operations: generic, matmul, batch_matmul, conv, yield, etc.
 """
 
-import z3
 from typing import Any
 
+import z3
+
 from .base import OperationHandler
-from ..operations import Operation
 from ..models import SymbolicState, MLIRFunction
+from ..operations import Operation
 
 
 class LinalgGenericOpHandler(OperationHandler):

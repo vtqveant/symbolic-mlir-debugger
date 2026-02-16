@@ -6,6 +6,7 @@ Provides type-specific formatting for shape, vector, tensor, and memory values.
 """
 
 from typing import Any, Dict, List, Optional, Tuple
+
 import z3
 
 

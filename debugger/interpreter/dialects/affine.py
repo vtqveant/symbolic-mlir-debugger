@@ -5,12 +5,13 @@ Affine dialect execution handlers.
 Handles operations: for, if, load, store, etc.
 """
 
-import z3
 from typing import Any
 
+import z3
+
 from .base import OperationHandler
-from ..operations import Operation, LoopOperation
 from ..models import SymbolicState, MLIRFunction
+from ..operations import Operation, LoopOperation
 
 
 class AffineForOpHandler(OperationHandler):

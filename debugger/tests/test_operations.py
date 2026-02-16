@@ -1,8 +1,7 @@
 """Operation-specific parsing tests."""
 
-import pytest
 import lark
-import re
+import pytest
 from interpreter.operations import LoopOperation
 
 

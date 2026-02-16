@@ -5,12 +5,13 @@ Vector dialect execution handlers.
 Handles operations: broadcast, bitcast, fma, etc.
 """
 
-import z3
 from typing import Any
 
+import z3
+
 from .base import OperationHandler
-from ..operations import Operation
 from ..models import SymbolicState, MLIRFunction
+from ..operations import Operation
 
 
 class VectorBroadcastOpHandler(OperationHandler):

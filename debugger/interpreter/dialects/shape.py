@@ -5,20 +5,20 @@ Shape dialect execution handlers.
 Handles operations: const_size, const_shape, add, div, dim, get_extent, etc.
 """
 
-import z3
 from typing import Any
+
+import z3
 
 from .base import (
     BinaryOperationHandler,
     ConstantOperationHandler,
     OperationHandler,
 )
+from ..models import SymbolicState, MLIRFunction
 from ..operations import (
     Operation,
     ConstantOperation,
-    ReturnOperation,
 )
-from ..models import SymbolicState, MLIRFunction
 
 
 # Shape constant operations are similar to arithmetic constants
@@ -38,7 +38,6 @@ class ShapeConstSizeOpHandler(ConstantOperationHandler):
 
         # Try to get value from attributes if op.value is None
         value = op.value
-        import sys
 
         if value is None and op.attributes and "value" in op.attributes:
             attr_val = op.attributes["value"]
@@ -52,7 +51,6 @@ class ShapeConstSizeOpHandler(ConstantOperationHandler):
                 value = attr_val
 
         # Create Z3 constant from value
-        import sys
 
         if isinstance(value, int):
             expr = z3.IntVal(value)

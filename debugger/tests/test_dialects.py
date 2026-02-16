@@ -1,7 +1,6 @@
 """Dialect-specific parsing tests."""
 
 import pytest
-from pathlib import Path
 
 
 @pytest.mark.dialect

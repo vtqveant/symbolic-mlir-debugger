@@ -1,8 +1,10 @@
 """Unit tests for DAP connection"""
 
-import pytest
 import socket
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from dap_client.core.connection import DAPConnection, DAPConnectionError
 
 

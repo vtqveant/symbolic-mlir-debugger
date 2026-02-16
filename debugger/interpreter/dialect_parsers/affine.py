@@ -8,9 +8,9 @@ representation.
 """
 
 from typing import Optional, Any, List
-import dataclasses
 
 import parser.astnodes as mast
+
 from .base import BaseDialectParser
 from ..operations import (
     Operation,

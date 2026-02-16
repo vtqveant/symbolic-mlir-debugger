@@ -1,7 +1,8 @@
 """DAP Protocol Message Classes"""
 
-from typing import Any, Dict, Optional
 from enum import IntEnum
+from typing import Any, Dict, Optional
+
 from .constants import (
     COMMAND_INITIALIZE, COMMAND_LAUNCH, COMMAND_DISCONNECT,
     COMMAND_SET_BREAKPOINTS, COMMAND_CONFIGURATION_DONE, COMMAND_CONTINUE

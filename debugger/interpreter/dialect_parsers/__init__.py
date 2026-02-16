@@ -7,22 +7,22 @@ AST nodes directly to interpreter Operation objects, skipping the intermediate
 dictionary representation.
 """
 
-from .base import BaseDialectParser, DialectParserRegistry
-from .arith import ArithDialectParser
-from .memref import MemrefDialectParser
-from .tensor import TensorDialectParser
 from .affine import AffineDialectParser
+from .arith import ArithDialectParser
+from .base import BaseDialectParser, DialectParserRegistry
+from .bufferization import BufferizationDialectParser
+from .builtin import BuiltinDialectParser
 from .cf import CfDialectParser
-from .scf import ScfDialectParser
+from .emitc import EmitcDialectParser
 from .func import FuncDialectParser
+from .index import IndexDialectParser
 from .linalg import LinalgDialectParser
 from .math import MathDialectParser
-from .index import IndexDialectParser
-from .bufferization import BufferizationDialectParser
+from .memref import MemrefDialectParser
+from .scf import ScfDialectParser
 from .shape import ShapeDialectParser
+from .tensor import TensorDialectParser
 from .vector import VectorDialectParser
-from .builtin import BuiltinDialectParser
-from .emitc import EmitcDialectParser
 
 __all__ = [
     "BaseDialectParser",

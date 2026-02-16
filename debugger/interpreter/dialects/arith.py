@@ -5,8 +5,9 @@ Arithmetic dialect execution handlers.
 Handles operations: addi, subi, muli, divi, constant, cmpi, etc.
 """
 
-import z3
 from typing import Any
+
+import z3
 
 from .base import (
     BinaryOperationHandler,
@@ -14,10 +15,10 @@ from .base import (
     CompareOperationHandler,
     UnaryOperationHandler,
 )
+from ..models import SymbolicState, MLIRFunction
 from ..operations import (
     UnaryOperation,
 )
-from ..models import SymbolicState, MLIRFunction
 
 
 # Binary arithmetic operations

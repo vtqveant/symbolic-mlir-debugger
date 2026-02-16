@@ -1,6 +1,7 @@
 """Pytest fixtures for DAP client tests"""
 
 import pytest
+
 from dap_client.core.client import DAPClient
 
 

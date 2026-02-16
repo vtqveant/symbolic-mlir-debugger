@@ -29,15 +29,25 @@
           "path": "${program}"
         },
         "breakpoints": [
-          {"line": 10},
-          {"line": 15}
+          {
+            "line": 10
+          },
+          {
+            "line": 15
+          }
         ]
       },
       "expect": {
         "success": true,
         "breakpoints": [
-          {"verified": true, "line": 10},
-          {"verified": true, "line": 15}
+          {
+            "verified": true,
+            "line": 10
+          },
+          {
+            "verified": true,
+            "line": 15
+          }
         ]
       }
     },

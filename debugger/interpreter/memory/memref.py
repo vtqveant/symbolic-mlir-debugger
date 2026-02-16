@@ -6,8 +6,9 @@ Handles multi-dimensional memory storage with support for symbolic indices
 and memref views (reinterpret_cast).
 """
 
+from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional, Union, Any
-from dataclasses import dataclass, field
+
 import z3
 
 from .base import MemoryModel

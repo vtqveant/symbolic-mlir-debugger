@@ -22,13 +22,11 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        cd debugger
         pip install -r requirements.txt
         pip install pytest pytest-cov
     - name: Run tests
       run: |
-        cd debugger
-        python -m pytest tests/ -v
+        python -m pytest -v
 
   lint:
     runs-on: ubuntu-latest

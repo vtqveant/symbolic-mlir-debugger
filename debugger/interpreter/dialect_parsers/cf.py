@@ -7,16 +7,15 @@ interpreter Operation objects, skipping the intermediate dictionary
 representation.
 """
 
-from typing import Optional, Any, List, Tuple
-import dataclasses
+from typing import Optional, List, Tuple
 
 import parser.astnodes as mast
+
 from .base import BaseDialectParser
 from ..operations import (
     Operation,
     ConditionalBranchOperation,
     UnconditionalBranchOperation,
-    TerminatorOperation,
 )
 
 
