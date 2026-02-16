@@ -5,9 +5,10 @@ Symbolic expression evaluator for MLIR symbolic debugging.
 Provides ability to evaluate symbolic expressions using Z3 solver.
 """
 
-from typing import Dict, Any, Optional, Union
-import z3
 import logging
+from typing import Any
+
+import z3
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +42,7 @@ class SymbolicExpressionEvaluator:
         if self.stepper is None:
             return "No stepper set"
 
-        if (
-            not hasattr(self.stepper, "current_state")
-            or self.stepper.current_state is None
-        ):
+        if not hasattr(self.stepper, "current_state") or self.stepper.current_state is None:
             return "No execution state available"
 
         state = self.stepper.current_state

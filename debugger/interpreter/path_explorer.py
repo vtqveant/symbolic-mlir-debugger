@@ -5,8 +5,8 @@ Path exploration for MLIR symbolic debugging.
 Explores all possible execution paths through symbolic execution.
 """
 
-from typing import Dict, List, Any, Optional, Union
 import logging
+from typing import Dict, List, Any
 
 logger = logging.getLogger(__name__)
 
@@ -66,13 +66,9 @@ class PathExplorer:
             self.paths = []
             for i, path in enumerate(real_paths):
                 # Convert Z3 expressions to strings for JSON serialization
-                path_condition_strs = [
-                    str(cond) for cond in path.get("path_condition", [])
-                ]
+                path_condition_strs = [str(cond) for cond in path.get("path_condition", [])]
                 return_value = path.get("return_value")
-                return_value_str = (
-                    str(return_value) if return_value is not None else None
-                )
+                return_value_str = str(return_value) if return_value is not None else None
 
                 # Extract branch decisions from path conditions
                 branches = self._extract_branches_from_conditions(path_condition_strs)
@@ -97,9 +93,7 @@ class PathExplorer:
             logger.error(f"Path exploration failed: {e}")
             return []
 
-    def _extract_branches_from_conditions(
-        self, conditions: List[str]
-    ) -> List[Dict[str, Any]]:
+    def _extract_branches_from_conditions(self, conditions: List[str]) -> List[Dict[str, Any]]:
         """Extract branch information from path conditions."""
         branches = []
         for i, condition in enumerate(conditions):

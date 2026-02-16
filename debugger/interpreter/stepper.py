@@ -5,10 +5,10 @@ Stepper for pausable execution of MLIR programs.
 Supports concrete mode execution (single path) with breakpoints and stepping.
 """
 
+import logging
 from typing import Dict, List, Optional, Any, cast
 
 import z3
-import logging
 
 from .debug_utils import get_variable_summary
 from .interpreter import ConcolicInterpreter
@@ -30,7 +30,12 @@ class ExecutionStepper:
     Supports concrete mode execution (single path) with breakpoints and stepping.
     """
 
-    def __init__(self, mlir_file: str, concrete_inputs: Optional[Dict[str, int]] = None, symbolic_mode: bool = False):
+    def __init__(
+        self,
+        mlir_file: str,
+        concrete_inputs: Optional[Dict[str, int]] = None,
+        symbolic_mode: bool = False,
+    ):
         """Initialize stepper with MLIR file and concrete inputs."""
         self.mlir_file = mlir_file
         self.concrete_inputs = concrete_inputs or {}
@@ -604,7 +609,7 @@ class ExecutionStepper:
         assert state.pc is not None
 
         # Track symbolic variables in symbolic mode
-        if self.symbolic_mode and hasattr(self.interpreter, 'symbolic_state'):
+        if self.symbolic_mode and hasattr(self.interpreter, "symbolic_state"):
             # Track symbolic variables
             for var_name, value in self.interpreter.symbolic_state.variables.items():
                 # This would be tracked by variable_tracker

@@ -6,11 +6,11 @@ from .interpreter import SymbolicInterpreter, ConcolicInterpreter
 # Re-export main public API
 from .models import MLIRValue, BasicBlock, MLIRFunction, SymbolicState
 from .parser import MLIRParser
+from .path_explorer import PathExplorer
 from .stepper import ExecutionStepper
 
 # Re-export symbolic debugging components
 from .symbolic_evaluator import SymbolicExpressionEvaluator
-from .path_explorer import PathExplorer
 from .variable_tracking import SymbolicVariableTracker
 
 __all__ = [

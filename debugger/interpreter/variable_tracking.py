@@ -5,8 +5,8 @@ Symbolic variable tracking for MLIR symbolic debugging.
 Tracks symbolic variables and their constraints.
 """
 
-from typing import Dict, List, Any, Optional
 import logging
+from typing import Dict, List, Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -45,18 +45,11 @@ class SymbolicVariableTracker:
     def get_variables(self) -> Dict[str, Any]:
         """Get all tracked variables from current symbolic state."""
         if self.stepper is None:
-            logger.warning(
-                "SymbolicVariableTracker: No stepper set, returning empty variables"
-            )
+            logger.warning("SymbolicVariableTracker: No stepper set, returning empty variables")
             return self.variables
 
-        if (
-            not hasattr(self.stepper, "current_state")
-            or self.stepper.current_state is None
-        ):
-            logger.warning(
-                "SymbolicVariableTracker: No current state, returning empty variables"
-            )
+        if not hasattr(self.stepper, "current_state") or self.stepper.current_state is None:
+            logger.warning("SymbolicVariableTracker: No current state, returning empty variables")
             return self.variables
 
         state = self.stepper.current_state
@@ -64,9 +57,7 @@ class SymbolicVariableTracker:
 
         # Extract variables from symbolic state
         for name, mlir_value in state.values.items():
-            value_str = (
-                str(mlir_value.expr) if mlir_value.expr is not None else "unknown"
-            )
+            value_str = str(mlir_value.expr) if mlir_value.expr is not None else "unknown"
             var_type = mlir_value.type if hasattr(mlir_value, "type") else "unknown"
             concrete_val = state.get_concrete_value(name)
 
@@ -90,18 +81,11 @@ class SymbolicVariableTracker:
     def get_constraints(self) -> List[str]:
         """Get all constraints from current symbolic state."""
         if self.stepper is None:
-            logger.warning(
-                "SymbolicVariableTracker: No stepper set, returning empty constraints"
-            )
+            logger.warning("SymbolicVariableTracker: No stepper set, returning empty constraints")
             return self.constraints
 
-        if (
-            not hasattr(self.stepper, "current_state")
-            or self.stepper.current_state is None
-        ):
-            logger.warning(
-                "SymbolicVariableTracker: No current state, returning empty constraints"
-            )
+        if not hasattr(self.stepper, "current_state") or self.stepper.current_state is None:
+            logger.warning("SymbolicVariableTracker: No current state, returning empty constraints")
             return self.constraints
 
         state = self.stepper.current_state
