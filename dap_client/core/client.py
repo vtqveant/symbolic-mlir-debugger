@@ -35,9 +35,7 @@ class DAPClient:
     def connect(self) -> bool:
         """Establish connection to DAP server"""
         try:
-            self.connection = DAPConnection(
-                self.host, self.port, self.timeout, self.read_timeout
-            )
+            self.connection = DAPConnection(self.host, self.port, self.timeout, self.read_timeout)
             if self.connection.connect():
                 self.connected = True
                 self._setup_event_handlers()
@@ -160,9 +158,7 @@ class DAPClient:
 
         return self.session.get_variables(variable_reference)
 
-    def evaluate(
-        self, expression: str, frame_id: Optional[int] = None
-    ) -> Dict[str, Any]:
+    def evaluate(self, expression: str, frame_id: Optional[int] = None) -> Dict[str, Any]:
         """Evaluate expression"""
         if not self.session:
             raise RuntimeError("Session not initialized")

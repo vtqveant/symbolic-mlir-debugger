@@ -49,9 +49,7 @@ class DAPConnection:
         except ConnectionRefusedError:
             raise DAPConnectionError(f"Connection refused by {self.host}:{self.port}")
         except Exception as e:
-            raise DAPConnectionError(
-                f"Failed to connect to {self.host}:{self.port}: {e}"
-            )
+            raise DAPConnectionError(f"Failed to connect to {self.host}:{self.port}: {e}")
 
     def disconnect(self) -> None:
         """Close connection to DAP server"""
@@ -106,9 +104,7 @@ class DAPConnection:
         while True:
             data = self._receive()
             if data is None:
-                raise DAPConnectionError(
-                    "Connection lost or timeout while waiting for response"
-                )
+                raise DAPConnectionError("Connection lost or timeout while waiting for response")
 
             buffer += data
 
@@ -130,9 +126,7 @@ class DAPConnection:
                     if self.event_handler:
                         self.event_handler(obj)
                     else:
-                        logger.debug(
-                            f"Received event (no handler): {json.dumps(obj, indent=2)}"
-                        )
+                        logger.debug(f"Received event (no handler): {json.dumps(obj, indent=2)}")
 
                 # For now, assume it's a response
                 response = DAPResponse.from_dict(obj)
