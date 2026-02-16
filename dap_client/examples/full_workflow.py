@@ -21,11 +21,9 @@ from pathlib import Path
 # Add parent directory to path to import dap_client modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from dap_client.generator.test_case_generator import TestCaseGenerator
-from dap_client.generator.path_aware_generator import PathAwareTestCaseGenerator
-from dap_client.runner.test_runner import TestRunner
-from dap_client.runner.orchestrator import TestOrchestrator
-
+from dap_client.generator.test_case_generator import TestCaseGenerator  # noqa: E402
+from dap_client.generator.path_aware_generator import PathAwareTestCaseGenerator  # noqa: E402
+from dap_client.runner.orchestrator import TestOrchestrator  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -80,9 +78,7 @@ def generate_test_cases(program_path: str, output_dir: str = "generated_tests") 
         # Try path-aware generator if Z3 is available
         print("\nTrying path-aware generator (requires Z3)...")
         try:
-            path_aware_generator = PathAwareTestCaseGenerator(
-                host="localhost", port=5678
-            )
+            path_aware_generator = PathAwareTestCaseGenerator(host="localhost", port=5678)
 
             if path_aware_generator.connect():
                 # Generate targeted test cases
@@ -93,9 +89,7 @@ def generate_test_cases(program_path: str, output_dir: str = "generated_tests") 
                 )
 
                 for i, test_script in enumerate(targeted_scripts):
-                    output_file = (
-                        output_path / f"targeted_{i:03d}_{Path(program_path).stem}.json"
-                    )
+                    output_file = output_path / f"targeted_{i:03d}_{Path(program_path).stem}.json"
                     with open(output_file, "w") as f:
                         json.dump(test_script, f, indent=2)
 
@@ -114,9 +108,7 @@ def generate_test_cases(program_path: str, output_dir: str = "generated_tests") 
     return test_script_paths
 
 
-def run_test_cases(
-    test_script_paths: list, output_file: str = "test_report.json"
-) -> dict:
+def run_test_cases(test_script_paths: list, output_file: str = "test_report.json") -> dict:
     """Run test cases and generate report.
 
     Args:
@@ -133,9 +125,6 @@ def run_test_cases(
     if not test_script_paths:
         print("No test scripts to run")
         return {}
-
-    # Create test runner
-    runner = TestRunner(host="localhost", port=5678)
 
     # Create orchestrator for parallel execution
     orchestrator = TestOrchestrator(
@@ -176,9 +165,7 @@ def run_test_cases(
     return report
 
 
-def generate_memory_model_tests(
-    program_path: str, output_dir: str = "generated_tests"
-) -> list:
+def generate_memory_model_tests(program_path: str, output_dir: str = "generated_tests") -> list:
     """Generate memory model test cases.
 
     Args:
@@ -214,9 +201,7 @@ def generate_memory_model_tests(
 
             # Save each test script
             for i, test_script in enumerate(memory_tests):
-                output_file = (
-                    output_path / f"memory_{i:03d}_{Path(program_path).stem}.json"
-                )
+                output_file = output_path / f"memory_{i:03d}_{Path(program_path).stem}.json"
                 with open(output_file, "w") as f:
                     json.dump(test_script, f, indent=2)
 
@@ -286,9 +271,7 @@ def main():
 
         # Generate memory model tests
         if not args.skip_memory and Path(args.memory_program).exists():
-            memory_tests = generate_memory_model_tests(
-                args.memory_program, args.output_dir
-            )
+            memory_tests = generate_memory_model_tests(args.memory_program, args.output_dir)
             test_script_paths.extend(memory_tests)
         elif not args.skip_memory:
             print(f"\nMemory program not found: {args.memory_program}")
@@ -299,9 +282,7 @@ def main():
         output_path = Path(args.output_dir)
         if output_path.exists():
             test_script_paths = [str(p) for p in output_path.glob("*.json")]
-            print(
-                f"\nFound {len(test_script_paths)} existing test scripts in {args.output_dir}"
-            )
+            print(f"\nFound {len(test_script_paths)} existing test scripts in {args.output_dir}")
 
     # Step 2: Run test cases
     if test_script_paths:

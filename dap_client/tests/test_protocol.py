@@ -71,7 +71,7 @@ class TestDAPResponse:
         """Test creating a basic response"""
         response = DAPResponse(request_seq=1, success=True, message="Success")
         assert response.request_seq == 1
-        assert response.success == True
+        assert response.success
         assert response.message == "Success"
 
     def test_response_to_dict(self):
@@ -80,7 +80,7 @@ class TestDAPResponse:
 
         result = response.to_dict()
         assert result["request_seq"] == 1
-        assert result["success"] == True
+        assert result["success"]
         assert result["body"] == {"result": "ok"}
 
     def test_response_to_json(self):
@@ -90,7 +90,7 @@ class TestDAPResponse:
         result = response.to_json()
         data = json.loads(result)
         assert data["request_seq"] == 1
-        assert data["success"] == True
+        assert data["success"]
 
     def test_response_from_dict(self):
         """Test creating response from dict"""
@@ -104,7 +104,7 @@ class TestDAPResponse:
 
         response = DAPResponse.from_dict(data)
         assert response.request_seq == 1
-        assert response.success == True
+        assert response.success
 
 
 class TestDAPEvent:
@@ -151,8 +151,8 @@ class TestInitializeRequest:
         assert request.command == "initialize"
         assert request.arguments["adapterID"] == "test-adapter"
         assert request.arguments["clientID"] == "test-client"
-        assert request.arguments["columnsStartAt1"] == True
-        assert request.arguments["linesStartAt1"] == True
+        assert request.arguments["columnsStartAt1"]
+        assert request.arguments["linesStartAt1"]
 
 
 class TestLaunchRequest:
@@ -164,7 +164,7 @@ class TestLaunchRequest:
 
         assert request.command == "launch"
         assert request.arguments["program"] == "program.mlir"
-        assert request.arguments["noDebug"] == False
+        assert not request.arguments["noDebug"]
 
 
 class TestSetBreakpointsRequest:
@@ -212,7 +212,7 @@ class TestDisconnectRequest:
         request = DisconnectRequest(terminate_debuggee=True)
 
         assert request.command == "disconnect"
-        assert request.arguments["terminateDebuggee"] == True
+        assert request.arguments["terminateDebuggee"]
 
 
 class TestSymbolicSetModeRequest:
@@ -223,14 +223,14 @@ class TestSymbolicSetModeRequest:
         request = SymbolicSetModeRequest(enabled=True)
 
         assert request.command == "symbolic/setMode"
-        assert request.arguments["enabled"] == True
+        assert request.arguments["enabled"]
 
     def test_create_symbolic_set_mode_request_disabled(self):
         """Test creating symbolic set mode request with disabled"""
         request = SymbolicSetModeRequest(enabled=False)
 
         assert request.command == "symbolic/setMode"
-        assert request.arguments["enabled"] == False
+        assert not request.arguments["enabled"]
 
 
 class TestSymbolicEvaluateRequest:

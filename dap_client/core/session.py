@@ -51,6 +51,7 @@ class DAPSession:
             logger.info("Debug session initialized")
             return result or {}
         except Exception as e:
+            logger.error(f"Failed to initialize session: {e}")
             self.connection.disconnect()
             raise
 
@@ -76,9 +77,7 @@ class DAPSession:
         if self.status != "launched":
             raise RuntimeError("Program not launched")
 
-        request = SetBreakpointsRequest(
-            source, breakpoints, line_breakpoints, column_breakpoints
-        )
+        request = SetBreakpointsRequest(source, breakpoints, line_breakpoints, column_breakpoints)
         result = self.connection.request(request)
         self.breakpoints[source["path"]] = result
         logger.info(f"Set {len(result.get('breakpoints', []))} breakpoints")
@@ -155,9 +154,7 @@ class DAPSession:
         # For now, return stub
         return {"variables": []}
 
-    def evaluate(
-        self, expression: str, frame_id: Optional[int] = None
-    ) -> Dict[str, Any]:
+    def evaluate(self, expression: str, frame_id: Optional[int] = None) -> Dict[str, Any]:
         """Evaluate expression"""
         if not self.connection:
             raise RuntimeError("Not connected to debug server")

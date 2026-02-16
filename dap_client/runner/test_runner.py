@@ -9,8 +9,7 @@ Supports both concrete and symbolic debugging commands.
 import json
 import logging
 import time
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 
 from ..core.client import DAPClient
 from ..schema import load_test_script, TestScript
@@ -110,15 +109,11 @@ class TestRunner:
 
                 # Check if step failed
                 if not step_result.get("success", True):
-                    test_result["error"] = (
-                        f"Step {step_index} failed: {step_result.get('error')}"
-                    )
+                    test_result["error"] = f"Step {step_index} failed: {step_result.get('error')}"
                     break
 
             # Determine overall test success
-            all_steps_success = all(
-                step.get("success", True) for step in test_result["steps"]
-            )
+            all_steps_success = all(step.get("success", True) for step in test_result["steps"])
             test_result["success"] = all_steps_success
 
             if test_result["success"]:
@@ -188,9 +183,7 @@ class TestRunner:
 
         return step_result
 
-    def _execute_command(
-        self, command: str, arguments: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _execute_command(self, command: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a DAP command via the client.
 
         Args:
@@ -227,9 +220,7 @@ class TestRunner:
         else:
             raise ValueError(f"Unsupported command: {command}")
 
-    def _validate_result(
-        self, result: Dict[str, Any], expect: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _validate_result(self, result: Dict[str, Any], expect: Dict[str, Any]) -> Dict[str, Any]:
         """Validate command result against expectations.
 
         Args:
@@ -248,9 +239,7 @@ class TestRunner:
         # Check success expectation
         expected_success = expect.get("success")
         if expected_success is not None:
-            actual_success = result.get(
-                "success", True
-            )  # Default to True if not specified
+            actual_success = result.get("success", True)  # Default to True if not specified
             if actual_success != expected_success:
                 validation["success"] = False
                 validation["errors"].append(
@@ -270,7 +259,8 @@ class TestRunner:
             if len(actual_breakpoints) != len(expected_breakpoints):
                 validation["success"] = False
                 validation["errors"].append(
-                    f"Expected {len(expected_breakpoints)} breakpoints, got {len(actual_breakpoints)}"
+                    f"Expected {len(expected_breakpoints)} breakpoints, "
+                    f"got {len(actual_breakpoints)}"
                 )
             else:
                 # Check each breakpoint
@@ -297,10 +287,7 @@ class TestRunner:
         if expected_total_paths is not None:
             actual_total_paths = result.get("totalPaths")
             if actual_total_paths is not None:
-                if (
-                    isinstance(expected_total_paths, dict)
-                    and "min" in expected_total_paths
-                ):
+                if isinstance(expected_total_paths, dict) and "min" in expected_total_paths:
                     # Minimum expectation
                     if actual_total_paths < expected_total_paths["min"]:
                         validation["success"] = False

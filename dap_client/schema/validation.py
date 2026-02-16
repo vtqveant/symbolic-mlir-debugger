@@ -6,7 +6,6 @@ import os
 from typing import Optional, Dict, Any
 
 from jsonschema import validate, ValidationError
-from protocol import DAPRequest, DAPResponse
 
 logger = logging.getLogger(__name__)
 
@@ -190,4 +189,7 @@ class TestScript:
         Returns:
             String representation of test script
         """
-        return f"TestScript(name={self.name}, program={self.program}, steps={len(self.session_steps)})"
+        return (
+            f"TestScript(name={self.name}, program={self.program}, "
+            f"steps={len(self.session_steps)})"
+        )

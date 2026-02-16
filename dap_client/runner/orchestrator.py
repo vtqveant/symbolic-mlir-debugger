@@ -11,7 +11,7 @@ import multiprocessing
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Callable
+from typing import Dict, List, Any, Optional
 
 from .test_runner import TestRunner
 from ..generator import TestCaseGenerator, PathAwareGenerator
@@ -46,9 +46,7 @@ class TestOrchestrator:
         self.max_workers = max_workers or multiprocessing.cpu_count()
         self.results: List[Dict[str, Any]] = []
         self.generator = TestCaseGenerator(host, port, timeout, read_timeout)
-        self.path_aware_generator = PathAwareGenerator(
-            host, port, timeout, read_timeout
-        )
+        self.path_aware_generator = PathAwareGenerator(host, port, timeout, read_timeout)
 
     def run_test_files(
         self,
@@ -94,9 +92,7 @@ class TestOrchestrator:
         results = []
         for test_file in test_files:
             try:
-                with TestRunner(
-                    self.host, self.port, self.timeout, self.read_timeout
-                ) as runner:
+                with TestRunner(self.host, self.port, self.timeout, self.read_timeout) as runner:
                     result = runner.run_test_file(test_file)
                     results.append(result)
             except Exception as e:
@@ -127,9 +123,7 @@ class TestOrchestrator:
 
         def run_single(test_file: str) -> Dict[str, Any]:
             try:
-                with TestRunner(
-                    self.host, self.port, self.timeout, self.read_timeout
-                ) as runner:
+                with TestRunner(self.host, self.port, self.timeout, self.read_timeout) as runner:
                     return runner.run_test_file(test_file)
             except Exception as e:
                 logger.error(f"Failed to run test file {test_file}: {e}")
@@ -144,8 +138,7 @@ class TestOrchestrator:
 
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             future_to_file = {
-                executor.submit(run_single, test_file): test_file
-                for test_file in test_files
+                executor.submit(run_single, test_file): test_file for test_file in test_files
             }
 
             for future in as_completed(future_to_file):
@@ -183,8 +176,7 @@ class TestOrchestrator:
 
         total_steps = sum(len(r.get("steps", [])) for r in results)
         passed_steps = sum(
-            sum(1 for step in r.get("steps", []) if step.get("success", False))
-            for r in results
+            sum(1 for step in r.get("steps", []) if step.get("success", False)) for r in results
         )
         failed_steps = total_steps - passed_steps
 
@@ -379,9 +371,7 @@ class TestOrchestrator:
 
         return combined_results
 
-    def save_report(
-        self, results: Dict[str, Any], output_path: str = "test_report.json"
-    ) -> str:
+    def save_report(self, results: Dict[str, Any], output_path: str = "test_report.json") -> str:
         """Save test report to JSON file.
 
         Args:
@@ -430,7 +420,7 @@ class TestOrchestrator:
 
             if "execution" in results and results["execution"]:
                 exec_results = results["execution"]
-                print(f"\nExecution Results:")
+                print("\nExecution Results:")
                 print(f"  Total Tests: {exec_results['total_tests']}")
                 print(f"  Passed: {exec_results['passed_tests']}")
                 print(f"  Success Rate: {exec_results['success_rate']:.1%}")

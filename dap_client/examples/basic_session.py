@@ -118,9 +118,7 @@ def symbolic_session_example():
 
             # Initialize session
             print("\n2. Initializing session...")
-            result = client.initialize(
-                adapter_id="mlir-debugger", client_id="symbolic-test-client"
-            )
+            result = client.initialize(adapter_id="mlir-debugger", client_id="symbolic-test-client")
             print(f"   Initialized: {result}")
 
             # Launch program
@@ -185,12 +183,8 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="DAP Client Example")
-    parser.add_argument(
-        "--test-script", action="store_true", help="Run test script example"
-    )
-    parser.add_argument(
-        "--symbolic", action="store_true", help="Run symbolic debugging example"
-    )
+    parser.add_argument("--test-script", action="store_true", help="Run test script example")
+    parser.add_argument("--symbolic", action="store_true", help="Run symbolic debugging example")
     args = parser.parse_args()
 
     if args.test_script:
