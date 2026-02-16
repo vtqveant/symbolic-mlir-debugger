@@ -58,11 +58,7 @@ class ScfForOpHandler(OperationHandler):
             step_concrete,
         )
 
-        if (
-            lb_concrete is not None
-            and ub_concrete is not None
-            and step_concrete is not None
-        ):
+        if lb_concrete is not None and ub_concrete is not None and step_concrete is not None:
             logger.debug("ScfForHandler: Concrete bounds, unrolling loop")
             # Concrete bounds, unroll loop
             current_acc = init_expr
@@ -81,9 +77,7 @@ class ScfForOpHandler(OperationHandler):
                 if step_concrete < 0 and iv_val <= ub_concrete:
                     break
                 if i >= max_iterations:
-                    print(
-                        f"Warning: Loop unrolling limited to {max_iterations} iterations"
-                    )
+                    print(f"Warning: Loop unrolling limited to {max_iterations} iterations")
                     break
 
                 # Create temporary state for this iteration (fork of current state)
@@ -99,13 +93,9 @@ class ScfForOpHandler(OperationHandler):
                 )
                 # Set iteration argument value
                 if iter_arg and init_expr is not None:
-                    iter_arg_name = (
-                        iter_arg[1:] if iter_arg.startswith("%") else iter_arg
-                    )
+                    iter_arg_name = iter_arg[1:] if iter_arg.startswith("%") else iter_arg
                     if current_acc is not None:
-                        iter_state.set_value(
-                            iter_arg_name, current_acc, op.result_type or "i32"
-                        )
+                        iter_state.set_value(iter_arg_name, current_acc, op.result_type or "i32")
                     # Could also set concrete value if current_acc is concrete
 
                 # Execute body operations
@@ -113,9 +103,7 @@ class ScfForOpHandler(OperationHandler):
                 for body_op in op.body:
                     if body_op.dialect == "scf" and body_op.name == "yield":
                         # This is the yield operation - get its value
-                        yield_expr = interpreter._get_operand_expr(
-                            body_op.value, iter_state
-                        )
+                        yield_expr = interpreter._get_operand_expr(body_op.value, iter_state)
                         yield_value = yield_expr
                         logger.debug("ScfForHandler: yield_expr=%s", yield_expr)
                         # Don't execute further operations after yield

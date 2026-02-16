@@ -71,9 +71,7 @@ class IndexShiftRightSignedOpHandler(BinaryOperationHandler):
 
 class IndexShiftRightUnsignedOpHandler(BinaryOperationHandler):
     def __init__(self):
-        super().__init__(
-            operator=lambda l, r: l >> r
-        )  # Unsigned shift (Z3 doesn't have)
+        super().__init__(operator=lambda l, r: l >> r)  # Unsigned shift (Z3 doesn't have)
 
 
 # Index constant operations

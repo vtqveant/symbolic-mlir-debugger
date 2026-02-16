@@ -10,7 +10,7 @@ import sys
 import os
 
 # Add the debugger directory to the path
-debugger_dir = os.path.join(os.path.dirname(__file__), '..', 'debugger')
+debugger_dir = os.path.join(os.path.dirname(__file__), "..", "debugger")
 sys.path.insert(0, debugger_dir)
 
 from interpreter.models import SymbolicState, MLIRValue
@@ -22,16 +22,18 @@ def test_mlirvalue_concrete_value():
     state = SymbolicState(pc=None)
     state.set_concrete_value("test_arg", 42)
     state.values["test_arg"] = MLIRValue("test_arg", expr=None, type="i32", concrete=42)
-    
+
     # Verify concrete value is stored
     value = state.values["test_arg"]
     assert value.concrete == 42, f"Expected concrete value 42, got {value.concrete}"
     print("✓ MLIRValue stores concrete value correctly")
-    
+
     # Test forking preserves concrete values
     forked_state = state.fork()
     forked_value = forked_state.values["test_arg"]
-    assert forked_value.concrete == 42, f"Expected forked concrete value 42, got {forked_value.concrete}"
+    assert (
+        forked_value.concrete == 42
+    ), f"Expected forked concrete value 42, got {forked_value.concrete}"
     print("✓ Forking preserves concrete values")
 
 
@@ -39,7 +41,7 @@ def test_mlirvalue_concrete_only():
     """Test that MLIRValue can be created with only concrete value."""
     # Create a value with only concrete value (no symbolic expression)
     value = MLIRValue("test", type="i32", concrete=42)
-    
+
     # Verify concrete value is stored
     assert value.concrete == 42, f"Expected concrete value 42, got {value.concrete}"
     print("✓ MLIRValue can be created with only concrete value")
@@ -49,7 +51,7 @@ def test_mlirvalue_without_concrete():
     """Test that MLIRValue can be created without concrete value."""
     # Create a value without concrete value
     value = MLIRValue("test", type="i32", concrete=None)
-    
+
     # Verify concrete value is None
     assert value.concrete is None, f"Expected concrete value None, got {value.concrete}"
     print("✓ MLIRValue can be created without concrete value")
@@ -58,7 +60,7 @@ def test_mlirvalue_without_concrete():
 if __name__ == "__main__":
     print("Testing concrete value handling in MLIRValue...")
     print()
-    
+
     try:
         test_mlirvalue_concrete_value()
         test_mlirvalue_concrete_only()
@@ -72,5 +74,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n✗ Unexpected error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

@@ -29,9 +29,7 @@ class ExecutionStepper:
     Supports concrete mode execution (single path) with breakpoints and stepping.
     """
 
-    def __init__(
-        self, mlir_file: str, concrete_inputs: Optional[Dict[str, int]] = None
-    ):
+    def __init__(self, mlir_file: str, concrete_inputs: Optional[Dict[str, int]] = None):
         """Initialize stepper with MLIR file and concrete inputs."""
         self.mlir_file = mlir_file
         self.concrete_inputs = concrete_inputs or {}
@@ -77,9 +75,7 @@ class ExecutionStepper:
             initial_state.set_value(clean_name, sym_var, arg_type)
 
             if clean_name in self.concrete_inputs:
-                initial_state.set_concrete_value(
-                    clean_name, self.concrete_inputs[clean_name]
-                )
+                initial_state.set_concrete_value(clean_name, self.concrete_inputs[clean_name])
 
         self.current_state = initial_state
         self.current_block_label = initial_state.pc
@@ -129,9 +125,7 @@ class ExecutionStepper:
         # Get concrete bounds
         lb = self.interpreter._get_concrete_operand(op.lb, state) if op.lb else None
         ub = self.interpreter._get_concrete_operand(op.ub, state) if op.ub else None
-        step = (
-            self.interpreter._get_concrete_operand(op.step, state) if op.step else None
-        )
+        step = self.interpreter._get_concrete_operand(op.step, state) if op.step else None
 
         if lb is None or ub is None or step is None:
             # Symbolic bounds - cannot step through loop
@@ -165,9 +159,7 @@ class ExecutionStepper:
             body_ops=body_ops,
             current_iteration=0,
             iv_value=lb,
-            iter_arg_value=self.interpreter._get_concrete_operand(init, state)
-            if init
-            else None,
+            iter_arg_value=self.interpreter._get_concrete_operand(init, state) if init else None,
             body_op_index=-1,  # -1 indicates not yet started iteration
             line=op.line,
         )
@@ -233,9 +225,7 @@ class ExecutionStepper:
                 # The loop result is the final iteration argument value
                 state.set_concrete_value(dest_name, loop.iter_arg_value)
                 # Also set symbolic value
-                state.set_value(
-                    dest_name, z3.Int(dest_name), loop.op.result_type or "i32"
-                )
+                state.set_value(dest_name, z3.Int(dest_name), loop.op.result_type or "i32")
 
             self._exit_loop()
             # Move past the scf.for operation in parent block
@@ -293,9 +283,9 @@ class ExecutionStepper:
         info = {
             "current_block": self.current_block_label,
             "successors": self.get_current_successors(),
-            "predecessors": self.get_predecessors(self.current_block_label)
-            if self.current_block_label
-            else [],
+            "predecessors": (
+                self.get_predecessors(self.current_block_label) if self.current_block_label else []
+            ),
             "last_branch": self.last_branch_decision,
             "branch_history": self.branch_history[-10:],  # last 10 branches,
         }
@@ -425,9 +415,7 @@ class ExecutionStepper:
                 # Still show allocated memrefs
                 if memref_name in self.current_state.memory_model.shapes:
                     shape = self.current_state.memory_model.shapes[memref_name]
-                    dtype = self.current_state.memory_model.dtypes.get(
-                        memref_name, "unknown"
-                    )
+                    dtype = self.current_state.memory_model.dtypes.get(memref_name, "unknown")
                     region_summary = {
                         "name": f"{memref_name} (memory)",
                         "value": f"shape={shape}, dtype={dtype}",
@@ -493,9 +481,7 @@ class ExecutionStepper:
 
             # Create a summary for the tensor region
             shape = self.current_state.tensor_memory_model.shapes.get(tensor_name, ())
-            dtype = self.current_state.tensor_memory_model.dtypes.get(
-                tensor_name, "unknown"
-            )
+            dtype = self.current_state.tensor_memory_model.dtypes.get(tensor_name, "unknown")
             region_summary = {
                 "name": f"{tensor_name} (tensor)",
                 "value": f"{len(entries)} entries, shape={shape}, dtype={dtype}",
@@ -580,9 +566,7 @@ class ExecutionStepper:
 
         # Add control flow information
         cf_info = self.get_control_flow_info()
-        value = (
-            f"block {cf_info['current_block']}, {len(cf_info['successors'])} successors"
-        )
+        value = f"block {cf_info['current_block']}, {len(cf_info['successors'])} successors"
         if "current_loop" in cf_info:
             loop = cf_info["current_loop"]
             value += f", loop {loop['iv_name']}={loop['iv_value']}/{loop['ub']}"
@@ -759,9 +743,7 @@ class ExecutionStepper:
                     # Try to get concrete condition value
                     cond_operand = op.cond
                     if cond_operand:
-                        concrete_cond = self.interpreter._get_concrete_operand(
-                            cond_operand, state
-                        )
+                        concrete_cond = self.interpreter._get_concrete_operand(cond_operand, state)
                         branch_info["condition_value"] = concrete_cond
                 else:  # cf.br
                     branch_info["taken_branch"] = "unconditional"

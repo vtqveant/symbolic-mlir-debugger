@@ -103,9 +103,7 @@ class BuiltinDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_return_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[ReturnOperation]:
+    def _parse_return_operation(self, op_node: mast.Operation) -> Optional[ReturnOperation]:
         """Parse return operation."""
         op_obj = op_node.op
 
@@ -174,9 +172,7 @@ class BuiltinDialectParser(BaseDialectParser):
                     attributes[field_name] = [self._ssa_use_to_string(v) for v in value]
                 elif field_name.endswith("_type") or field_name == "type":
                     attributes[field_name] = self._type_to_string(value)
-                elif isinstance(
-                    value, (mast.SsaId, mast.StringLiteral, int, float, str)
-                ):
+                elif isinstance(value, (mast.SsaId, mast.StringLiteral, int, float, str)):
                     attributes[field_name] = self._ssa_use_to_string(value)
                 else:
                     attributes[field_name] = str(value)

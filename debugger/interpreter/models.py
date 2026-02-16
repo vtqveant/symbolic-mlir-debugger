@@ -150,6 +150,7 @@ class MLIRFunction:
 @dataclass
 class LoopContext:
     """Represents the context of a loop being stepped through."""
+
     op: LoopOperation
     iv_name: str
     lb: Union[int, z3.ExprRef]
@@ -188,9 +189,7 @@ class SymbolicState:
         default_factory=TensorMemoryModel
     )  # Memory model for tensor operations
 
-    def set_tensor_shape(
-        self, tensor: str, shape: List[Union[int, z3.ExprRef]]
-    ) -> None:
+    def set_tensor_shape(self, tensor: str, shape: List[Union[int, z3.ExprRef]]) -> None:
         """Store shape of a tensor."""
         self.tensor_memory_model.set_shape(tensor, shape)
 
@@ -216,13 +215,11 @@ class SymbolicState:
             pc=self.pc,
             path_condition=list(self.path_condition),
             values={
-                k: MLIRValue(v.name, v.expr, v.type, v.concrete)
-                for k, v in self.values.items()
+                k: MLIRValue(v.name, v.expr, v.type, v.concrete) for k, v in self.values.items()
             },
             concrete_values=dict(self.concrete_values),
             memory={
-                k: MLIRValue(v.name, v.expr, v.type, v.concrete)
-                for k, v in self.memory.items()
+                k: MLIRValue(v.name, v.expr, v.type, v.concrete) for k, v in self.memory.items()
             },
             memory_cells=memory_cells_copy,
             memory_model=forked_memory_model,
@@ -310,9 +307,7 @@ class SymbolicState:
         # Update memory model
         self.memory_model.store(memref, list(indices), expr, type)
 
-    def get_memory_cell(
-        self, memref: str, indices: Tuple[int, ...]
-    ) -> Optional[MLIRValue]:
+    def get_memory_cell(self, memref: str, indices: Tuple[int, ...]) -> Optional[MLIRValue]:
         """Get memory cell at given concrete indices."""
         # First check legacy storage
         if memref in self.memory_cells and indices in self.memory_cells[memref]:
@@ -337,9 +332,7 @@ class SymbolicState:
             # Memory model doesn't have this cell or doesn't support load
             return None
 
-    def set_memory_cell_concrete(
-        self, memref: str, indices: Tuple[int, ...], value: Any
-    ) -> None:
+    def set_memory_cell_concrete(self, memref: str, indices: Tuple[int, ...], value: Any) -> None:
         """Set concrete value for memory cell."""
         # Update legacy storage
         key = f"mem_{memref}_{'_'.join(str(i) for i in indices)}"
@@ -348,9 +341,7 @@ class SymbolicState:
         # Update memory model
         self.memory_model.set_concrete_value(memref, list(indices), value)
 
-    def get_memory_cell_concrete(
-        self, memref: str, indices: Tuple[int, ...]
-    ) -> Optional[Any]:
+    def get_memory_cell_concrete(self, memref: str, indices: Tuple[int, ...]) -> Optional[Any]:
         """Get concrete value for memory cell."""
         # First check legacy storage
         key = f"mem_{memref}_{'_'.join(str(i) for i in indices)}"

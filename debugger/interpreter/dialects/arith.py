@@ -38,9 +38,7 @@ class ArithMulIOpHandler(BinaryOperationHandler):
 
 class ArithDivSIOpHandler(BinaryOperationHandler):
     def __init__(self):
-        super().__init__(
-            operator=lambda left, right: left / right
-        )  # Integer division in Z3
+        super().__init__(operator=lambda left, right: left / right)  # Integer division in Z3
 
 
 # Comparison operations predicate mapping
@@ -78,9 +76,7 @@ class ArithIndexCastOpHandler(UnaryOperationHandler):
     ) -> Any:
         """Try concrete evaluation of index_cast."""
         operand_concrete = state.get_concrete_value(op.operand)
-        print(
-            f"DEBUG ArithIndexCastHandler: operand={op.operand}, concrete={operand_concrete}"
-        )
+        print(f"DEBUG ArithIndexCastHandler: operand={op.operand}, concrete={operand_concrete}")
         if operand_concrete is not None:
             # Just pass through the concrete value
             return operand_concrete

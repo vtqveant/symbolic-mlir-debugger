@@ -24,9 +24,7 @@ module {
     assert len(functions) == 1
     func = functions["test"]
     if len(func.basic_blocks) != 2:
-        pytest.skip(
-            "pymlir does not expose block labels (multiple blocks not supported)"
-        )
+        pytest.skip("pymlir does not expose block labels (multiple blocks not supported)")
 
     # Check if pymlir exposes real block labels (not our synthetic ones)
     block_labels = [bb.label for bb in func.basic_blocks.values()]
@@ -70,9 +68,7 @@ module {
         assert len(functions) == 1
         func = functions["test"]
         if len(func.basic_blocks) != 3:
-            pytest.skip(
-                "pymlir does not expose block labels (multiple blocks not supported)"
-            )
+            pytest.skip("pymlir does not expose block labels (multiple blocks not supported)")
     else:
         pytest.skip("cf.cond_br parsing failed (known limitation)")
 
@@ -105,9 +101,7 @@ module {
         assert len(functions) == 1
         func = functions["test"]
         if len(func.basic_blocks) != 3:
-            pytest.skip(
-                "pymlir does not expose block labels (multiple blocks not supported)"
-            )
+            pytest.skip("pymlir does not expose block labels (multiple blocks not supported)")
     else:
         pytest.skip("cf.cond_br with caret parsing failed (known limitation)")
 
@@ -167,9 +161,7 @@ module {
         assert len(functions) == 1
         func = functions["test"]
         if len(func.basic_blocks) != 3:
-            pytest.skip(
-                "pymlir does not expose block labels (multiple blocks not supported)"
-            )
+            pytest.skip("pymlir does not expose block labels (multiple blocks not supported)")
     else:
         pytest.skip("cond_br without caret parsing failed")
 
@@ -197,9 +189,7 @@ module {
         assert len(functions) == 1
         func = functions["test"]
         if len(func.basic_blocks) != 3:
-            pytest.skip(
-                "pymlir does not expose block labels (multiple blocks not supported)"
-            )
+            pytest.skip("pymlir does not expose block labels (multiple blocks not supported)")
     else:
         pytest.skip("std cond_br parsing failed (known limitation)")
 

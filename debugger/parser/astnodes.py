@@ -32,9 +32,7 @@ class Node(object):
         if is_dataclass(self):
             return self.__dataclass_fields__.keys()
         else:
-            raise AttributeError(
-                f"'{self.__class__}' object has not attribute '_fields_'"
-            )
+            raise AttributeError(f"'{self.__class__}' object has not attribute '_fields_'")
 
     def dump(self, indent: int = 0) -> str:
         """Dumps the AST node and its children in MLIR format.
@@ -208,9 +206,7 @@ class RankedTensorType(TensorType):
 
     def dump(self, indent: int = 0) -> str:
         return "tensor<%s>" % (
-            "x".join(t.dump(indent) for t in self.dimensions)
-            + "x"
-            + self.element_type.dump(indent)
+            "x".join(t.dump(indent) for t in self.dimensions) + "x" + self.element_type.dump(indent)
         )
 
 
@@ -302,18 +298,14 @@ class FunctionType(Type):
     result_types: List[Type]
 
     def dump(self, indent: int = 0) -> str:
-        result = "(%s)" % ", ".join(
-            dump_or_value(arg, indent) for arg in self.argument_types
-        )
+        result = "(%s)" % ", ".join(dump_or_value(arg, indent) for arg in self.argument_types)
         result += " -> "
         if not self.result_types:
             result += "()"
         elif len(self.result_types) == 1:
             result += dump_or_value(self.result_types[0], indent)
         else:
-            result += "(%s)" % ", ".join(
-                dump_or_value(res, indent) for res in self.result_types
-            )
+            result += "(%s)" % ", ".join(dump_or_value(res, indent) for res in self.result_types)
         return result
 
 
@@ -325,9 +317,7 @@ class LlvmFunctionType(Type):
     def dump(self, indent: int = 0) -> str:
         result = dump_or_value(self.result_type) + ""
         if self.argument_types:
-            result += " (%s)" % ", ".join(
-                dump_or_value(arg, indent) for arg in self.argument_types
-            )
+            result += " (%s)" % ", ".join(dump_or_value(arg, indent) for arg in self.argument_types)
         return result
 
 
@@ -525,9 +515,7 @@ class Operation(Node):
     def dump(self, indent: int = 0) -> str:
         result = indent * "  "
         if self.result_list:
-            result += "%s = " % (
-                ", ".join(dump_or_value(r, indent) for r in self.result_list)
-            )
+            result += "%s = " % (", ".join(dump_or_value(r, indent) for r in self.result_list))
         result += dump_or_value(self.op, indent)
         if self.location:
             result += " " + self.location.dump(indent)
@@ -655,9 +643,7 @@ class FusedLoc(Location):
                 dump_or_value(self.metadata, indent),
                 ", ".join(dump_or_value(loc, indent) for loc in self.locations),
             )
-        return "loc(fused[%s])" % ", ".join(
-            dump_or_value(loc, indent) for loc in self.locations
-        )
+        return "loc(fused[%s])" % ", ".join(dump_or_value(loc, indent) for loc in self.locations)
 
 
 @dataclass
@@ -758,9 +744,7 @@ class Function(Node):
         if self.attributes:
             result += " attributes " + dump_or_value(self.attributes, indent)
 
-        result += " %s" % (
-            self.region.dump(indent) if self.region else "{\n%s}" % (indent * "  ")
-        )
+        result += " %s" % (self.region.dump(indent) if self.region else "{\n%s}" % (indent * "  "))
         if self.location:
             result += " " + self.location.dump(indent)
         return result
@@ -772,9 +756,7 @@ class Region(Node):
 
     def dump(self, indent=0) -> str:
         return (
-            "{\n"
-            + "\n".join(op.dump(indent + 1) for op in self.body)
-            + "\n%s}" % (indent * "  ")
+            "{\n" + "\n".join(op.dump(indent + 1) for op in self.body) + "\n%s}" % (indent * "  ")
         )
 
 
@@ -847,9 +829,7 @@ class MLIRFile(Node):
     def dump(self, indent: int = 0) -> str:
         result = ""
         if self.definitions:
-            result += "\n".join(
-                dump_or_value(defn, indent) for defn in self.definitions
-            )
+            result += "\n".join(dump_or_value(defn, indent) for defn in self.definitions)
 
             result += "\n"
 
@@ -864,9 +844,7 @@ class MLIRFile(Node):
         :class:`ValueError`.
         """
         if len(self.modules) != 1:
-            raise ValueError(
-                "Can access default_module iff the MLIR file has exactly one module."
-            )
+            raise ValueError("Can access default_module iff the MLIR file has exactly one module.")
         return self.modules[0]
 
 
@@ -908,9 +886,7 @@ class AffineExpr(Node):
             left = AffineParens(self)
         # Wrap right operand if needed (only if it's an AffineExpr)
         right = other
-        if isinstance(other, AffineExpr) and other._needs_parens(
-            op_precedence, is_right=True
-        ):
+        if isinstance(other, AffineExpr) and other._needs_parens(op_precedence, is_right=True):
             right = AffineParens(other)
         return AffineAdd(operand_a=left, operand_b=right)
 
@@ -923,9 +899,7 @@ class AffineExpr(Node):
             left = AffineParens(self)
         # Wrap right operand if needed (only if it's an AffineExpr)
         right = other
-        if isinstance(other, AffineExpr) and other._needs_parens(
-            op_precedence, is_right=True
-        ):
+        if isinstance(other, AffineExpr) and other._needs_parens(op_precedence, is_right=True):
             right = AffineParens(other)
         return AffineSub(operand_a=left, operand_b=right)
 
@@ -938,9 +912,7 @@ class AffineExpr(Node):
             left = AffineParens(self)
         # Wrap right operand if needed (only if it's an AffineExpr)
         right = other
-        if isinstance(other, AffineExpr) and other._needs_parens(
-            op_precedence, is_right=True
-        ):
+        if isinstance(other, AffineExpr) and other._needs_parens(op_precedence, is_right=True):
             right = AffineParens(other)
         return AffineMul(operand_a=left, operand_b=right)
 
@@ -958,9 +930,7 @@ class AffineExpr(Node):
         op_precedence = AffineAdd._precedence_
         # Wrap left operand if needed (only if it's an AffineExpr)
         left = other
-        if isinstance(other, AffineExpr) and other._needs_parens(
-            op_precedence, is_right=False
-        ):
+        if isinstance(other, AffineExpr) and other._needs_parens(op_precedence, is_right=False):
             left = AffineParens(other)
         # Wrap right operand if needed
         right = self
@@ -973,9 +943,7 @@ class AffineExpr(Node):
         op_precedence = AffineSub._precedence_
         # Wrap left operand if needed (only if it's an AffineExpr)
         left = other
-        if isinstance(other, AffineExpr) and other._needs_parens(
-            op_precedence, is_right=False
-        ):
+        if isinstance(other, AffineExpr) and other._needs_parens(op_precedence, is_right=False):
             left = AffineParens(other)
         # Wrap right operand if needed
         right = self
@@ -1003,9 +971,7 @@ class SemiAffineExpr(AffineExpr):
             left = AffineParens(self)
         # Wrap right operand if needed (only if it's an AffineExpr)
         right = other
-        if isinstance(other, AffineExpr) and other._needs_parens(
-            op_precedence, is_right=True
-        ):
+        if isinstance(other, AffineExpr) and other._needs_parens(op_precedence, is_right=True):
             right = AffineParens(other)
         return AffineFloorDiv(operand_a=left, operand_b=right)
 
@@ -1018,9 +984,7 @@ class SemiAffineExpr(AffineExpr):
             left = AffineParens(self)
         # Wrap right operand if needed (only if it's an AffineExpr)
         right = other
-        if isinstance(other, AffineExpr) and other._needs_parens(
-            op_precedence, is_right=True
-        ):
+        if isinstance(other, AffineExpr) and other._needs_parens(op_precedence, is_right=True):
             right = AffineParens(other)
         return AffineMod(operand_a=left, operand_b=right)
 
@@ -1094,9 +1058,7 @@ class AffineBinaryOp(AffineExpr):
 
 class AffineNeg(AffineUnaryOp):
     _op_ = "-%s"
-    _precedence_: ClassVar[int] = (
-        80  # Unary negation has higher precedence than multiplication
-    )
+    _precedence_: ClassVar[int] = 80  # Unary negation has higher precedence than multiplication
 
     @property
     def precedence(self) -> int:
@@ -1308,8 +1270,7 @@ def _dump_ast_or_value(value: Any, python=True, indent: int = 0) -> str:
     if isinstance(value, dict):
         sep = ": " if python else " = "
         return "{%s}" % ", ".join(
-            "%s%s%s"
-            % (_dump_ast_or_value(k, python), sep, _dump_ast_or_value(v, python))
+            "%s%s%s" % (_dump_ast_or_value(k, python), sep, _dump_ast_or_value(v, python))
             for k, v in value.items()
         )
     return str(value)

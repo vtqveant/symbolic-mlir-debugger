@@ -85,9 +85,7 @@ class TensorDialectParser(BaseDialectParser):
         return None
 
     # Individual operation parsers
-    def _parse_extract_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[LoadOperation]:
+    def _parse_extract_operation(self, op_node: mast.Operation) -> Optional[LoadOperation]:
         """Parse tensor.extract operation."""
         op_obj = op_node.op
 
@@ -117,9 +115,7 @@ class TensorDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_insert_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[StoreOperation]:
+    def _parse_insert_operation(self, op_node: mast.Operation) -> Optional[StoreOperation]:
         """Parse tensor.insert operation."""
         op_obj = op_node.op
 
@@ -152,9 +148,7 @@ class TensorDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_splat_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[UnaryOperation]:
+    def _parse_splat_operation(self, op_node: mast.Operation) -> Optional[UnaryOperation]:
         """Parse tensor.splat operation."""
         op_obj = op_node.op
 
@@ -220,9 +214,7 @@ class TensorDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_store_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[StoreOperation]:
+    def _parse_store_operation(self, op_node: mast.Operation) -> Optional[StoreOperation]:
         """Parse tensor.store operation."""
         op_obj = op_node.op
 
@@ -314,9 +306,7 @@ class TensorDialectParser(BaseDialectParser):
             },
         )
 
-    def _parse_collapse_shape_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_collapse_shape_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse tensor.collapse_shape operation."""
         op_obj = op_node.op
 
@@ -347,9 +337,7 @@ class TensorDialectParser(BaseDialectParser):
             },
         )
 
-    def _parse_expand_shape_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_expand_shape_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse tensor.expand_shape operation."""
         op_obj = op_node.op
 
@@ -434,21 +422,15 @@ class TensorDialectParser(BaseDialectParser):
         )
 
     # Stub implementations for remaining operations (to be filled)
-    def _parse_extract_slice_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_extract_slice_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse tensor.extract_slice operation."""
         return self._generic_operation(op_node, "extract_slice")
 
-    def _parse_insert_slice_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_insert_slice_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse tensor.insert_slice operation."""
         return self._generic_operation(op_node, "insert_slice")
 
-    def _parse_from_elements_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_from_elements_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse tensor.from_elements operation."""
         return self._generic_operation(op_node, "from_elements")
 
@@ -484,9 +466,7 @@ class TensorDialectParser(BaseDialectParser):
         """Parse tensor.concat operation."""
         return self._generic_operation(op_node, "concat")
 
-    def _generic_operation(
-        self, op_node: mast.Operation, name: str
-    ) -> Optional[Operation]:
+    def _generic_operation(self, op_node: mast.Operation, name: str) -> Optional[Operation]:
         """Generic fallback for tensor operations."""
         op_obj = op_node.op
 

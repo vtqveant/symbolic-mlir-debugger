@@ -223,9 +223,7 @@ class MemrefStoreOpHandler(OperationHandler):
 
         if concrete_indices is not None:
             # Multi-cell memory storage
-            state.set_memory_cell(
-                memref, concrete_indices, value_expr, op.result_type or "i32"
-            )
+            state.set_memory_cell(memref, concrete_indices, value_expr, op.result_type or "i32")
             # Also store concrete value if available
             concrete_val = state.get_concrete_value(value)
             if concrete_val is not None:

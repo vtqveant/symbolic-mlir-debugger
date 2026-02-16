@@ -52,9 +52,7 @@ class Parser(object):
             parser_src += dialect.contents
             # Add rules for operations and types
             parser_src += add_dialect_rules(dialect, dialect.ops, "op", rule_dict_ops)
-            parser_src += add_dialect_rules(
-                dialect, dialect.types, "type", rule_dict_types
-            )
+            parser_src += add_dialect_rules(dialect, dialect.types, "type", rule_dict_types)
 
         # Create a parser from the MLIR EBNF file, default dialects, and
         # additional dialects if exist
@@ -67,9 +65,7 @@ class Parser(object):
         self.transformer = TreeToMlir()
 
         # Add dialect rules to transformer
-        for rule_name, ctor in itertools.chain(
-            rule_dict_ops.items(), rule_dict_types.items()
-        ):
+        for rule_name, ctor in itertools.chain(rule_dict_ops.items(), rule_dict_types.items()):
             setattr(self.transformer, rule_name, ctor)
         for dialect in itertools.chain(UPSTREAM_DIALECTS, dialects):
             for rule_name, rule in dialect.transformers.items():
@@ -166,8 +162,6 @@ if __name__ == "__main__":
         # Load Python file with dialect
         global_vars = runpy.run_path(dialect_path)
 
-        additional_dialects.extend(
-            v for v in global_vars.values() if isinstance(v, Dialect)
-        )
+        additional_dialects.extend(v for v in global_vars.values() if isinstance(v, Dialect))
 
     print(parse_path(sys.argv[1], dialects=additional_dialects).pretty())

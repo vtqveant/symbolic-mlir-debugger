@@ -31,9 +31,7 @@ class DialectElement(astnodes.Node):
     # may match, a list can be provided. For example:
     # ['return', 'return {values.ssa_use_list} : {types.type_list_no_parens}']
     # will implement the return operation in the Standard dialect.
-    _syntax_: Optional[Union[str, List[str]]] = field(
-        init=False, default=None, repr=False
-    )
+    _syntax_: Optional[Union[str, List[str]]] = field(init=False, default=None, repr=False)
 
     # If custom behavior is defined through the dialect preamble, define rule
     # name on this variable to match this class
@@ -54,9 +52,7 @@ class DialectElement(astnodes.Node):
         if isinstance(cls._syntax_, str):
             cls._syntax_ = [cls._syntax_]
         if not isinstance(cls._syntax_, (list, tuple)):
-            raise ValueError(
-                "Invalid syntax expression (can only be a string or a list of strings"
-            )
+            raise ValueError("Invalid syntax expression (can only be a string or a list of strings")
         # Collect fields and create lark expressions
         fields = set()
         lark_exprs = []
@@ -65,9 +61,7 @@ class DialectElement(astnodes.Node):
             sfields = _get_fields(syntax)
             compiled_fields.append(sfields)
             if any(len(field) != 2 for field in sfields):
-                raise ValueError(
-                    "Syntax matches must provide exactly one name and one type"
-                )
+                raise ValueError("Syntax matches must provide exactly one name and one type")
             fields |= set(f[0] for f in sfields)
 
             # Create Lark expression
@@ -75,8 +69,7 @@ class DialectElement(astnodes.Node):
             syntax = syntax.replace("{{", "{LBRACE}").replace("}}", "{RBRACE}")
             # Replace words with strings
             syntax = " ".join(
-                (('"%s"' % word) if not word.startswith("{") else word)
-                for word in syntax.split()
+                (('"%s"' % word) if not word.startswith("{") else word) for word in syntax.split()
             )
             # Replace back {field.type} with types
             for fname, ftype in sfields:
@@ -202,19 +195,13 @@ def add_dialect_rules(
 
 def is_op(member: Any, module: str) -> bool:
     """Returns true if an object is a Dialect operation subclass."""
-    return (
-        inspect.isclass(member)
-        and issubclass(member, DialectOp)
-        and member.__module__ == module
-    )
+    return inspect.isclass(member) and issubclass(member, DialectOp) and member.__module__ == module
 
 
 def is_type(member: Any, module: str) -> bool:
     """Returns true if an object is a Dialect type subclass."""
     return (
-        inspect.isclass(member)
-        and issubclass(member, DialectType)
-        and member.__module__ == module
+        inspect.isclass(member) and issubclass(member, DialectType) and member.__module__ == module
     )
 
 
@@ -247,7 +234,5 @@ class BinaryOperation(DialectOp):
 
     @classmethod
     def make_rules(cls):
-        cls._syntax_ = (
-            "%s {operand_a.ssa_use} , {operand_b.ssa_use} : {type.type}" % cls._opname_
-        )
+        cls._syntax_ = "%s {operand_a.ssa_use} , {operand_b.ssa_use} : {type.type}" % cls._opname_
         super().make_rules()

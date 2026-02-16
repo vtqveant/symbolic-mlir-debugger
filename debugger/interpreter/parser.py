@@ -176,9 +176,7 @@ class MLIRParser:
             result["callee"] = self._extract_location_from_loc(loc.callee)
             result["caller"] = self._extract_location_from_loc(loc.caller)
         elif isinstance(loc, mast.FusedLoc):
-            result["locations"] = [
-                self._extract_location_from_loc(l) for l in loc.locations
-            ]
+            result["locations"] = [self._extract_location_from_loc(l) for l in loc.locations]
             if loc.metadata is not None:
                 result["metadata"] = self._parse_attribute(loc.metadata)
         elif isinstance(loc, mast.NameLoc):
@@ -222,9 +220,7 @@ class MLIRParser:
         # Pattern for cf.cond_br or std.cond_br or bare cond_br
         # Matches: (cf|std)?.cond_br %cond, ^true, ^false
         # Use word boundary to avoid matching cond_br inside other words
-        cond_br_pattern = (
-            r"\b((cf|std)\.)?cond_br\b\s+([^,]+)\s*,\s*([^,]+)\s*,\s*([^:\n]+)"
-        )
+        cond_br_pattern = r"\b((cf|std)\.)?cond_br\b\s+([^,]+)\s*,\s*([^,]+)\s*,\s*([^:\n]+)"
         # Pattern for cf.br or std.br or bare br
         # Matches: (cf|std)\.?br ^target
         # Use word boundary to avoid matching br inside other words (e.g., cond_br)
@@ -250,9 +246,7 @@ class MLIRParser:
             # Convert std.br or bare br to cf.br (dialect operation)
             return f"cf.br {target_block}"
 
-        mlir_code = re.sub(
-            cond_br_pattern, replace_cond_br, mlir_code, flags=re.MULTILINE
-        )
+        mlir_code = re.sub(cond_br_pattern, replace_cond_br, mlir_code, flags=re.MULTILINE)
         mlir_code = re.sub(br_pattern, replace_br, mlir_code, flags=re.MULTILINE)
         # Replace non-standard arith.divi with arith.divsi (signed division)
         mlir_code = re.sub(r"arith\.divi", "arith.divsi", mlir_code)
@@ -266,9 +260,7 @@ class MLIRParser:
             inner = match.group(1).strip()
             return f"shape.const_shape {inner}"
 
-        mlir_code = re.sub(
-            shape_const_shape_pattern, replace_shape_const_shape, mlir_code
-        )
+        mlir_code = re.sub(shape_const_shape_pattern, replace_shape_const_shape, mlir_code)
 
         # Handle bufferization.alloc_tensor [%arg0, %arg1] -> bufferization.alloc_tensor %arg0, %arg1
         # Also handle parentheses for compatibility
@@ -339,9 +331,7 @@ class MLIRParser:
         args = []
         if func.args:  # type: ignore
             for arg in func.args:  # type: ignore
-                arg_name = (
-                    arg.name.value if hasattr(arg.name, "value") else str(arg.name)
-                )
+                arg_name = arg.name.value if hasattr(arg.name, "value") else str(arg.name)
                 arg_type = self._type_to_string(arg.type)
                 args.append((arg_name, arg_type))
 
@@ -361,9 +351,7 @@ class MLIRParser:
 
         self.functions[func_name] = mlir_func
 
-    def _parse_block(
-        self, block: mast.Block, func: MLIRFunction, block_index: int = 0
-    ) -> None:
+    def _parse_block(self, block: mast.Block, func: MLIRFunction, block_index: int = 0) -> None:
         """Parse a basic block and add to function."""
         # Determine block label
         if block.label and block.label.name:
@@ -389,11 +377,7 @@ class MLIRParser:
         bb = func.add_basic_block(label)
 
         # Parse block parameters if present
-        if (
-            block.label
-            and hasattr(block.label, "arg_ids")
-            and hasattr(block.label, "arg_types")
-        ):
+        if block.label and hasattr(block.label, "arg_ids") and hasattr(block.label, "arg_types"):
             if block.label.arg_ids and block.label.arg_types:
                 for arg_id, arg_type in zip(block.label.arg_ids, block.label.arg_types):
                     # Convert SsaId to string (remove % prefix)
@@ -416,9 +400,7 @@ class MLIRParser:
         self.current_block_label = None
         self.current_func = None
 
-    def _parse_operation(
-        self, op: mast.Operation
-    ) -> Optional[Any]:  # Returns Operation or None
+    def _parse_operation(self, op: mast.Operation) -> Optional[Any]:  # Returns Operation or None
         """Parse an operation into Operation object using dialect parser registry."""
         # Try dialect parser registry first (returns Operation objects directly)
         operation = self.dialect_parser_registry.parse(op)

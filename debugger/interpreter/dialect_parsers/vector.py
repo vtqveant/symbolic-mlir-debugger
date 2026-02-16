@@ -58,11 +58,7 @@ class VectorDialectParser(BaseDialectParser):
                 return self._parse_fma_operation(op_node)
 
             # Binary operations (InterleaveOperation has lhs, rhs)
-            elif (
-                class_name.endswith("Op")
-                and hasattr(op_obj, "lhs")
-                and hasattr(op_obj, "rhs")
-            ):
+            elif class_name.endswith("Op") and hasattr(op_obj, "lhs") and hasattr(op_obj, "rhs"):
                 return self._parse_binary_operation(op_node)
 
             # Unary operations (BroadcastOperation, DeinterleaveOperation have source)
@@ -88,9 +84,7 @@ class VectorDialectParser(BaseDialectParser):
 
         return None
 
-    def _parse_binary_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[BinaryOperation]:
+    def _parse_binary_operation(self, op_node: mast.Operation) -> Optional[BinaryOperation]:
         """Parse binary vector operation (interleave, etc.)."""
         op_obj = op_node.op
 
@@ -133,9 +127,7 @@ class VectorDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_unary_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[UnaryOperation]:
+    def _parse_unary_operation(self, op_node: mast.Operation) -> Optional[UnaryOperation]:
         """Parse unary vector operation (broadcast, deinterleave, etc.)."""
         op_obj = op_node.op
 
@@ -303,9 +295,7 @@ class VectorDialectParser(BaseDialectParser):
             attributes=attributes,
         )
 
-    def _parse_compress_store_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_compress_store_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse vector.compressstore operation."""
         op_obj = op_node.op
 
@@ -344,9 +334,7 @@ class VectorDialectParser(BaseDialectParser):
             attributes=attributes,
         )
 
-    def _parse_expand_load_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_expand_load_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse vector.expandload operation."""
         op_obj = op_node.op
 
@@ -419,9 +407,7 @@ class VectorDialectParser(BaseDialectParser):
             attributes=attributes,
         )
 
-    def _parse_insert_strided_slice_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_insert_strided_slice_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse vector.insert_strided_slice operation."""
         op_obj = op_node.op
 
@@ -534,9 +520,7 @@ class VectorDialectParser(BaseDialectParser):
                     attributes[field_name] = [self._ssa_use_to_string(v) for v in value]
                 elif field_name.endswith("_type") or field_name == "type":
                     attributes[field_name] = self._type_to_string(value)
-                elif isinstance(
-                    value, (mast.SsaId, mast.StringLiteral, int, float, str)
-                ):
+                elif isinstance(value, (mast.SsaId, mast.StringLiteral, int, float, str)):
                     attributes[field_name] = self._ssa_use_to_string(value)
                 else:
                     attributes[field_name] = str(value)

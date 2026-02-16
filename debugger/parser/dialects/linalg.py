@@ -129,10 +129,7 @@ class LinalgCopy(DialectOp):
             "linalg.copy( {a_id.ssa_id} , {b_id.ssa_id} ) "
             "{attr.attribute_value} : {a_type.type} , {b_type.type}"
         ),
-        (
-            "linalg.copy( {a_id.ssa_id} , {b_id.ssa_id} ) "
-            " : {a_type.type} , {b_type.type}"
-        ),
+        ("linalg.copy( {a_id.ssa_id} , {b_id.ssa_id} ) " " : {a_type.type} , {b_type.type}"),
     ]
     _opname_ = "linalg.copy"
 
@@ -310,10 +307,7 @@ class LinalgRange(DialectOp):
             "linalg.range {min_id.ssa_id} : {max_id.ssa_id} : {step_id.ssa_id}"
             " {attr.attribute_value} : {out_type.type}"
         ),
-        (
-            "linalg.range {min_id.ssa_id} : {max_id.ssa_id} : {step_id.ssa_id}"
-            " : {out_type.type}"
-        ),
+        ("linalg.range {min_id.ssa_id} : {max_id.ssa_id} : {step_id.ssa_id}" " : {out_type.type}"),
     ]
     _opname_ = "linalg.range"
 
@@ -431,9 +425,7 @@ class LinalgYield(DialectOp):
     operand_ids: List[mast.SsaId]
     operand_types: List[mast.Type]
 
-    _syntax_ = (
-        "linalg.yield {operand_ids.ssa_id_list} : {operand_types.type_list_no_parens}"
-    )
+    _syntax_ = "linalg.yield {operand_ids.ssa_id_list} : {operand_types.type_list_no_parens}"
     _opname_ = "linalg.yield"
 
 
@@ -508,10 +500,5 @@ class LinalgTranspose(DialectOp):
 # Inspect current module to get all classes defined above
 linalg = Dialect(
     "linalg",
-    ops=[
-        m[1]
-        for m in inspect.getmembers(
-            sys.modules[__name__], lambda obj: is_op(obj, __name__)
-        )
-    ],
+    ops=[m[1] for m in inspect.getmembers(sys.modules[__name__], lambda obj: is_op(obj, __name__))],
 )

@@ -63,7 +63,9 @@ class AffineLoadOp(DialectOp):
     arg: SsaUse
     index: mast.MultiDimAffineExpr
     type: mast.MemRefType
-    _syntax_ = "affine.load {arg.ssa_use} [ {index.multi_dim_affine_expr_no_parens} ] : {type.memref_type}"
+    _syntax_ = (
+        "affine.load {arg.ssa_use} [ {index.multi_dim_affine_expr_no_parens} ] : {type.memref_type}"
+    )
     _opname_ = "affine.load"
 
 
@@ -144,10 +146,5 @@ class AffineYieldOp(DialectOp):
 # Inspect current module to get all classes defined above
 affine = Dialect(
     "affine",
-    ops=[
-        m[1]
-        for m in inspect.getmembers(
-            sys.modules[__name__], lambda obj: is_op(obj, __name__)
-        )
-    ],
+    ops=[m[1] for m in inspect.getmembers(sys.modules[__name__], lambda obj: is_op(obj, __name__))],
 )

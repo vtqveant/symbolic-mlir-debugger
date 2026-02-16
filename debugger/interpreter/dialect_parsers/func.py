@@ -91,9 +91,7 @@ class FuncDialectParser(BaseDialectParser):
             args=args,
         )
 
-    def _parse_call_indirect_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[CallOperation]:
+    def _parse_call_indirect_operation(self, op_node: mast.Operation) -> Optional[CallOperation]:
         """Parse func.call_indirect operation."""
         op_obj = op_node.op
 
@@ -126,9 +124,7 @@ class FuncDialectParser(BaseDialectParser):
             args=args,
         )
 
-    def _parse_return_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[ReturnOperation]:
+    def _parse_return_operation(self, op_node: mast.Operation) -> Optional[ReturnOperation]:
         """Parse func.return operation."""
         op_obj = op_node.op
 

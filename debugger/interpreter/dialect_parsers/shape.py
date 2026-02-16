@@ -88,11 +88,7 @@ class ShapeDialectParser(BaseDialectParser):
                 return self._parse_from_extents_operation(op_node)
 
             # Binary operations (AddOperation, DivOperation) have lhs, rhs
-            elif (
-                class_name.endswith("Op")
-                and hasattr(op_obj, "lhs")
-                and hasattr(op_obj, "rhs")
-            ):
+            elif class_name.endswith("Op") and hasattr(op_obj, "lhs") and hasattr(op_obj, "rhs"):
                 return self._parse_binary_operation(op_node)
 
             # Unary operations (AnyOperation) have shape
@@ -105,9 +101,7 @@ class ShapeDialectParser(BaseDialectParser):
 
         return None
 
-    def _parse_binary_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[BinaryOperation]:
+    def _parse_binary_operation(self, op_node: mast.Operation) -> Optional[BinaryOperation]:
         """Parse binary shape operation (add, div)."""
         op_obj = op_node.op
 
@@ -148,9 +142,7 @@ class ShapeDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_unary_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[UnaryOperation]:
+    def _parse_unary_operation(self, op_node: mast.Operation) -> Optional[UnaryOperation]:
         """Parse unary shape operation (any)."""
         op_obj = op_node.op
 
@@ -188,9 +180,7 @@ class ShapeDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_const_shape_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_const_shape_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse shape.const_shape operation."""
         op_obj = op_node.op
 
@@ -217,9 +207,7 @@ class ShapeDialectParser(BaseDialectParser):
             attributes={"shape": shape},
         )
 
-    def _parse_const_size_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[ConstantOperation]:
+    def _parse_const_size_operation(self, op_node: mast.Operation) -> Optional[ConstantOperation]:
         """Parse shape.const_size operation."""
         op_obj = op_node.op
 
@@ -300,9 +288,7 @@ class ShapeDialectParser(BaseDialectParser):
             attributes={"condition": condition},
         )
 
-    def _parse_assuming_all_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_assuming_all_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse shape.assuming_all operation."""
         op_obj = op_node.op
 
@@ -325,9 +311,7 @@ class ShapeDialectParser(BaseDialectParser):
             attributes={"conditions": conditions},
         )
 
-    def _parse_assuming_yield_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_assuming_yield_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse shape.assuming_yield operation."""
         op_obj = op_node.op
 
@@ -350,9 +334,7 @@ class ShapeDialectParser(BaseDialectParser):
             attributes={"values": values},
         )
 
-    def _parse_broadcast_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_broadcast_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse shape.broadcast operation."""
         op_obj = op_node.op
 
@@ -406,9 +388,7 @@ class ShapeDialectParser(BaseDialectParser):
             attributes={"shapes": shapes},
         )
 
-    def _parse_cstr_broadcastable_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_cstr_broadcastable_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse shape.cstr_broadcastable operation."""
         op_obj = op_node.op
 
@@ -457,9 +437,7 @@ class ShapeDialectParser(BaseDialectParser):
             attributes={"lhs": lhs, "rhs": rhs},
         )
 
-    def _parse_cstr_require_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_cstr_require_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse shape.cstr_require operation."""
         op_obj = op_node.op
 
@@ -482,9 +460,7 @@ class ShapeDialectParser(BaseDialectParser):
             attributes={"condition": condition},
         )
 
-    def _parse_debug_print_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_debug_print_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse shape.debug_print operation."""
         op_obj = op_node.op
 
@@ -537,9 +513,7 @@ class ShapeDialectParser(BaseDialectParser):
             attributes={"shape": shape, "index": index},
         )
 
-    def _parse_from_extent_tensor_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_from_extent_tensor_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse shape.from_extent_tensor operation."""
         op_obj = op_node.op
 
@@ -566,9 +540,7 @@ class ShapeDialectParser(BaseDialectParser):
             attributes={"tensor": tensor},
         )
 
-    def _parse_from_extents_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_from_extents_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse shape.from_extents operation."""
         op_obj = op_node.op
 
@@ -630,9 +602,7 @@ class ShapeDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_generic_const_shape_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_generic_const_shape_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse shape.const_shape generic operation."""
         op_obj = op_node.op
         dest = self._extract_destination(op_node)
@@ -661,9 +631,7 @@ class ShapeDialectParser(BaseDialectParser):
             attributes={"shape": shape_attr},
         )
 
-    def _parse_generic_binary_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[BinaryOperation]:
+    def _parse_generic_binary_operation(self, op_node: mast.Operation) -> Optional[BinaryOperation]:
         """Parse shape.add/div generic operation."""
         op_obj = op_node.op
         dest = self._extract_destination(op_node)
@@ -701,9 +669,7 @@ class ShapeDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_generic_get_extent_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_generic_get_extent_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse shape.get_extent generic operation."""
         op_obj = op_node.op
         dest = self._extract_destination(op_node)

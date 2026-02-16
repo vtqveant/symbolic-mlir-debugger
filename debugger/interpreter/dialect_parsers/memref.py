@@ -101,9 +101,7 @@ class MemrefDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_store_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[StoreOperation]:
+    def _parse_store_operation(self, op_node: mast.Operation) -> Optional[StoreOperation]:
         """Parse memref.store operation."""
         op_obj = op_node.op
 
@@ -355,9 +353,7 @@ class MemrefDialectParser(BaseDialectParser):
             },
         )
 
-    def _parse_collapse_shape_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_collapse_shape_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse memref.collapse_shape operation."""
         op_obj = op_node.op
 
@@ -389,9 +385,7 @@ class MemrefDialectParser(BaseDialectParser):
             },
         )
 
-    def _parse_expand_shape_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_expand_shape_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse memref.expand_shape operation."""
         op_obj = op_node.op
 
@@ -462,9 +456,7 @@ class MemrefDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_memory_space_cast_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_memory_space_cast_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse memref.memory_space_cast operation."""
         op_obj = op_node.op
 
@@ -496,9 +488,7 @@ class MemrefDialectParser(BaseDialectParser):
             },
         )
 
-    def _parse_dma_start_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_dma_start_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse memref.dma_start operation."""
         op_obj = op_node.op
 
@@ -539,13 +529,8 @@ class MemrefDialectParser(BaseDialectParser):
         # Optional fields
         if hasattr(op_obj, "stride") and op_obj.stride is not None:
             attributes["stride"] = self._ssa_use_to_string(op_obj.stride)
-        if (
-            hasattr(op_obj, "transfer_per_stride")
-            and op_obj.transfer_per_stride is not None
-        ):
-            attributes["transfer_per_stride"] = self._ssa_use_to_string(
-                op_obj.transfer_per_stride
-            )
+        if hasattr(op_obj, "transfer_per_stride") and op_obj.transfer_per_stride is not None:
+            attributes["transfer_per_stride"] = self._ssa_use_to_string(op_obj.transfer_per_stride)
 
         line = self._extract_line_number(op_node)
 

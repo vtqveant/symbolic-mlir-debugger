@@ -84,9 +84,7 @@ class SymbolicInterpreter:
         else:
             raise TypeError(f"Unsupported operation type: {type(op)}")
 
-    def _try_execute_with_registry(
-        self, op: Any, state: SymbolicState, func: MLIRFunction
-    ) -> bool:
+    def _try_execute_with_registry(self, op: Any, state: SymbolicState, func: MLIRFunction) -> bool:
         """Try to execute operation using dialect registry.
 
         Returns True if operation was handled by registry, False otherwise.
@@ -174,9 +172,7 @@ class SymbolicInterpreter:
         # Could also check solver for satisfiability, but for now return None
         return None
 
-    def _get_concrete_operand(
-        self, operand: str, state: SymbolicState
-    ) -> Optional[Any]:
+    def _get_concrete_operand(self, operand: str, state: SymbolicState) -> Optional[Any]:
         """Get concrete value for an operand if available."""
         # First try to get as integer constant
         try:
@@ -202,9 +198,7 @@ class SymbolicInterpreter:
             concrete_indices.append(concrete_idx)
         return tuple(concrete_indices)
 
-    def _execute_operation(
-        self, op: Any, state: SymbolicState, func: MLIRFunction
-    ) -> None:
+    def _execute_operation(self, op: Any, state: SymbolicState, func: MLIRFunction) -> None:
         """Execute a single operation using dialect registry or fallback."""
         # Try to execute using dialect registry first
         if self._try_execute_with_registry(op, state, func):
@@ -246,9 +240,7 @@ class SymbolicInterpreter:
             if hasattr(op_obj, "dest") and op_obj.dest is not None:
                 # Create fresh symbolic value
                 expr = z3.FreshConst(z3.IntSort(), f"unknown_{op_type}")
-                state.set_value(
-                    op_obj.dest, expr, getattr(op_obj, "result_type", "unknown")
-                )
+                state.set_value(op_obj.dest, expr, getattr(op_obj, "result_type", "unknown"))
 
     def execute_function(self, func: MLIRFunction) -> List[SymbolicState]:
         """Symbolically execute an MLIR function."""
@@ -272,9 +264,7 @@ class SymbolicInterpreter:
         while self.state_manager.has_states():
             loop_counter += 1
             if loop_counter > 10000:
-                print(
-                    f"Warning: Infinite loop detected, breaking after {loop_counter} iterations"
-                )
+                print(f"Warning: Infinite loop detected, breaking after {loop_counter} iterations")
                 print(f"Remaining states: {self.state_manager.get_worklist_size()}")
                 if self.state_manager.has_states():
                     # Get a state from worklist without removing it
@@ -332,9 +322,7 @@ class ConcolicInterpreter(SymbolicInterpreter):
         self.explored_paths = []
         self.input_models = []
 
-    def _try_execute_with_registry(
-        self, op: Any, state: SymbolicState, func: MLIRFunction
-    ) -> bool:
+    def _try_execute_with_registry(self, op: Any, state: SymbolicState, func: MLIRFunction) -> bool:
         """Try to execute operation using dialect registry with concolic support."""
         # Operations that should be handled by legacy elif branches
         # (e.g., control flow that needs state forking)
@@ -358,9 +346,7 @@ class ConcolicInterpreter(SymbolicInterpreter):
                     handler.__class__.__name__,
                 )
                 handler.execute_concolic(op_obj, state, func, self)
-                logger.debug(
-                    "concolic: Handler executed successfully for %s", op_obj.full_name
-                )
+                logger.debug("concolic: Handler executed successfully for %s", op_obj.full_name)
                 return True
             else:
                 logger.debug("concolic: No handler found for %s", op_obj.full_name)
@@ -380,9 +366,7 @@ class ConcolicInterpreter(SymbolicInterpreter):
         """Execute operation with concolic support."""
         self._execute_operation_concolic(op, state, func)
 
-    def explore_paths(
-        self, func: MLIRFunction, max_paths: int = 10
-    ) -> List[Dict[str, Any]]:
+    def explore_paths(self, func: MLIRFunction, max_paths: int = 10) -> List[Dict[str, Any]]:
         """Explore multiple execution paths using concolic execution."""
         # Start with random concrete inputs
 
@@ -466,14 +450,10 @@ class ConcolicInterpreter(SymbolicInterpreter):
                     model = solver.model()
                     new_inputs = {}
                     for arg_name, _ in func.args:
-                        clean_name = (
-                            arg_name[1:] if arg_name.startswith("%") else arg_name
-                        )
+                        clean_name = arg_name[1:] if arg_name.startswith("%") else arg_name
                         # Get value from model, fallback to random
                         z3_var = z3.Int(clean_name)
-                        if model[z3_var] is not None and isinstance(
-                            model[z3_var], z3.IntNumRef
-                        ):
+                        if model[z3_var] is not None and isinstance(model[z3_var], z3.IntNumRef):
                             new_inputs[clean_name] = model[z3_var].as_long()  # type: ignore
                         else:
                             new_inputs[clean_name] = random.randint(-10, 10)
@@ -495,9 +475,7 @@ class ConcolicInterpreter(SymbolicInterpreter):
             initial_state.set_value(clean_name, sym_var, arg_type)
 
             if clean_name in concrete_inputs:
-                initial_state.set_concrete_value(
-                    clean_name, concrete_inputs[clean_name]
-                )
+                initial_state.set_concrete_value(clean_name, concrete_inputs[clean_name])
 
         # Reset state manager and add initial state
         self.state_manager.clear()
@@ -563,9 +541,7 @@ class ConcolicInterpreter(SymbolicInterpreter):
         op_obj = self._convert_to_operation(op)
         super()._execute_operation(op_obj, state, func)
 
-    def _get_concrete_operand(
-        self, operand: str, state: SymbolicState
-    ) -> Optional[Any]:
+    def _get_concrete_operand(self, operand: str, state: SymbolicState) -> Optional[Any]:
         """Get concrete value for an operand if available."""
         # Debug: print what we're looking for
         # print(f"DEBUG _get_concrete_operand: operand='{operand}'")

@@ -92,9 +92,7 @@ def get_variable_summary(
         summary["presentationHint"] = "shape"
     elif value_type and value_type.startswith("vector"):
         summary["presentationHint"] = "array"
-    elif value_type and (
-        value_type.startswith("tensor") or value_type.startswith("memref")
-    ):
+    elif value_type and (value_type.startswith("tensor") or value_type.startswith("memref")):
         summary["presentationHint"] = "data"
 
     return summary

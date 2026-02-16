@@ -151,9 +151,7 @@ class TensorMemoryModel(MemoryModel):
         new_model = TensorMemoryModel()
 
         # Copy primitive dicts
-        new_model.shapes = {
-            k: list(v) for k, v in self.shapes.items()
-        }  # shallow copy of list
+        new_model.shapes = {k: list(v) for k, v in self.shapes.items()}  # shallow copy of list
         new_model.dtypes = dict(self.dtypes)
 
         # Deep copy storage (z3 expressions are immutable, can share references)
@@ -245,9 +243,7 @@ class TensorMemoryModel(MemoryModel):
             self.splat_concrete[tensor] = concrete_value
 
     # Helper methods
-    def _indices_to_key(
-        self, indices: List[Union[int, z3.ExprRef]]
-    ) -> Optional[Tuple[int, ...]]:
+    def _indices_to_key(self, indices: List[Union[int, z3.ExprRef]]) -> Optional[Tuple[int, ...]]:
         """Convert indices to concrete tuple if all are concrete ints."""
         concrete_indices = []
         for idx in indices:

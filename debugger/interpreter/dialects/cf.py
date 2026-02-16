@@ -54,9 +54,7 @@ class CondBrOpHandler(OperationHandler):
             raise TypeError(f"Expected ConditionalBranchOperation, got {type(op)}")
         if interpreter is None:
             raise ValueError("CondBrHandler requires interpreter parameter")
-        interpreter.cf_executor.execute_conditional_branch_concolic(
-            op, state, func, interpreter
-        )
+        interpreter.cf_executor.execute_conditional_branch_concolic(op, state, func, interpreter)
 
 
 class BrOpHandler(OperationHandler):
@@ -74,9 +72,7 @@ class BrOpHandler(OperationHandler):
             raise TypeError(f"Expected UnconditionalBranchOperation, got {type(op)}")
         if interpreter is None:
             raise ValueError("BrHandler requires interpreter parameter")
-        interpreter.cf_executor.execute_unconditional_branch(
-            op, state, func, interpreter
-        )
+        interpreter.cf_executor.execute_unconditional_branch(op, state, func, interpreter)
 
     def _try_concrete_evaluation(
         self, op: UnconditionalBranchOperation, state: SymbolicState, func: MLIRFunction

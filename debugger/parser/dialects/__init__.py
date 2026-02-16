@@ -14,7 +14,6 @@ from .vector import vector as vector_dialect
 from .builtin import builtin as builtin_dialect
 from .emitc import emitc as emitc_dialect
 
-
 UPSTREAM_DIALECTS = [
     affine_dialect,
     scf_dialect,

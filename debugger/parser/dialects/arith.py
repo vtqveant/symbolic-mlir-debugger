@@ -7,7 +7,6 @@ from .. import astnodes as mast
 from typing import List, Tuple, Optional, Union
 from dataclasses import dataclass
 
-
 Literal = Union[mast.StringLiteral, float, int, bool]
 SsaUse = Union[mast.SsaId, Literal]
 
@@ -109,7 +108,9 @@ class ArithCmpIOp(DialectOp):
     operand_a: mast.SsaId
     operand_b: mast.SsaId
     type: mast.Type
-    _syntax_ = "arith.cmpi {comptype.bare_id} , {operand_a.ssa_id} , {operand_b.ssa_id} : {type.type}"
+    _syntax_ = (
+        "arith.cmpi {comptype.bare_id} , {operand_a.ssa_id} , {operand_b.ssa_id} : {type.type}"
+    )
     _opname_ = "arith.cmpi"
 
 
@@ -119,7 +120,9 @@ class ArithCmpFOp(DialectOp):
     operand_a: mast.SsaId
     operand_b: mast.SsaId
     type: mast.Type
-    _syntax_ = "arith.cmpf {comptype.bare_id} , {operand_a.ssa_id} , {operand_b.ssa_id} : {type.type}"
+    _syntax_ = (
+        "arith.cmpf {comptype.bare_id} , {operand_a.ssa_id} , {operand_b.ssa_id} : {type.type}"
+    )
     _opname_ = "arith.cmpf"
 
 
@@ -167,17 +170,14 @@ class ArithSelectOp(DialectOp):
     arg_true: SsaUse
     arg_false: SsaUse
     type: mast.Type
-    _syntax_ = "arith.select {cond.ssa_use} , {arg_true.ssa_use} , {arg_false.ssa_use} : {type.type}"
+    _syntax_ = (
+        "arith.select {cond.ssa_use} , {arg_true.ssa_use} , {arg_false.ssa_use} : {type.type}"
+    )
     _opname_ = "arith.select"
 
 
 # Inspect current module to get all classes defined above
 arith = Dialect(
     "arith",
-    ops=[
-        m[1]
-        for m in inspect.getmembers(
-            sys.modules[__name__], lambda obj: is_op(obj, __name__)
-        )
-    ],
+    ops=[m[1] for m in inspect.getmembers(sys.modules[__name__], lambda obj: is_op(obj, __name__))],
 )
