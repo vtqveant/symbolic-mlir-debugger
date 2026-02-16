@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DAP Test Script",
+  "description": "Schema for DAP test scripts used by symbolic-mlir-dap-client",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the test script",
+      "minLength": 1
+    },
+    "program": {
+      "type": "string",
+      "description": "Path to the MLIR program to debug",
+      "minLength": 1
+    },
+    "session": {
+      "type": "array",
+      "description": "List of session steps to execute",
+      "items": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "enum": [
+              "initialize",
+              "launch",
+              "setBreakpoints",
+              "configurationDone",
+              "continue",
+              "disconnect"
+            ],
+            "description": "DAP command to execute"
+          },
+          "arguments": {
+            "type": "object",
+            "description": "Arguments for the command",
+            "additionalProperties": true
+          },
+          "expect": {
+            "type": "object",
+            "description": "Expected result (for validation)",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "description": "Whether the command should succeed"
+              },
+              "breakpoints": {
+                "type": "array",
+                "description": "Expected breakpoint results",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "line": {
+                      "type": "integer",
+                      "description": "Line number"
+                    },
+                    "verified": {
+                      "type": "boolean",
+                      "description": "Whether breakpoint is verified"
+                    }
+                  },
+                  "required": ["line", "verified"]
+                }
+              }
+            }
+          },
+          "executed": {
+            "type": "boolean",
+            "description": "Whether this step has been executed (internal use)"
+          }
+        },
+        "required": ["command"],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "description": "At least one command must be specified"
+    }
+  },
+  "required": ["name", "program", "session"],
+  "additionalProperties": false
+}
