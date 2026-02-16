@@ -5,68 +5,113 @@ Path exploration for MLIR symbolic debugging.
 Explores all possible execution paths through symbolic execution.
 """
 
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Union
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class PathExplorer:
     """Explore all possible execution paths."""
 
-    def __init__(self):
-        """Initialize path explorer."""
+    def __init__(self, stepper=None):
+        """Initialize path explorer.
+
+        Args:
+            stepper: ExecutionStepper instance for accessing interpreter and function.
+                     If None, must be set via set_stepper before calling explore().
+        """
+        self.stepper = stepper
         self.paths = []
 
+    def set_stepper(self, stepper):
+        """Set the execution stepper for path exploration."""
+        self.stepper = stepper
+
     def explore(self, max_paths: int = 10) -> List[Dict[str, Any]]:
-        """Explore execution paths.
+        """Explore execution paths using concolic execution.
 
         Args:
             max_paths: Maximum number of paths to explore
 
         Returns:
-            List of paths with their details
+            List of paths with their details, formatted for DAP response.
+            Each path contains: inputs, path_condition, return_value, depth, branches
         """
-        self.paths = []
-        self._explore_paths_recursive(max_paths)
-        return self.paths[:max_paths]
+        if self.stepper is None:
+            logger.error("PathExplorer: No stepper set, cannot explore paths")
+            return []
 
-    def _explore_paths_recursive(self, max_paths: int, current_path: Optional[List[str]] = None,
-                                   depth: int = 0, max_depth: int = 10):
-        """Recursively explore all possible paths.
+        if not hasattr(self.stepper, "interpreter") or self.stepper.interpreter is None:
+            logger.error("PathExplorer: Stepper has no interpreter")
+            return []
 
-        Args:
-            max_paths: Maximum paths to collect
-            current_path: Current path being explored
-            depth: Current recursion depth
-            max_depth: Maximum recursion depth
-        """
-        if current_path is None:
-            current_path = []
+        if not hasattr(self.stepper, "func") or self.stepper.func is None:
+            logger.error("PathExplorer: Stepper has no function")
+            return []
 
-        if len(self.paths) >= max_paths or depth >= max_depth:
-            return
+        interpreter = self.stepper.interpreter
+        func = self.stepper.func
 
-        # Collect current path information
-        path_info = {
-            "path": current_path.copy(),
-            "depth": depth,
-            "branches": [],
-        }
+        # Use concolic interpreter's explore_paths method
+        if not hasattr(interpreter, "explore_paths"):
+            logger.error("PathExplorer: Interpreter does not have explore_paths method")
+            return []
 
-        if depth > 0:
-            self.paths.append(path_info)
+        try:
+            # Get real paths from concolic interpreter
+            real_paths = interpreter.explore_paths(func, max_paths)
 
-        # In a real implementation, this would explore actual symbolic branches
-        # For now, we'll generate placeholder paths
-        branch_count = min(2, max_paths - len(self.paths))
+            # Transform to DAP-friendly format (compatible with mock format)
+            self.paths = []
+            for i, path in enumerate(real_paths):
+                # Convert Z3 expressions to strings for JSON serialization
+                path_condition_strs = [
+                    str(cond) for cond in path.get("path_condition", [])
+                ]
+                return_value = path.get("return_value")
+                return_value_str = (
+                    str(return_value) if return_value is not None else None
+                )
 
-        for i in range(branch_count):
-            new_path = current_path.copy()
+                # Extract branch decisions from path conditions
+                branches = self._extract_branches_from_conditions(path_condition_strs)
+                path_decisions = branches  # path is list of branch decisions
+
+                # Create DAP path info
+                path_info = {
+                    "path": path_decisions,
+                    "depth": len(path_condition_strs),
+                    "branches": branches,
+                    # Additional debug information
+                    "path_id": i,
+                    "inputs": path.get("inputs", {}),
+                    "path_condition": path_condition_strs,
+                    "return_value": return_value_str,
+                }
+                self.paths.append(path_info)
+
+            return self.paths[:max_paths]
+
+        except Exception as e:
+            logger.error(f"Path exploration failed: {e}")
+            return []
+
+    def _extract_branches_from_conditions(
+        self, conditions: List[str]
+    ) -> List[Dict[str, Any]]:
+        """Extract branch information from path conditions."""
+        branches = []
+        for i, condition in enumerate(conditions):
+            # Parse condition to determine branch direction
+            # For now, create simple branch info
             branch_info = {
                 "branch_index": i,
-                "taken": i == 0,
-                "conditions": ["condition_" + str(i)],
+                "condition": condition,
+                "taken": True,  # All conditions in path condition are satisfied (taken)
             }
-            new_path.append(branch_info)
-            self._explore_paths_recursive(max_paths, new_path, depth + 1, max_depth)
+            branches.append(branch_info)
+        return branches
 
     def get_all_paths(self) -> List[Dict[str, Any]]:
         """Get all explored paths."""

@@ -17,12 +17,10 @@ from typing import Any, Dict, List, Optional
 sys.path.insert(0, os.path.dirname(__file__))
 from interpreter.stepper import ExecutionStepper
 
-# Add project root to path for imports
-sys.path.insert(0, os.path.dirname(__file__))
-from interpreter.stepper import ExecutionStepper
-
 # Set up logging to stderr
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -71,12 +69,17 @@ class MLIRDebugSession:
         self.path_explorer = None
         self._server_ref = None  # Reference to parent DAPServer
 
-    def set_server_ref(self, server: 'DAPServer'):
+    def set_server_ref(self, server: "DAPServer"):
         """Set reference to parent DAPServer for response handling."""
         self._server_ref = server
 
-    def send_response(self, request: DAPRequest, body: Optional[Dict[str, Any]] = None,
-                      success: bool = True, message: Optional[str] = None) -> None:
+    def send_response(
+        self,
+        request: DAPRequest,
+        body: Optional[Dict[str, Any]] = None,
+        success: bool = True,
+        message: Optional[str] = None,
+    ) -> None:
         """Send a response to a request via parent server."""
         if self._server_ref:
             self._server_ref.send_response(request, body, success, message)
@@ -113,13 +116,13 @@ class MLIRDebugSession:
             # Initialize symbolic debugging components if symbolic mode is enabled
             if self.symbolic_mode:
                 logger.info("Symbolic debugging mode enabled")
-                from .interpreter.symbolic_evaluator import SymbolicExpressionEvaluator
-                from .interpreter.path_explorer import PathExplorer
-                from .interpreter.variable_tracking import SymbolicVariableTracker
+                from interpreter.symbolic_evaluator import SymbolicExpressionEvaluator
+                from interpreter.path_explorer import PathExplorer
+                from interpreter.variable_tracking import SymbolicVariableTracker
 
-                self.symbolic_evaluator = SymbolicExpressionEvaluator()
-                self.variable_tracker = SymbolicVariableTracker()
-                self.path_explorer = PathExplorer()
+                self.symbolic_evaluator = SymbolicExpressionEvaluator(self.stepper)
+                self.variable_tracker = SymbolicVariableTracker(self.stepper)
+                self.path_explorer = PathExplorer(self.stepper)
 
         except Exception as e:
             logger.error(f"Failed to create ExecutionStepper: {e}")
@@ -213,7 +216,9 @@ class MLIRDebugSession:
             "column": 1,
             "source": {
                 "path": self.program_path or "",
-                "name": os.path.basename(self.program_path) if self.program_path else "unknown",
+                "name": os.path.basename(self.program_path)
+                if self.program_path
+                else "unknown",
             },
         }
 
@@ -346,7 +351,9 @@ class MLIRDebugSession:
             result = []
 
             for name, info in variables.items():
-                if info.get("_memory_cell", False) and name.startswith(memref_name + "["):
+                if info.get("_memory_cell", False) and name.startswith(
+                    memref_name + "["
+                ):
                     var_entry = {
                         "name": name,
                         "value": info.get("value", "?"),
@@ -413,7 +420,9 @@ class MLIRDebugSession:
 
         return (memref_name, tuple(indices))
 
-    def _replace_memory_references(self, expression: str, variables: Dict[str, Any]) -> tuple:
+    def _replace_memory_references(
+        self, expression: str, variables: Dict[str, Any]
+    ) -> tuple:
         """Replace memory references in expression with placeholders.
 
         Returns (transformed_expression, placeholder_values_dict)
@@ -584,97 +593,112 @@ class MLIRDebugSession:
 
     def send_error_response(self, request: DAPRequest, message: str) -> None:
         """Send an error response to a request."""
-        self._send_error_response(request, message)
-
-    def _send_error_response(self, request: DAPRequest, message: str) -> None:
-        """Send an error response to a request."""
-        self._send_response(request, {}, success=False, message=message)
-
-    def _send_response(self, request: DAPRequest, body: Optional[Dict[str, Any]] = None,
-                       success: bool = True, message: Optional[str] = None) -> None:
-        """Send a response to a request."""
         if self._server_ref:
-            self._server_ref.send_response(request, body, success, message)
+            self._server_ref.send_response(request, {}, success=False, message=message)
 
-    def handle_symbolic_evaluate(self, request: DAPRequest, arguments: Dict[str, Any]) -> None:
+    def _ensure_symbolic_components(self):
+        """Ensure symbolic debugging components are initialized."""
+        if not self.symbolic_mode:
+            return False
+        if self.stepper is None:
+            return False
+        if (
+            self.symbolic_evaluator is None
+            or self.variable_tracker is None
+            or self.path_explorer is None
+        ):
+            # Import and create components
+            from interpreter.symbolic_evaluator import SymbolicExpressionEvaluator
+            from interpreter.path_explorer import PathExplorer
+            from interpreter.variable_tracking import SymbolicVariableTracker
+
+            self.symbolic_evaluator = SymbolicExpressionEvaluator(self.stepper)
+            self.variable_tracker = SymbolicVariableTracker(self.stepper)
+            self.path_explorer = PathExplorer(self.stepper)
+            logger.info("Symbolic debugging components initialized")
+        return True
+
+    def handle_symbolic_evaluate(
+        self, request: DAPRequest, arguments: Dict[str, Any]
+    ) -> None:
         """Handle symbolic expression evaluation request."""
         try:
-            expression = arguments.get('expression', '')
-            frame_id = arguments.get('frameId', 0)
-            
+            expression = arguments.get("expression", "")
+            frame_id = arguments.get("frameId", 0)
+
+            # Ensure symbolic components are initialized
+            if not self._ensure_symbolic_components():
+                self.send_error_response(
+                    request,
+                    "Symbolic debugging mode is not enabled or stepper not available",
+                )
+                return
+
+            # At this point, symbolic components are guaranteed to be initialized
+            assert self.symbolic_evaluator is not None
+            assert self.variable_tracker is not None
+            assert self.stepper is not None
+
             # Use symbolic evaluator
-            result = self.symbolic_evaluator.evaluate(expression, self.stepper.interpreter)
-            
-            self._send_response(request, {
-                'result': str(result),
-                'variables': self.variable_tracker.get_variables()
-            })
-        except Exception as e:
-            self._send_error_response(request, f"Symbolic evaluation failed: {e}")
+            result = self.symbolic_evaluator.evaluate(expression)
 
-    def handle_explore_paths(self, request: DAPRequest, arguments: Dict[str, Any]) -> None:
-        """Handle path exploration request."""
-        try:
-            max_paths = arguments.get('maxPaths', 10)
-            paths = self.path_explorer.explore(max_paths)
-            
-            self._send_response(request, {
-                'paths': paths,
-                'totalPaths': len(paths)
-            })
-        except Exception as e:
-            self._send_error_response(request, f"Path exploration failed: {e}")
-
-    def handle_get_constraints(self, request: DAPRequest, arguments: Dict[str, Any]) -> None:
-        """Handle get constraints request."""
-        try:
-            constraints = self.variable_tracker.get_constraints()
-            
-            self._send_response(request, {
-                'constraints': constraints,
-                'count': len(constraints)
-            })
-        except Exception as e:
-            self._send_error_response(request, f"Failed to get constraints: {e}")
-
-    def handle_symbolic_evaluate(self, request: DAPRequest, arguments: Dict[str, Any]) -> None:
-        """Handle symbolic expression evaluation request."""
-        try:
-            expression = arguments.get('expression', '')
-            frame_id = arguments.get('frameId', 0)
-            
-            # Use symbolic evaluator
-            result = self.symbolic_evaluator.evaluate(expression, self.stepper.interpreter)
-            
-            self.send_response(request, {
-                'result': str(result),
-                'variables': self.variable_tracker.get_variables()
-            })
+            self.send_response(
+                request,
+                {
+                    "result": str(result),
+                    "variables": self.variable_tracker.get_variables(),
+                },
+            )
         except Exception as e:
             self.send_error_response(request, f"Symbolic evaluation failed: {e}")
 
-    def handle_explore_paths(self, request: DAPRequest, arguments: Dict[str, Any]) -> None:
+    def handle_explore_paths(
+        self, request: DAPRequest, arguments: Dict[str, Any]
+    ) -> None:
         """Handle path exploration request."""
         try:
-            max_paths = arguments.get('maxPaths', 10)
+            max_paths = arguments.get("maxPaths", 10)
+
+            # Ensure symbolic components are initialized
+            if not self._ensure_symbolic_components():
+                self.send_error_response(
+                    request,
+                    "Symbolic debugging mode is not enabled or stepper not available",
+                )
+                return
+
+            # At this point, symbolic components are guaranteed to be initialized
+            assert self.path_explorer is not None
+            assert self.stepper is not None
+
             paths = self.path_explorer.explore(max_paths)
-            
-            self.send_response(request, {
-                'paths': paths,
-                'totalPaths': len(paths)
-            })
+
+            self.send_response(request, {"paths": paths, "totalPaths": len(paths)})
         except Exception as e:
             self.send_error_response(request, f"Path exploration failed: {e}")
 
-    def handle_get_constraints(self, request: DAPRequest, arguments: Dict[str, Any]) -> None:
+    def handle_get_constraints(
+        self, request: DAPRequest, arguments: Dict[str, Any]
+    ) -> None:
         """Handle get constraints request."""
         try:
+            # Ensure symbolic components are initialized
+            if not self._ensure_symbolic_components():
+                self.send_error_response(
+                    request,
+                    "Symbolic debugging mode is not enabled or stepper not available",
+                )
+                return
+
+            # At this point, symbolic components are guaranteed to be initialized
+            assert self.variable_tracker is not None
+            assert self.stepper is not None
+
             constraints = self.variable_tracker.get_constraints()
-            
-            self.send_response(request, {
-                'constraints': constraints,
-                'count': len(constraints)
-            })
+
+            self.send_response(
+                request, {"constraints": constraints, "count": len(constraints)}
+            )
         except Exception as e:
             self.send_error_response(request, f"Failed to get constraints: {e}")
 
@@ -744,7 +768,9 @@ class DAPServer:
 
         self.write_message(response)
 
-    def send_event(self, event_name: str, body: Optional[Dict[str, Any]] = None) -> None:
+    def send_event(
+        self, event_name: str, body: Optional[Dict[str, Any]] = None
+    ) -> None:
         """Send an event."""
         event = {
             "seq": self.next_seq(),
@@ -836,6 +862,7 @@ class DAPServer:
                     self.session.launch(program, args)
                     self.send_response(request, {})
                     # Send stopped event at entry point
+                    assert self.session.stepper is not None
                     location = self.session.stepper.get_current_location()
                     body = {
                         "reason": "entry",
@@ -857,7 +884,9 @@ class DAPServer:
                 except Exception as e:
                     logger.error(f"Launch failed: {e}")
                     self.send_output(f"ERROR: Launch failed: {e}", category="stderr")
-                    self.send_response(request, {}, success=False, message=f"Launch failed: {e}")
+                    self.send_response(
+                        request, {}, success=False, message=f"Launch failed: {e}"
+                    )
 
             elif command == "setBreakpoints":
                 source = arguments.get("source", {})
@@ -908,6 +937,7 @@ class DAPServer:
                 self.send_response(request, {"allThreadsContinued": True})
                 if stopped_at_breakpoint:
                     # Send stopped event for breakpoint
+                    assert self.session.stepper is not None
                     location = self.session.stepper.get_current_location()
                     body = {
                         "reason": "breakpoint",
@@ -936,6 +966,7 @@ class DAPServer:
                 self.send_response(request, {})
                 if still_running:
                     # Send stopped event for step
+                    assert self.session.stepper is not None
                     location = self.session.stepper.get_current_location()
                     body = {
                         "reason": "step",
@@ -973,8 +1004,13 @@ class DAPServer:
                 self.session.handle_get_constraints(request, arguments)
 
             elif command == "symbolic/setMode":
-                self.session.symbolic_mode = arguments.get('enabled', True)
-                self.send_response(request, {'symbolicMode': self.session.symbolic_mode})
+                self.session.symbolic_mode = arguments.get("enabled", True)
+                # Ensure symbolic components are initialized if mode is enabled
+                if self.session.symbolic_mode:
+                    self.session._ensure_symbolic_components()
+                self.send_response(
+                    request, {"symbolicMode": self.session.symbolic_mode}
+                )
 
             else:
                 logger.warning(f"Unsupported command: {command}")
