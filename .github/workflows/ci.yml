@@ -42,7 +42,7 @@ jobs:
       run: pip install black flake8
     - name: Check formatting (our code only)
       run: |
-        find debugger -name "*.py" -type f \
+        find . -name "*.py" -type f \
           -not -path "*/vscode/*" \
           -not -path "*/node_modules/*" \
           -not -path "*/.venv/*" \
@@ -52,7 +52,6 @@ jobs:
           -exec python -m black --check {} +
     - name: Lint with flake8 (our code only)
       run: |
-        cd debugger
         python -m flake8 . \
           --exclude=vscode,node_modules,.venv,venv,__pycache__,.pytest_cache \
           --count --select=E9,F63,F7,F82 --show-source --statistics
