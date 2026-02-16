@@ -1,6 +1,8 @@
 """Pytest fixtures for DAP client tests"""
 
 import pytest
+from unittest.mock import patch, MagicMock
+
 from dap_client.core.client import DAPClient
 
 
@@ -13,7 +15,7 @@ def client():
 @pytest.fixture
 def mock_connection():
     """Create a mock DAP connection"""
-    with patch('dap_client.core.connection.DAPConnection') as mock:
+    with patch("dap_client.core.connection.DAPConnection") as mock:
         connection_instance = MagicMock()
         mock.return_value = connection_instance
         yield connection_instance

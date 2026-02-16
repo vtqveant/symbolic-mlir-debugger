@@ -6,21 +6,19 @@ Supports concrete mode execution (single path) with breakpoints and stepping.
 """
 
 from typing import Dict, List, Optional, Any, cast
+
 import z3
 
-from .models import SymbolicState, LoopContext
-from .parser import MLIRParser
-from .interpreter import ConcolicInterpreter
 from .debug_utils import get_variable_summary
+from .interpreter import ConcolicInterpreter
+from .models import SymbolicState, LoopContext
 from .operations import (
     Operation,
     LoopOperation,
     ConditionalBranchOperation,
-    UnconditionalBranchOperation,
     ReturnOperation,
-    IfOperation,
-    YieldOperation,
 )
+from .parser import MLIRParser
 
 
 class ExecutionStepper:

@@ -1,10 +1,11 @@
 """Classes containing MLIR AST node types, fields, and conversion back to MLIR."""
 
-from enum import Enum, auto
+from dataclasses import dataclass, field, is_dataclass
+from enum import Enum
 from typing import Any, List, Union, Optional, ClassVar
+
 from lark import Token
 from lark.tree import Tree
-from dataclasses import dataclass, field, is_dataclass
 
 
 class Node(object):

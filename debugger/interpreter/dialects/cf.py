@@ -8,12 +8,11 @@ Handles operations: cond_br, br, etc. Note: cf.br supports arguments via cf.br ^
 from typing import Any
 
 from .base import OperationHandler
+from ..models import SymbolicState, MLIRFunction
 from ..operations import (
     ConditionalBranchOperation,
     UnconditionalBranchOperation,
-    Operation,
 )
-from ..models import SymbolicState, MLIRFunction
 
 
 class CondBrOpHandler(OperationHandler):

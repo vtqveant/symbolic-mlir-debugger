@@ -5,12 +5,13 @@ Func dialect execution handlers.
 Handles operations: call, call_indirect, return, etc.
 """
 
-import z3
 from typing import Any
 
+import z3
+
 from .base import OperationHandler
-from ..operations import Operation, CallOperation, ReturnOperation
 from ..models import SymbolicState, MLIRFunction
+from ..operations import Operation, CallOperation, ReturnOperation
 
 
 class FuncCallOpHandler(OperationHandler):
@@ -116,7 +117,6 @@ class FuncReturnOpHandler(OperationHandler):
 # Function to register all func dialect handlers
 def register_handlers(registry) -> None:
     """Register func dialect handlers with registry."""
-    import sys
 
     registry.register("func.call", FuncCallOpHandler())
     registry.register("func.call_indirect", FuncCallIndirectOpHandler())

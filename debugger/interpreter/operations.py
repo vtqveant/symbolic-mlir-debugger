@@ -6,8 +6,8 @@ Preserves MLIR dialect structure with typed operation representations.
 Each operation belongs to a dialect and has dialect-specific fields.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def clean_operand(operand) -> str:

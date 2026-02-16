@@ -2,10 +2,11 @@
 
 import inspect
 import sys
-from ..dialect import Dialect, DialectOp, is_op, UnaryOperation
-from .. import astnodes as mast
 from dataclasses import dataclass
 from typing import Optional, List, Tuple
+
+from .. import astnodes as mast
+from ..dialect import Dialect, DialectOp, is_op
 
 
 @dataclass

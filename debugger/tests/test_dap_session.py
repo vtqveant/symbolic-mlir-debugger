@@ -1,8 +1,8 @@
 """DAP server integration tests."""
 
-import pytest
 import os
 
+import pytest
 from dap_server import MLIRDebugSession
 
 

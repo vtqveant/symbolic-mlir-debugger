@@ -1,8 +1,8 @@
 """Symbolic and concolic interpreter tests."""
 
+import lark
 import pytest
 import z3
-import lark
 
 
 @pytest.mark.interpreter

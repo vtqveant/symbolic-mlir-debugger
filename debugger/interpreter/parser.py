@@ -3,8 +3,8 @@
 MLIR parser using pymlir as backend.
 """
 
-import sys
 import os
+import sys
 from typing import Dict, Optional, Any, List, Tuple
 
 # Add project root to path for imports
@@ -14,7 +14,7 @@ import parser
 import parser.astnodes as mast
 from parser.parser import Parser
 from lark import Tree
-from .operations import Operation, ReturnOperation
+from .operations import Operation
 
 # Import dialect modules
 from parser.dialects import (

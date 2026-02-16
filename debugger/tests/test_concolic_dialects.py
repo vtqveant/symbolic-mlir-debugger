@@ -1,7 +1,6 @@
 """Concolic execution tests for dialect operations."""
 
 import pytest
-from pathlib import Path
 
 
 @pytest.mark.dialect

@@ -1,7 +1,7 @@
 import inspect
 import sys
-from typing import List, Tuple, Optional, Union
 from dataclasses import dataclass
+from typing import List, Optional, Union
 
 from .. import astnodes as mast
 from ..dialect import Dialect, DialectOp, is_op

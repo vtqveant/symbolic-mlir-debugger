@@ -4,7 +4,8 @@ A Python DAP (Debug Adapter Protocol) client for automated testing of the Symbol
 
 ## Overview
 
-This module provides a comprehensive DAP client implementation that can communicate with the MLIR debugger DAP server. It serves as the foundation for automated testing and programmable debugging workflows.
+This module provides a comprehensive DAP client implementation that can communicate with the MLIR debugger DAP server.
+It serves as the foundation for automated testing and programmable debugging workflows.
 
 ## Features
 
@@ -42,6 +43,7 @@ dap_client/
 ## Core DAP Commands
 
 Implemented commands:
+
 - `initialize` - Initialize debug session
 - `launch` - Launch MLIR program
 - `setBreakpoints` - Set breakpoints in source
@@ -66,19 +68,19 @@ from core.client import DAPClient
 with DAPClient(host="localhost", port=5678) as client:
     # Initialize session
     client.initialize(adapter_id="mlir-debugger", client_id="automated-test")
-    
+
     # Launch program
     client.launch(program="example.mlir", no_debug=False)
-    
+
     # Set breakpoints
     client.set_breakpoints(
         source={"path": "example.mlir"},
         breakpoints=[{"line": 10}]
     )
-    
+
     # Configuration done
     client.configuration_done()
-    
+
     # Continue execution
     client.continue_execution(thread_id=1)
 ```

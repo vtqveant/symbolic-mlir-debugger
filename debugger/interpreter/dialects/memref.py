@@ -6,17 +6,18 @@ Handles operations: alloc, alloca, load, store, etc.
 """
 
 import re
-import z3
 from typing import Any, Tuple, Optional, List, Union
 
+import z3
+
 from .base import OperationHandler
+from ..models import SymbolicState, MLIRFunction, MLIRValue
 from ..operations import (
     LoadOperation,
     StoreOperation,
     Operation,
     ReinterpretCastOperation,
 )
-from ..models import SymbolicState, MLIRFunction, MLIRValue
 
 
 def parse_memref_type(memref_type: str) -> Tuple[List[int], str]:

@@ -1,16 +1,17 @@
 """Contains classes that parse MLIR files"""
 
 import itertools
-from lark import Lark, Tree
 import os
+import runpy
 import sys
 from typing import List, Optional, TextIO
-import runpy
 
-from .parser_transformer import TreeToMlir
+from lark import Lark
+
+from . import astnodes as mast
 from .dialect import Dialect, add_dialect_rules
 from .dialects import UPSTREAM_DIALECTS
-from . import astnodes as mast
+from .parser_transformer import TreeToMlir
 
 
 class Parser(object):

@@ -1,9 +1,9 @@
 """ExecutionStepper tests."""
 
-import pytest
 import os
 
-from interpreter import ExecutionStepper
+import pytest
+from interpreter.stepper import ExecutionStepper
 
 
 @pytest.mark.integration

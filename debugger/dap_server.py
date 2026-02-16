@@ -5,14 +5,13 @@ Communicates via stdin/stdout using JSON-RPC.
 """
 
 import json
-import re
-import sys
-import threading
-import traceback
-from typing import Any, Dict, List, Optional
-from dataclasses import dataclass, field
 import logging
 import os
+import re
+import sys
+import traceback
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 # Add project root to path for imports
 sys.path.insert(0, os.path.dirname(__file__))

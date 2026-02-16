@@ -29,7 +29,8 @@ Worklist scheduling:
 - Priority methods: prioritize_by_path_length(), prioritize_by_recently_forked()
 """
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
+
 from .models import SymbolicState
 
 

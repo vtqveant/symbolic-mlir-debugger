@@ -7,7 +7,7 @@ Tensors are immutable values; tensor.insert creates a new tensor copy.
 """
 
 from typing import Dict, List, Tuple, Optional, Union, Any
-from dataclasses import dataclass, field
+
 import z3
 
 from .base import MemoryModel

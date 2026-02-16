@@ -1,11 +1,12 @@
 """MLIR Dialect representation."""
 
 import inspect
-from lark import Token
-from . import astnodes
-import parse
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+
+import parse
+
+from . import astnodes
 
 
 def _get_fields(syntax: str):

@@ -1,8 +1,9 @@
 # Symbolic MLIR Debugger
 
+[![CI](https://github.com/vtqveant/symbolic-mlir-debugger/actions/workflows/ci.yml/badge.svg)](https://github.com/vtqveant/symbolic-mlir-debugger/actions/workflows/ci.yml)
+
 <div align="center">
   <img src="mlir-debug-icon.jpg" alt="MLIR Debug Logo" width="200" height="200">
-  [![CI](https://github.com/vtqveant/symbolic-mlir-debugger/actions/workflows/ci.yml/badge.svg)](https://github.com/vtqveant/symbolic-mlir-debugger/actions/workflows/ci.yml)
 </div>
 
 A symbolic and concolic execution engine for MLIR (Multi-Level Intermediate Representation) programs 

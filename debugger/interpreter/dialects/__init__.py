@@ -5,8 +5,8 @@ Dialect registry for operation execution.
 Automatically discovers and registers dialect handlers.
 """
 
-from typing import Optional
 import importlib
+from typing import Optional
 
 from .base import DialectRegistry, OperationHandler
 

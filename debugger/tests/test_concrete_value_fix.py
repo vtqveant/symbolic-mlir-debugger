@@ -6,8 +6,8 @@ This test verifies the fix for the issue where concrete value expressions were n
 set in MLIRValue when creating values from concrete arguments in control flow.
 """
 
-import sys
 import os
+import sys
 
 # Add the debugger directory to the path
 debugger_dir = os.path.join(os.path.dirname(__file__), "..", "debugger")

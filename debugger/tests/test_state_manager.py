@@ -5,8 +5,8 @@ Tests for StateManager.
 
 import pytest
 import z3
-from interpreter.state_manager import StateManager
 from interpreter.models import SymbolicState
+from interpreter.state_manager import StateManager
 
 
 def test_state_manager_initialization():

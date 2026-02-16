@@ -5,12 +5,13 @@ Builtin dialect execution handlers.
 Handles operations: module, func, etc. (mostly structural operations).
 """
 
-import z3
 from typing import Any
 
+import z3
+
 from .base import OperationHandler
-from ..operations import Operation, CallOperation, ReturnOperation
 from ..models import SymbolicState, MLIRFunction
+from ..operations import Operation
 
 
 class BuiltinModuleOpHandler(OperationHandler):

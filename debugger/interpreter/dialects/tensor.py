@@ -5,12 +5,13 @@ Tensor dialect execution handlers.
 Handles operations: extract, insert, splat, etc.
 """
 
-import z3
 from typing import Any, Optional, Tuple, List, Union
 
+import z3
+
 from .base import OperationHandler
-from ..operations import LoadOperation, StoreOperation, Operation, UnaryOperation
 from ..models import SymbolicState, MLIRFunction
+from ..operations import LoadOperation, StoreOperation, Operation, UnaryOperation
 
 
 def parse_tensor_dimensions(tensor_type: str) -> List[str]:

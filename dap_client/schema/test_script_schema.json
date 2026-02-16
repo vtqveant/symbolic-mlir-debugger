@@ -60,7 +60,10 @@
                       "description": "Whether breakpoint is verified"
                     }
                   },
-                  "required": ["line", "verified"]
+                  "required": [
+                    "line",
+                    "verified"
+                  ]
                 }
               }
             }
@@ -70,13 +73,19 @@
             "description": "Whether this step has been executed (internal use)"
           }
         },
-        "required": ["command"],
+        "required": [
+          "command"
+        ],
         "additionalProperties": false
       },
       "minItems": 1,
       "description": "At least one command must be specified"
     }
   },
-  "required": ["name", "program", "session"],
+  "required": [
+    "name",
+    "program",
+    "session"
+  ],
   "additionalProperties": false
 }

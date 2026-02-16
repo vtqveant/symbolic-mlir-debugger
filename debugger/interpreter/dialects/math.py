@@ -5,12 +5,13 @@ Math dialect execution handlers.
 Handles operations: absf, cos, sin, exp, log, sqrt, etc.
 """
 
-import z3
 from typing import Any
 
+import z3
+
 from .base import BinaryOperationHandler, UnaryOperationHandler
-from ..operations import Operation
 from ..models import SymbolicState, MLIRFunction
+from ..operations import Operation
 
 
 # Math operations can reuse arithmetic handlers for now

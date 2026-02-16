@@ -2,10 +2,11 @@
 
 import inspect
 import sys
-from ..dialect import Dialect, DialectOp, is_op
-from .. import astnodes as mast
-from typing import List, Optional, Tuple, Union
 from dataclasses import dataclass
+from typing import List, Optional, Tuple, Union
+
+from .. import astnodes as mast
+from ..dialect import Dialect, DialectOp, is_op
 
 Literal = Union[mast.StringLiteral, float, int, bool]
 SsaUse = Union[mast.SsaId, Literal]

@@ -3,9 +3,10 @@
 Advanced DAP tests for expression evaluation and state inspection.
 """
 
-import pytest
 import os
 import tempfile
+
+import pytest
 from dap_server import MLIRDebugSession
 
 
@@ -203,7 +204,6 @@ module {
 
 if __name__ == "__main__":
     # Run tests directly
-    import sys
 
     test_dir = os.path.join(os.path.dirname(__file__), "..", "tests")
     test_data_dir = type(

@@ -8,6 +8,7 @@ dialect boundaries and operation semantics.
 
 import logging
 from typing import Any, Dict, Optional, Callable
+
 import z3
 
 logger = logging.getLogger(__name__)
