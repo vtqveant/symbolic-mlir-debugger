@@ -1,0 +1,62 @@
+{
+  "name": "test_basic_arithmetic",
+  "program": "examples/arithmetic.mlir",
+  "session": [
+    {
+      "command": "initialize",
+      "arguments": {
+        "adapterID": "mlir-debugger",
+        "clientID": "automated-test-client"
+      },
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "launch",
+      "arguments": {
+        "program": "${program}",
+        "noDebug": false
+      },
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "setBreakpoints",
+      "arguments": {
+        "source": {
+          "path": "${program}"
+        },
+        "breakpoints": [
+          {"line": 10},
+          {"line": 15}
+        ]
+      },
+      "expect": {
+        "success": true,
+        "breakpoints": [
+          {"verified": true, "line": 10},
+          {"verified": true, "line": 15}
+        ]
+      }
+    },
+    {
+      "command": "configurationDone",
+      "arguments": {},
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "continue",
+      "arguments": {
+        "threadId": 1
+      },
+      "expect": {
+        "success": true,
+        "allThreadsContinued": true
+      }
+    }
+  ]
+}
