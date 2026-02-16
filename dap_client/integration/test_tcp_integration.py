@@ -46,7 +46,6 @@ def dap_client(dap_server_wrapper):
     client.close()
 
 
-@pytest.mark.skip(reason="TCP wrapper needs debugging - connection timeout issues")
 def test_client_initialize(dap_client):
     """Test DAP client initialization."""
     result = dap_client.initialize(
@@ -59,7 +58,7 @@ def test_client_initialize(dap_client):
     assert result["supportsConfigurationDoneRequest"]
 
 
-@pytest.mark.skip(reason="TCP wrapper needs debugging - connection timeout issues")
+@pytest.mark.skip(reason="TCP wrapper deadlock issue - launch timeout")
 def test_client_launch(dap_client):
     """Test DAP client launch command."""
     # Initialize first
@@ -78,7 +77,7 @@ def test_client_launch(dap_client):
     assert result is not None
 
 
-@pytest.mark.skip(reason="TCP wrapper needs debugging - connection timeout issues")
+@pytest.mark.skip(reason="TCP wrapper deadlock issue - launch timeout")
 def test_client_set_breakpoints(dap_client):
     """Test DAP client set breakpoints command."""
     dap_client.initialize(adapter_id="mlir-debugger", client_id="test")
@@ -102,7 +101,7 @@ def test_client_set_breakpoints(dap_client):
     assert breakpoints[0]["line"] == 6
 
 
-@pytest.mark.skip(reason="TCP wrapper needs debugging - connection timeout issues")
+@pytest.mark.skip(reason="TCP wrapper deadlock issue - launch timeout")
 def test_client_symbolic_commands(dap_client):
     """Test DAP client symbolic debugging commands."""
     dap_client.initialize(adapter_id="mlir-debugger", client_id="test")
@@ -137,7 +136,7 @@ def test_client_symbolic_commands(dap_client):
     # Result may contain "paths" and "totalPaths"
 
 
-@pytest.mark.skip(reason="TCP wrapper needs debugging - connection timeout issues")
+@pytest.mark.skip(reason="TCP wrapper deadlock issue - launch timeout")
 def test_client_full_session(dap_client):
     """Test a full debugging session using DAP client."""
     dap_client.initialize(adapter_id="mlir-debugger", client_id="full-session")

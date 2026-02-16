@@ -23,10 +23,15 @@ logger = logging.getLogger(__name__)
 class DAPSession:
     """Manage DAP debug session"""
 
-    def __init__(self, host: str = "localhost", port: int = 5678):
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = 5678,
+        connection: Optional[DAPConnection] = None,
+    ):
         self.host = host
         self.port = port
-        self.connection: Optional[DAPConnection] = None
+        self.connection: Optional[DAPConnection] = connection
         self.thread_id: Optional[int] = None
         self.process_id: Optional[int] = None
         self.breakpoints: Dict[str, Any] = {}
@@ -36,29 +41,38 @@ class DAPSession:
         self,
         adapter_id: str = "mlir-debugger",
         client_id: str = "automated-test-client",
+        skip_request: bool = False,
     ) -> Dict[str, Any]:
         """Initialize debug session"""
         if self.status != "idle":
             raise RuntimeError("Session already initialized")
 
+        if self.connection is None:
+            self.connection = DAPConnection(self.host, self.port)
+            self.connection.connect()
+
         request = InitializeRequest(adapter_id, client_id)
-        self.connection = DAPConnection(self.host, self.port)
-        self.connection.connect()
 
         try:
-            result = self.connection.request(request)
+            if skip_request:
+                result = {}
+            else:
+                result = self.connection.request(request)
             self.status = "initialized"
             logger.info("Debug session initialized")
             return result or {}
         except Exception as e:
             logger.error(f"Failed to initialize session: {e}")
-            self.connection.disconnect()
+            if self.connection:
+                self.connection.disconnect()
             raise
 
     def launch(self, program: str, no_debug: bool = True, **kwargs) -> Dict[str, Any]:
         """Launch the debugged program"""
         if self.status != "initialized":
             raise RuntimeError("Session not initialized")
+        if not self.connection:
+            raise RuntimeError("Not connected to debug server")
 
         request = LaunchRequest(program, no_debug, **kwargs)
         result = self.connection.request(request)
@@ -76,6 +90,8 @@ class DAPSession:
         """Set breakpoints in source"""
         if self.status != "launched":
             raise RuntimeError("Program not launched")
+        if not self.connection:
+            raise RuntimeError("Not connected to debug server")
 
         request = SetBreakpointsRequest(source, breakpoints, line_breakpoints, column_breakpoints)
         result = self.connection.request(request)
@@ -87,6 +103,8 @@ class DAPSession:
         """Signal configuration is complete"""
         if self.status != "launched":
             raise RuntimeError("Program not launched")
+        if not self.connection:
+            raise RuntimeError("Not connected to debug server")
 
         request = ConfigurationDoneRequest()
         result = self.connection.request(request)
@@ -98,6 +116,8 @@ class DAPSession:
         """Continue execution"""
         if self.status != "ready":
             raise RuntimeError("Session not ready for execution")
+        if not self.connection:
+            raise RuntimeError("Not connected to debug server")
 
         request = ContinueRequest(thread_id)
         result = self.connection.request(request)

@@ -47,8 +47,8 @@ class DAPServerWrapper:
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True,
-                bufsize=1,  # Line buffered
+                text=False,  # Binary mode
+                bufsize=0,  # Unbuffered
             )
             logger.info(f"Started DAP server subprocess (PID: {self.process.pid})")
 
@@ -169,8 +169,8 @@ class DAPServerWrapper:
                     if not data:
                         break  # Connection closed
 
-                    # Send raw data to subprocess stdin
-                    self.process.stdin.write(data.decode("utf-8"))
+                    # Send raw bytes to subprocess stdin
+                    self.process.stdin.write(data)
                     self.process.stdin.flush()
                 except (socket.timeout, socket.error):
                     continue
@@ -185,12 +185,13 @@ class DAPServerWrapper:
         try:
             while self.running and self.process and self.process.stdout:
                 try:
-                    line = self.process.stdout.readline()
-                    if not line:
-                        break  # Subprocess terminated
+                    # Read raw bytes (up to 4096)
+                    data = self.process.stdout.read(4096)
+                    if not data:
+                        break  # Subprocess terminated or EOF
 
-                    # Send to TCP client
-                    client_socket.sendall(line.encode("utf-8"))
+                    # Send raw bytes to TCP client
+                    client_socket.sendall(data)
                 except Exception as e:
                     logger.error(f"Error forwarding stdout->TCP: {e}")
                     break
