@@ -8,6 +8,11 @@ from .models import MLIRValue, BasicBlock, MLIRFunction, SymbolicState
 from .parser import MLIRParser
 from .stepper import ExecutionStepper
 
+# Re-export symbolic debugging components
+from .symbolic_evaluator import SymbolicExpressionEvaluator
+from .path_explorer import PathExplorer
+from .variable_tracking import SymbolicVariableTracker
+
 __all__ = [
     "MLIRValue",
     "BasicBlock",
@@ -17,4 +22,7 @@ __all__ = [
     "SymbolicInterpreter",
     "ConcolicInterpreter",
     "ExecutionStepper",
+    "SymbolicExpressionEvaluator",
+    "PathExplorer",
+    "SymbolicVariableTracker",
 ]

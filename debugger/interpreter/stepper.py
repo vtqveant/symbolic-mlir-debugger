@@ -8,10 +8,13 @@ Supports concrete mode execution (single path) with breakpoints and stepping.
 from typing import Dict, List, Optional, Any, cast
 
 import z3
+import logging
 
 from .debug_utils import get_variable_summary
 from .interpreter import ConcolicInterpreter
 from .models import SymbolicState, LoopContext
+
+logger = logging.getLogger(__name__)
 from .operations import (
     Operation,
     LoopOperation,
@@ -27,10 +30,11 @@ class ExecutionStepper:
     Supports concrete mode execution (single path) with breakpoints and stepping.
     """
 
-    def __init__(self, mlir_file: str, concrete_inputs: Optional[Dict[str, int]] = None):
+    def __init__(self, mlir_file: str, concrete_inputs: Optional[Dict[str, int]] = None, symbolic_mode: bool = False):
         """Initialize stepper with MLIR file and concrete inputs."""
         self.mlir_file = mlir_file
         self.concrete_inputs = concrete_inputs or {}
+        self.symbolic_mode = symbolic_mode
 
         # Parse MLIR file
         self.parser = MLIRParser()
@@ -57,9 +61,15 @@ class ExecutionStepper:
         # Loop execution state
         self.loop_stack = []  # Stack of active loops
         self.current_loop = None  # Top of loop stack
+        # Symbolic variable tracking
+        self.symbolic_variables = {}
+        self.symbolic_constraints = []
 
         # Initialize execution state
         self._initialize_state()
+
+        if symbolic_mode:
+            logger.info("Symbolic debugging mode enabled")
 
     def _initialize_state(self):
         """Initialize the execution state with concrete inputs."""
@@ -592,6 +602,13 @@ class ExecutionStepper:
         assert self.current_state is not None and self.current_state.pc is not None
         state = cast(SymbolicState, self.current_state)
         assert state.pc is not None
+
+        # Track symbolic variables in symbolic mode
+        if self.symbolic_mode and hasattr(self.interpreter, 'symbolic_state'):
+            # Track symbolic variables
+            for var_name, value in self.interpreter.symbolic_state.variables.items():
+                # This would be tracked by variable_tracker
+                pass
 
         # If we're currently inside a loop, step within loop body
         if self.current_loop is not None:
