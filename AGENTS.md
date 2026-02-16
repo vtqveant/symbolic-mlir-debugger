@@ -47,7 +47,19 @@ python -m pytest tests/test_parser.py -k "test_cmpi_parsing"
 - `integration`: integration tests
 - `concolic`: concolic execution tests
 
-**Linting and formatting:** No specific linting tool configured; follow style guidelines below.
+**Linting and formatting:**
+```bash
+# Run black formatting
+python -m black .
+
+# Check formatting without applying changes
+python -m black --check .
+
+# Run flake8 linting
+python -m flake8 .
+```
+
+**Note:** The project uses black (line-length=100) for formatting and flake8 for linting. Always run black before committing to ensure consistent formatting.
 
 ### VS Code Extension
 
@@ -106,8 +118,8 @@ npm run publish          # Publish extension to marketplace
 
 ## Development Workflow
 
-1. **Before making changes:** Ensure tests pass (`python -m pytest` / `npm run test`). Run linting if available (`npm run lint` for TypeScript).
-2. **After making changes:** Run relevant unit tests. Verify linting and type checking. Update/add tests as needed.
+1. **Before making changes:** Ensure tests pass (`python -m pytest` / `npm run test`). Run linting if available (`npm run lint` for TypeScript). For Python, run `python -m black --check .` and `python -m flake8 .` (see Linting and formatting section).
+2. **After making changes:** Run relevant unit tests. Verify linting and type checking. Update/add tests as needed. For Python, run `python -m black .` to format code before committing.
 3. **Commit messages:** Use present tense imperative ("Add feature", "Fix bug"). Reference issue numbers if applicable. Keep first line under 50 characters, body lines under 72.
 
 ## Common Pitfalls

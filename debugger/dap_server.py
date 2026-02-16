@@ -15,12 +15,10 @@ from typing import Any, Dict, List, Optional
 
 # Add project root to path for imports
 sys.path.insert(0, os.path.dirname(__file__))
-from interpreter.stepper import ExecutionStepper
+from interpreter.stepper import ExecutionStepper  # noqa: E402
 
 # Set up logging to stderr
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -216,9 +214,7 @@ class MLIRDebugSession:
             "column": 1,
             "source": {
                 "path": self.program_path or "",
-                "name": os.path.basename(self.program_path)
-                if self.program_path
-                else "unknown",
+                "name": os.path.basename(self.program_path) if self.program_path else "unknown",
             },
         }
 
@@ -351,9 +347,7 @@ class MLIRDebugSession:
             result = []
 
             for name, info in variables.items():
-                if info.get("_memory_cell", False) and name.startswith(
-                    memref_name + "["
-                ):
+                if info.get("_memory_cell", False) and name.startswith(memref_name + "["):
                     var_entry = {
                         "name": name,
                         "value": info.get("value", "?"),
@@ -390,7 +384,7 @@ class MLIRDebugSession:
                     "name": memref_name,
                     "value": f"{cell_count} cells",
                     "type": "memory_region_summary",
-                    "variablesReference": 0,  # Could make expandable but already have memory regions
+                    "variablesReference": 0,  # Not expandable (already have memory regions)
                     "presentationHint": "data",
                 }
                 result.append(var_entry)
@@ -420,9 +414,7 @@ class MLIRDebugSession:
 
         return (memref_name, tuple(indices))
 
-    def _replace_memory_references(
-        self, expression: str, variables: Dict[str, Any]
-    ) -> tuple:
+    def _replace_memory_references(self, expression: str, variables: Dict[str, Any]) -> tuple:
         """Replace memory references in expression with placeholders.
 
         Returns (transformed_expression, placeholder_values_dict)
@@ -437,8 +429,8 @@ class MLIRDebugSession:
         # Find all matches
         for match in re.finditer(pattern, expression):
             full_match = match.group(0)  # e.g., "mem[0][1]"
-            memref_name = match.group(1)  # e.g., "mem"
-            indices_str = match.group(2)  # e.g., "[0][1]"
+            _ = match.group(1)  # e.g., "mem"
+            _ = match.group(2)  # e.g., "[0][1]"
 
             # Check if this is a valid memory cell in variables
             # Memory cells are stored with names like "mem[0][1]"
@@ -469,7 +461,7 @@ class MLIRDebugSession:
                         if not placeholder[0].isalpha():
                             placeholder = "mem_" + placeholder
 
-                        # Replace in expression (but need to be careful with overlapping replacements)
+                        # Replace in expression (careful with overlapping replacements)
                         # We'll collect replacements and apply later
                         placeholder_values[full_match] = (placeholder, concrete_val)
 
@@ -618,13 +610,11 @@ class MLIRDebugSession:
             logger.info("Symbolic debugging components initialized")
         return True
 
-    def handle_symbolic_evaluate(
-        self, request: DAPRequest, arguments: Dict[str, Any]
-    ) -> None:
+    def handle_symbolic_evaluate(self, request: DAPRequest, arguments: Dict[str, Any]) -> None:
         """Handle symbolic expression evaluation request."""
         try:
             expression = arguments.get("expression", "")
-            frame_id = arguments.get("frameId", 0)
+            _ = arguments.get("frameId", 0)  # unused, kept for protocol compatibility
 
             # Ensure symbolic components are initialized
             if not self._ensure_symbolic_components():
@@ -652,9 +642,7 @@ class MLIRDebugSession:
         except Exception as e:
             self.send_error_response(request, f"Symbolic evaluation failed: {e}")
 
-    def handle_explore_paths(
-        self, request: DAPRequest, arguments: Dict[str, Any]
-    ) -> None:
+    def handle_explore_paths(self, request: DAPRequest, arguments: Dict[str, Any]) -> None:
         """Handle path exploration request."""
         try:
             max_paths = arguments.get("maxPaths", 10)
@@ -677,9 +665,7 @@ class MLIRDebugSession:
         except Exception as e:
             self.send_error_response(request, f"Path exploration failed: {e}")
 
-    def handle_get_constraints(
-        self, request: DAPRequest, arguments: Dict[str, Any]
-    ) -> None:
+    def handle_get_constraints(self, request: DAPRequest, arguments: Dict[str, Any]) -> None:
         """Handle get constraints request."""
         try:
             # Ensure symbolic components are initialized
@@ -696,9 +682,7 @@ class MLIRDebugSession:
 
             constraints = self.variable_tracker.get_constraints()
 
-            self.send_response(
-                request, {"constraints": constraints, "count": len(constraints)}
-            )
+            self.send_response(request, {"constraints": constraints, "count": len(constraints)})
         except Exception as e:
             self.send_error_response(request, f"Failed to get constraints: {e}")
 
@@ -769,9 +753,7 @@ class DAPServer:
 
         self.write_message(response)
 
-    def send_event(
-        self, event_name: str, body: Optional[Dict[str, Any]] = None
-    ) -> None:
+    def send_event(self, event_name: str, body: Optional[Dict[str, Any]] = None) -> None:
         """Send an event."""
         event = {
             "seq": self.next_seq(),
@@ -885,9 +867,7 @@ class DAPServer:
                 except Exception as e:
                     logger.error(f"Launch failed: {e}")
                     self.send_output(f"ERROR: Launch failed: {e}", category="stderr")
-                    self.send_response(
-                        request, {}, success=False, message=f"Launch failed: {e}"
-                    )
+                    self.send_response(request, {}, success=False, message=f"Launch failed: {e}")
 
             elif command == "setBreakpoints":
                 source = arguments.get("source", {})
@@ -928,7 +908,7 @@ class DAPServer:
             elif command == "evaluate":
                 expression = arguments.get("expression", "")
                 frame_id = arguments.get("frameId", 0)
-                context = arguments.get("context", "hover")
+                _ = arguments.get("context", "hover")  # unused
 
                 result = self.session.evaluate_expression(expression)
                 self.send_response(request, result)
@@ -1009,9 +989,7 @@ class DAPServer:
                 # Ensure symbolic components are initialized if mode is enabled
                 if self.session.symbolic_mode:
                     self.session._ensure_symbolic_components()
-                self.send_response(
-                    request, {"symbolicMode": self.session.symbolic_mode}
-                )
+                self.send_response(request, {"symbolicMode": self.session.symbolic_mode})
 
             else:
                 logger.warning(f"Unsupported command: {command}")

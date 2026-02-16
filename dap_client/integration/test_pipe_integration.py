@@ -9,7 +9,6 @@ via stdin/stdout using the DAP protocol (Content-Length headers).
 import json
 import logging
 import subprocess
-import tempfile
 import time
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -43,6 +42,7 @@ class DAPPipeClient:
         # Send with Content-Length header
         content = json.dumps(request)
         message = f"Content-Length: {len(content)}\r\n\r\n{content}"
+        assert self.process.stdin is not None
         self.process.stdin.write(message)
         self.process.stdin.flush()
 
@@ -64,6 +64,7 @@ class DAPPipeClient:
 
     def _read_message(self) -> Optional[Dict[str, Any]]:
         """Read a DAP message from stdout."""
+        assert self.process.stdout is not None
         # Read header line
         line = self.process.stdout.readline()
         if not line:
@@ -152,7 +153,7 @@ def test_initialize(dap_client):
 
     assert response["type"] == "response"
     assert response["command"] == "initialize"
-    assert response["success"] == True
+    assert response["success"]
     assert "body" in response
     body = response["body"]
     assert isinstance(body, dict)
@@ -172,12 +173,7 @@ def test_launch(dap_client):
     )
 
     # Use existing fixture file
-    fixture_path = (
-        Path(__file__).parent.parent.parent
-        / "debugger"
-        / "fixtures"
-        / "simple_add.mlir"
-    )
+    fixture_path = Path(__file__).parent.parent.parent / "debugger" / "fixtures" / "simple_add.mlir"
     if not fixture_path.exists():
         pytest.skip(f"Fixture not found: {fixture_path}")
 
@@ -192,7 +188,7 @@ def test_launch(dap_client):
 
     assert response["type"] == "response"
     assert response["command"] == "launch"
-    assert response["success"] == True
+    assert response["success"]
 
 
 def test_set_breakpoints(dap_client):
@@ -200,12 +196,7 @@ def test_set_breakpoints(dap_client):
     # Initialize and launch
     dap_client.send_request("initialize", {"adapterID": "mlir-debugger"})
 
-    fixture_path = (
-        Path(__file__).parent.parent.parent
-        / "debugger"
-        / "fixtures"
-        / "simple_add.mlir"
-    )
+    fixture_path = Path(__file__).parent.parent.parent / "debugger" / "fixtures" / "simple_add.mlir"
     if not fixture_path.exists():
         pytest.skip(f"Fixture not found: {fixture_path}")
 
@@ -220,33 +211,28 @@ def test_set_breakpoints(dap_client):
         },
     )
 
-    assert response["success"] == True
+    assert response["success"]
     assert "body" in response
     body = response["body"]
     assert "breakpoints" in body
     breakpoints = body["breakpoints"]
     assert len(breakpoints) == 1
     # Breakpoint line might be adjusted
-    assert breakpoints[0]["verified"] == True
+    assert breakpoints[0]["verified"]
 
 
 def test_configuration_done(dap_client):
     """Test configurationDone command."""
     dap_client.send_request("initialize", {"adapterID": "mlir-debugger"})
 
-    fixture_path = (
-        Path(__file__).parent.parent.parent
-        / "debugger"
-        / "fixtures"
-        / "simple_add.mlir"
-    )
+    fixture_path = Path(__file__).parent.parent.parent / "debugger" / "fixtures" / "simple_add.mlir"
     if not fixture_path.exists():
         pytest.skip(f"Fixture not found: {fixture_path}")
 
     dap_client.send_request("launch", {"program": str(fixture_path)})
 
     response = dap_client.send_request("configurationDone", {})
-    assert response["success"] == True
+    assert response["success"]
 
 
 def test_symbolic_commands(dap_client):
@@ -254,21 +240,16 @@ def test_symbolic_commands(dap_client):
     dap_client.send_request("initialize", {"adapterID": "mlir-debugger"})
 
     fixture_path = (
-        Path(__file__).parent.parent.parent
-        / "debugger"
-        / "fixtures"
-        / "conditional_branch.mlir"
+        Path(__file__).parent.parent.parent / "debugger" / "fixtures" / "conditional_branch.mlir"
     )
     if not fixture_path.exists():
         pytest.skip(f"Fixture not found: {fixture_path}")
 
-    dap_client.send_request(
-        "launch", {"program": str(fixture_path), "args": ["arg0=5"]}
-    )
+    dap_client.send_request("launch", {"program": str(fixture_path), "args": ["arg0=5"]})
 
     # Enable symbolic mode
     response = dap_client.send_request("symbolic/setMode", {"enabled": True})
-    assert response["success"] == True
+    assert response["success"]
 
     # Try symbolic evaluate
     response = dap_client.send_request(

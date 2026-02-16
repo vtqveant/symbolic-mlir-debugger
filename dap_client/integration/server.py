@@ -6,14 +6,13 @@ This module provides a TCP server that wraps the DAP server (stdin/stdout)
 and exposes it via TCP socket for integration testing.
 """
 
-import json
 import logging
 import socket
 import subprocess
 import threading
 import time
 from pathlib import Path
-from typing import Optional, Tuple, Callable, Any
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
