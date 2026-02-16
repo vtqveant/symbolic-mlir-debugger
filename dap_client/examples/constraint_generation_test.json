@@ -1,0 +1,169 @@
+{
+  "name": "test_constraint_generation",
+  "program": "../debugger/fixtures/nested_conditional.mlir",
+  "session": [
+    {
+      "command": "initialize",
+      "arguments": {
+        "adapterID": "mlir-debugger",
+        "clientID": "constraint-test-client"
+      },
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "launch",
+      "arguments": {
+        "program": "${program}",
+        "noDebug": false
+      },
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "setBreakpoints",
+      "arguments": {
+        "source": {
+          "path": "${program}"
+        },
+        "breakpoints": [
+          {
+            "line": 6
+          },
+          {
+            "line": 10
+          },
+          {
+            "line": 20
+          }
+        ]
+      },
+      "expect": {
+        "success": true,
+        "breakpoints": [
+          {
+            "verified": true,
+            "line": 6
+          },
+          {
+            "verified": true,
+            "line": 10
+          },
+          {
+            "verified": true,
+            "line": 20
+          }
+        ]
+      }
+    },
+    {
+      "command": "configurationDone",
+      "arguments": {},
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "continue",
+      "arguments": {
+        "threadId": 1
+      },
+      "expect": {
+        "success": true,
+        "allThreadsContinued": true
+      }
+    },
+    {
+      "command": "symbolic/setMode",
+      "arguments": {
+        "enabled": true
+      },
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "symbolic/evaluate",
+      "arguments": {
+        "expression": "%a < %b",
+        "frameId": 0
+      },
+      "expect": {
+        "success": true,
+        "result": {
+          "type": "symbolic",
+          "value": "(%a < %b)"
+        }
+      }
+    },
+    {
+      "command": "symbolic/evaluate",
+      "arguments": {
+        "expression": "%b < %c",
+        "frameId": 0
+      },
+      "expect": {
+        "success": true,
+        "result": {
+          "type": "symbolic",
+          "value": "(%b < %c)"
+        }
+      }
+    },
+    {
+      "command": "symbolic/explorePaths",
+      "arguments": {
+        "maxPaths": 20
+      },
+      "expect": {
+        "success": true,
+        "paths": [
+          {
+            "id": 0,
+            "description": "Path: a < b and b < c",
+            "constraints": ["%a < %b", "%b < %c"]
+          },
+          {
+            "id": 1,
+            "description": "Path: a < b and b >= c",
+            "constraints": ["%a < %b", "%b >= %c"]
+          },
+          {
+            "id": 2,
+            "description": "Path: a >= b and a < c",
+            "constraints": ["%a >= %b", "%a < %c"]
+          },
+          {
+            "id": 3,
+            "description": "Path: a >= b and a >= c",
+            "constraints": ["%a >= %b", "%a >= %c"]
+          }
+        ]
+      }
+    },
+    {
+      "command": "symbolic/getConstraints",
+      "arguments": {},
+      "expect": {
+        "success": true,
+        "constraints": [
+          "%a < %b",
+          "%b < %c",
+          "%b >= %c",
+          "%a >= %b",
+          "%a < %c",
+          "%a >= %c"
+        ]
+      }
+    },
+    {
+      "command": "disconnect",
+      "arguments": {},
+      "expect": {
+        "success": true
+      }
+    }
+  ]
+}

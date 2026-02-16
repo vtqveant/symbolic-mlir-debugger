@@ -1,0 +1,124 @@
+{
+  "name": "test_path_exploration",
+  "program": "../debugger/fixtures/conditional_branch.mlir",
+  "session": [
+    {
+      "command": "initialize",
+      "arguments": {
+        "adapterID": "mlir-debugger",
+        "clientID": "path-exploration-test-client"
+      },
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "launch",
+      "arguments": {
+        "program": "${program}",
+        "noDebug": false
+      },
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "setBreakpoints",
+      "arguments": {
+        "source": {
+          "path": "${program}"
+        },
+        "breakpoints": [
+          {
+            "line": 6
+          }
+        ]
+      },
+      "expect": {
+        "success": true,
+        "breakpoints": [
+          {
+            "verified": true,
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "command": "configurationDone",
+      "arguments": {},
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "continue",
+      "arguments": {
+        "threadId": 1
+      },
+      "expect": {
+        "success": true,
+        "allThreadsContinued": true
+      }
+    },
+    {
+      "command": "symbolic/setMode",
+      "arguments": {
+        "enabled": true
+      },
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "symbolic/evaluate",
+      "arguments": {
+        "expression": "%a < %b",
+        "frameId": 0
+      },
+      "expect": {
+        "success": true,
+        "result": {
+          "type": "symbolic",
+          "value": "(%a < %b)"
+        }
+      }
+    },
+    {
+      "command": "symbolic/explorePaths",
+      "arguments": {
+        "maxPaths": 10
+      },
+      "expect": {
+        "success": true,
+        "paths": [
+          {
+            "id": 0,
+            "description": "Path where %a < %b (branch to ^bb1)",
+            "constraints": ["%a < %b"]
+          },
+          {
+            "id": 1,
+            "description": "Path where %a >= %b (branch to ^bb2)",
+            "constraints": ["%a >= %b"]
+          }
+        ]
+      }
+    },
+    {
+      "command": "symbolic/getConstraints",
+      "arguments": {},
+      "expect": {
+        "success": true,
+        "constraints": ["%a < %b", "%a >= %b"]
+      }
+    },
+    {
+      "command": "disconnect",
+      "arguments": {},
+      "expect": {
+        "success": true
+      }
+    }
+  ]
+}

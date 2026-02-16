@@ -6,7 +6,6 @@ import os
 from typing import Optional, Dict, Any
 
 from jsonschema import validate, ValidationError
-from protocol import DAPRequest, DAPResponse
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,10 @@ def load_test_script_schema() -> Dict[str, Any]:
                 "title": "DAP Test Script",
                 "type": "object",
                 "properties": {
-                    "name": {"type": "string", "description": "Name of the test script"},
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the test script",
+                    },
                     "program": {
                         "type": "string",
                         "description": "Path to the MLIR program to debug",
@@ -49,6 +51,10 @@ def load_test_script_schema() -> Dict[str, Any]:
                                         "configurationDone",
                                         "continue",
                                         "disconnect",
+                                        "symbolic/setMode",
+                                        "symbolic/evaluate",
+                                        "symbolic/explorePaths",
+                                        "symbolic/getConstraints",
                                     ],
                                 },
                                 "arguments": {"type": "object"},
@@ -184,5 +190,6 @@ class TestScript:
             String representation of test script
         """
         return (
-            f"TestScript(name={self.name}, program={self.program}, steps={len(self.session_steps)})"
+            f"TestScript(name={self.name}, program={self.program}, "
+            f"steps={len(self.session_steps)})"
         )

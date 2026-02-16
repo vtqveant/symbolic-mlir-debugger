@@ -11,7 +11,12 @@ COMMAND_NEXT = "next"
 COMMAND_STEP_IN = "stepIn"
 COMMAND_STEP_OUT = "stepOut"
 COMMAND_STEPPED = "stepped"
-COMMAND_NEXT = "next"
+
+# Symbolic debugging commands
+COMMAND_SYMBOLIC_SET_MODE = "symbolic/setMode"
+COMMAND_SYMBOLIC_EVALUATE = "symbolic/evaluate"
+COMMAND_SYMBOLIC_EXPLORE_PATHS = "symbolic/explorePaths"
+COMMAND_SYMBOLIC_GET_CONSTRAINTS = "symbolic/getConstraints"
 
 # Protocol events
 EVENT_INITIALIZED = "initialized"
@@ -65,14 +70,10 @@ REQUEST_GOTO_TARGETS = "gotoTargets"
 REQUEST_SET_FUNCTION_BREAKPOINTS = "setFunctionBreakpoints"
 REQUEST_SET_EXCEPTION_BREAKPOINTS = "setExceptionBreakpoints"
 REQUEST_COMPILED_SOURCE = "compiledSource"
-REQUEST_COMPILED_SOURCE = "compiledSource"
-REQUEST_COMPILED_SOURCE = "compiledSource"
 
 # Response types
 RESPONSE_CONTINUE = "continue"
 RESPONSE_CONTINUE = "continue"
-RESPONSE_GOTO = "goto"
-RESPONSE_GOTO = "goto"
 RESPONSE_GOTO = "goto"
 
 # Path segment types
@@ -115,6 +116,4 @@ MEMORY_READ = 0
 MEMORY_WRITE = 1
 
 # Source types
-SOURCE_DEFAULT = 0
-SOURCE_DEFAULT = 0
 SOURCE_DEFAULT = 0

@@ -1,0 +1,148 @@
+{
+  "name": "test_symbolic_debugging_workflow",
+  "program": "../debugger/fixtures/arithmetic_ops.mlir",
+  "session": [
+    {
+      "command": "initialize",
+      "arguments": {
+        "adapterID": "mlir-debugger",
+        "clientID": "symbolic-test-client"
+      },
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "launch",
+      "arguments": {
+        "program": "${program}",
+        "noDebug": false
+      },
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "setBreakpoints",
+      "arguments": {
+        "source": {
+          "path": "${program}"
+        },
+        "breakpoints": [
+          {
+            "line": 6
+          },
+          {
+            "line": 10
+          }
+        ]
+      },
+      "expect": {
+        "success": true,
+        "breakpoints": [
+          {
+            "verified": true,
+            "line": 6
+          },
+          {
+            "verified": true,
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "command": "configurationDone",
+      "arguments": {},
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "continue",
+      "arguments": {
+        "threadId": 1
+      },
+      "expect": {
+        "success": true,
+        "allThreadsContinued": true
+      }
+    },
+    {
+      "command": "symbolic/setMode",
+      "arguments": {
+        "enabled": true
+      },
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "symbolic/evaluate",
+      "arguments": {
+        "expression": "%a + %b",
+        "frameId": 0
+      },
+      "expect": {
+        "success": true,
+        "result": {
+          "type": "symbolic",
+          "value": "(%a + %b)"
+        }
+      }
+    },
+    {
+      "command": "symbolic/evaluate",
+      "arguments": {
+        "expression": "%sub",
+        "frameId": 0
+      },
+      "expect": {
+        "success": true,
+        "result": {
+          "type": "symbolic",
+          "value": "(%a - %b)"
+        }
+      }
+    },
+    {
+      "command": "symbolic/explorePaths",
+      "arguments": {
+        "maxPaths": 5
+      },
+      "expect": {
+        "success": true,
+        "paths": [
+          {
+            "id": 0,
+            "description": "main path"
+          }
+        ]
+      }
+    },
+    {
+      "command": "symbolic/getConstraints",
+      "arguments": {},
+      "expect": {
+        "success": true,
+        "constraints": []
+      }
+    },
+    {
+      "command": "symbolic/setMode",
+      "arguments": {
+        "enabled": false
+      },
+      "expect": {
+        "success": true
+      }
+    },
+    {
+      "command": "disconnect",
+      "arguments": {},
+      "expect": {
+        "success": true
+      }
+    }
+  ]
+}

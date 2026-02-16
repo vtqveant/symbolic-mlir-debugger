@@ -28,7 +28,11 @@
               "setBreakpoints",
               "configurationDone",
               "continue",
-              "disconnect"
+              "disconnect",
+              "symbolic/setMode",
+              "symbolic/evaluate",
+              "symbolic/explorePaths",
+              "symbolic/getConstraints"
             ],
             "description": "DAP command to execute"
           },
