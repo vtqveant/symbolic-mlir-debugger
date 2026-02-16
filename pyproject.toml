@@ -1,8 +1,9 @@
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["debugger/tests", "dap_client/tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+norecursedirs = [".git", ".venv", "node_modules", "__pycache__", ".pytest_cache", "generator", "runner"]
 markers = [
     "slow: marks tests as slow",
     "parser: parser-related tests",
