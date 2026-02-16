@@ -65,12 +65,12 @@ def test_expression_boolean_operations(test_data_dir):
 
     for expr, expected in tests:
         result = session.evaluate_expression(expr)
-        assert result["result"] == expected, (
-            f"Expression '{expr}' expected '{expected}', got '{result['result']}'"
-        )
-        assert result["type"] == "bool", (
-            f"Expected type 'bool' for '{expr}', got '{result['type']}'"
-        )
+        assert (
+            result["result"] == expected
+        ), f"Expression '{expr}' expected '{expected}', got '{result['result']}'"
+        assert (
+            result["type"] == "bool"
+        ), f"Expected type 'bool' for '{expr}', got '{result['type']}'"
 
     print("✓ Boolean expression evaluation passed")
 
@@ -103,9 +103,9 @@ def test_state_inspection_path_conditions(test_data_dir):
     # Note: path conditions may not be added in concrete execution
     # This test just ensures the variable exists when appropriate
     if path_cond_var:
-        assert path_cond_var["variablesReference"] > 0, (
-            "$pathConditions should have variablesReference > 0"
-        )
+        assert (
+            path_cond_var["variablesReference"] > 0
+        ), "$pathConditions should have variablesReference > 0"
 
         # Try to expand
         ref_id = path_cond_var["variablesReference"]
@@ -143,17 +143,13 @@ def test_state_inspection_memory_map(test_data_dir):
             break
 
     assert memory_map_var is not None, "$memoryMap should be present"
-    assert memory_map_var["variablesReference"] > 0, (
-        "$memoryMap should have variablesReference > 0"
-    )
+    assert memory_map_var["variablesReference"] > 0, "$memoryMap should have variablesReference > 0"
 
     # Expand memory map
     ref_id = memory_map_var["variablesReference"]
     children = session.get_variable_children(ref_id)
     assert len(children) == 1, f"Expected 1 memory region, got {len(children)}"
-    assert children[0]["name"] == "mem", (
-        f"Expected memory region 'mem', got {children[0]['name']}"
-    )
+    assert children[0]["name"] == "mem", f"Expected memory region 'mem', got {children[0]['name']}"
     assert "cells" in children[0]["value"], f"Memory region should show cell count"
 
     print("✓ Memory map inspection test passed")
@@ -191,12 +187,12 @@ module {
 
         for expr in error_cases:
             result = session.evaluate_expression(expr)
-            assert result["type"] == "error", (
-                f"Expected error type for '{expr}', got {result['type']}"
-            )
-            assert result["result"].startswith("Error:"), (
-                f"Expected error message for '{expr}', got {result['result']}"
-            )
+            assert (
+                result["type"] == "error"
+            ), f"Expected error type for '{expr}', got {result['type']}"
+            assert result["result"].startswith(
+                "Error:"
+            ), f"Expected error message for '{expr}', got {result['result']}"
             print(f"  ✓ Error handled for: {expr}")
 
         print("✓ Expression error handling test passed")

@@ -45,9 +45,7 @@ class BufferizationDialectParser(BaseDialectParser):
 
         return None
 
-    def _parse_alloc_tensor_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_alloc_tensor_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse bufferization.alloc_tensor operation."""
         op_obj = op_node.op
 
@@ -77,9 +75,7 @@ class BufferizationDialectParser(BaseDialectParser):
             },
         )
 
-    def _parse_clone_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[UnaryOperation]:
+    def _parse_clone_operation(self, op_node: mast.Operation) -> Optional[UnaryOperation]:
         """Parse bufferization.clone operation."""
         op_obj = op_node.op
 
@@ -107,9 +103,7 @@ class BufferizationDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_dealloc_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[UnaryOperation]:
+    def _parse_dealloc_operation(self, op_node: mast.Operation) -> Optional[UnaryOperation]:
         """Parse bufferization.dealloc operation."""
         op_obj = op_node.op
 
@@ -139,9 +133,7 @@ class BufferizationDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_dealloc_tensor_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[UnaryOperation]:
+    def _parse_dealloc_tensor_operation(self, op_node: mast.Operation) -> Optional[UnaryOperation]:
         """Parse bufferization.dealloc_tensor operation."""
         op_obj = op_node.op
 
@@ -209,9 +201,7 @@ class BufferizationDialectParser(BaseDialectParser):
             },
         )
 
-    def _parse_to_buffer_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_to_buffer_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse bufferization.to_buffer operation."""
         op_obj = op_node.op
 
@@ -247,9 +237,7 @@ class BufferizationDialectParser(BaseDialectParser):
             },
         )
 
-    def _parse_to_tensor_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_to_tensor_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse bufferization.to_tensor operation."""
         op_obj = op_node.op
 

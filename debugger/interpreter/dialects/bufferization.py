@@ -112,9 +112,7 @@ class BufferizationCloneOpHandler(OperationHandler):
 
         # Clone creates a copy - treat as same value
         if src_expr is not None:
-            state.set_value(
-                op.dest, src_expr, op.result_type or op.result_type or "memref<?xi32>"
-            )
+            state.set_value(op.dest, src_expr, op.result_type or op.result_type or "memref<?xi32>")
         else:
             # Create fresh symbolic value
             expr = z3.FreshConst(z3.IntSort(), f"clone_{op.dest}")

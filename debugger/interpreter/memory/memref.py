@@ -27,14 +27,10 @@ class MemrefView:
     sizes: List[Union[int, z3.ExprRef]]
     strides: List[Union[int, z3.ExprRef]]
 
-    def map_indices(
-        self, indices: List[Union[int, z3.ExprRef]]
-    ) -> List[Union[int, z3.ExprRef]]:
+    def map_indices(self, indices: List[Union[int, z3.ExprRef]]) -> List[Union[int, z3.ExprRef]]:
         """Map view indices to base indices."""
         if len(indices) != len(self.offsets):
-            raise ValueError(
-                f"Indices count {len(indices)} != view rank {len(self.offsets)}"
-            )
+            raise ValueError(f"Indices count {len(indices)} != view rank {len(self.offsets)}")
 
         # Apply offset + index * stride for each dimension
         mapped = []
@@ -43,11 +39,7 @@ class MemrefView:
             stride = self.strides[i]
 
             # Compute offset + idx * stride
-            if (
-                isinstance(idx, int)
-                and isinstance(offset, int)
-                and isinstance(stride, int)
-            ):
+            if isinstance(idx, int) and isinstance(offset, int) and isinstance(stride, int):
                 mapped.append(offset + idx * stride)
             elif isinstance(idx, int) and isinstance(offset, int):
                 # offset is int, stride might be symbolic
@@ -106,9 +98,7 @@ class MemrefMemoryModel(MemoryModel):
             return (view.base, view)
         return (memref, None)
 
-    def _indices_to_key(
-        self, indices: List[Union[int, z3.ExprRef]]
-    ) -> Optional[Tuple[int, ...]]:
+    def _indices_to_key(self, indices: List[Union[int, z3.ExprRef]]) -> Optional[Tuple[int, ...]]:
         """Convert indices to concrete tuple if all are concrete ints."""
         concrete_indices = []
         for idx in indices:

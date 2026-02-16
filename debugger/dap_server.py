@@ -19,9 +19,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from interpreter.stepper import ExecutionStepper
 
 # Set up logging to stderr
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -185,9 +183,7 @@ class MLIRDebugSession:
             "column": 1,
             "source": {
                 "path": self.program_path or "",
-                "name": os.path.basename(self.program_path)
-                if self.program_path
-                else "unknown",
+                "name": os.path.basename(self.program_path) if self.program_path else "unknown",
             },
         }
 
@@ -320,9 +316,7 @@ class MLIRDebugSession:
             result = []
 
             for name, info in variables.items():
-                if info.get("_memory_cell", False) and name.startswith(
-                    memref_name + "["
-                ):
+                if info.get("_memory_cell", False) and name.startswith(memref_name + "["):
                     var_entry = {
                         "name": name,
                         "value": info.get("value", "?"),
@@ -389,9 +383,7 @@ class MLIRDebugSession:
 
         return (memref_name, tuple(indices))
 
-    def _replace_memory_references(
-        self, expression: str, variables: Dict[str, Any]
-    ) -> tuple:
+    def _replace_memory_references(self, expression: str, variables: Dict[str, Any]) -> tuple:
         """Replace memory references in expression with placeholders.
 
         Returns (transformed_expression, placeholder_values_dict)
@@ -626,9 +618,7 @@ class DAPServer:
 
         self.write_message(response)
 
-    def send_event(
-        self, event_name: str, body: Optional[Dict[str, Any]] = None
-    ) -> None:
+    def send_event(self, event_name: str, body: Optional[Dict[str, Any]] = None) -> None:
         """Send an event."""
         event = {
             "seq": self.next_seq(),
@@ -731,17 +721,17 @@ class DAPServer:
                         body["column"] = 1
                         body["source"] = {
                             "path": location["file"],
-                            "name": os.path.basename(location["file"])
-                            if location["file"]
-                            else "unknown",
+                            "name": (
+                                os.path.basename(location["file"])
+                                if location["file"]
+                                else "unknown"
+                            ),
                         }
                     self.send_event("stopped", body)
                 except Exception as e:
                     logger.error(f"Launch failed: {e}")
                     self.send_output(f"ERROR: Launch failed: {e}", category="stderr")
-                    self.send_response(
-                        request, {}, success=False, message=f"Launch failed: {e}"
-                    )
+                    self.send_response(request, {}, success=False, message=f"Launch failed: {e}")
 
             elif command == "setBreakpoints":
                 source = arguments.get("source", {})
@@ -803,9 +793,11 @@ class DAPServer:
                         body["column"] = 1
                         body["source"] = {
                             "path": location["file"],
-                            "name": os.path.basename(location["file"])
-                            if location["file"]
-                            else "unknown",
+                            "name": (
+                                os.path.basename(location["file"])
+                                if location["file"]
+                                else "unknown"
+                            ),
                         }
                     self.send_event("stopped", body)
                 else:
@@ -829,9 +821,11 @@ class DAPServer:
                         body["column"] = 1
                         body["source"] = {
                             "path": location["file"],
-                            "name": os.path.basename(location["file"])
-                            if location["file"]
-                            else "unknown",
+                            "name": (
+                                os.path.basename(location["file"])
+                                if location["file"]
+                                else "unknown"
+                            ),
                         }
                     self.send_event("stopped", body)
                 else:

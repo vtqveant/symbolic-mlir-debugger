@@ -57,9 +57,7 @@ class MathDialectParser(BaseDialectParser):
         # No handler found
         return None
 
-    def _parse_binary_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[BinaryOperation]:
+    def _parse_binary_operation(self, op_node: mast.Operation) -> Optional[BinaryOperation]:
         """Parse binary math operation (atan2, fma, powf, etc.)."""
         op_obj = op_node.op
 
@@ -111,9 +109,7 @@ class MathDialectParser(BaseDialectParser):
             attributes=attributes,
         )
 
-    def _parse_unary_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[UnaryOperation]:
+    def _parse_unary_operation(self, op_node: mast.Operation) -> Optional[UnaryOperation]:
         """Parse unary math operation (absf, cos, sin, etc.)."""
         op_obj = op_node.op
 
@@ -155,9 +151,7 @@ class MathDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_cmpf_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[CompareOperation]:
+    def _parse_cmpf_operation(self, op_node: mast.Operation) -> Optional[CompareOperation]:
         """Parse math.cmpf operation."""
         op_obj = op_node.op
 
@@ -197,9 +191,7 @@ class MathDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_constant_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[ConstantOperation]:
+    def _parse_constant_operation(self, op_node: mast.Operation) -> Optional[ConstantOperation]:
         """Parse math.constant operation."""
         op_obj = op_node.op
 

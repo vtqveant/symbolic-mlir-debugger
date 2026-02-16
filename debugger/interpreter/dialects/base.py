@@ -38,9 +38,7 @@ class OperationHandler:
         interpreter: Optional interpreter instance for operations that need
                     to modify interpreter state (e.g., control flow).
         """
-        raise NotImplementedError(
-            f"Symbolic execution not implemented for {op.full_name}"
-        )
+        raise NotImplementedError(f"Symbolic execution not implemented for {op.full_name}")
 
     def execute_concolic(
         self, op: Operation, state: SymbolicState, func: MLIRFunction, interpreter=None
@@ -166,9 +164,7 @@ class ConstantOperationHandler(OperationHandler):
 class CompareOperationHandler(OperationHandler):
     """Handler for comparison operations."""
 
-    def __init__(
-        self, predicate_map: Dict[str, Callable[[z3.ExprRef, z3.ExprRef], z3.ExprRef]]
-    ):
+    def __init__(self, predicate_map: Dict[str, Callable[[z3.ExprRef, z3.ExprRef], z3.ExprRef]]):
         self.predicate_map = predicate_map
 
     def execute_symbolic(
@@ -211,8 +207,7 @@ class CompareOperationHandler(OperationHandler):
                 "sle": lambda left, right: left <= right,
                 "sgt": lambda left, right: left > right,
                 "sge": lambda left, right: left >= right,
-                "ult": lambda left, right: left
-                < right,  # unsigned - same for concrete ints
+                "ult": lambda left, right: left < right,  # unsigned - same for concrete ints
                 "ule": lambda left, right: left <= right,
                 "ugt": lambda left, right: left > right,
                 "uge": lambda left, right: left >= right,
@@ -243,9 +238,7 @@ class UnaryOperationHandler(OperationHandler):
             raise TypeError(f"Expected UnaryOperation, got {type(op)}")
 
         if self.operator is None:
-            raise NotImplementedError(
-                f"UnaryOperationHandler.operator not set for {op.full_name}"
-            )
+            raise NotImplementedError(f"UnaryOperationHandler.operator not set for {op.full_name}")
 
         operand_expr = state.get_expr(op.operand)
         if operand_expr is None:

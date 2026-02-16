@@ -242,15 +242,11 @@ class TensorInsertOpHandler(OperationHandler):
         state.tensor_memory_model.copy_tensor(src_tensor, dst_tensor)
 
         # Store value at indices in destination tensor
-        state.tensor_memory_model.store(
-            dst_tensor, index_values, value_expr, element_type
-        )
+        state.tensor_memory_model.store(dst_tensor, index_values, value_expr, element_type)
 
         # Store concrete value if available and indices are concrete
         if concrete_val is not None and all_concrete and concrete_indices is not None:
-            state.tensor_memory_model.set_concrete_value(
-                dst_tensor, concrete_indices, concrete_val
-            )
+            state.tensor_memory_model.set_concrete_value(dst_tensor, concrete_indices, concrete_val)
 
         # Also set the destination value in state's value map (tensor as whole)
         # For tensors, we can store a reference to the tensor memory
@@ -358,9 +354,7 @@ class TensorSplatOpHandler(OperationHandler):
                 size_expr = state.get_expr(size_name)
                 if size_expr is None:
                     # Create fresh symbolic expression for size
-                    size_expr = z3.FreshConst(
-                        z3.IntSort(), f"dim_{op.dest}_{dynamic_idx}"
-                    )
+                    size_expr = z3.FreshConst(z3.IntSort(), f"dim_{op.dest}_{dynamic_idx}")
                     state.set_value(size_name, size_expr, "index")
                 shape.append(size_expr)
                 dynamic_idx += 1
@@ -425,9 +419,7 @@ class TensorEmptyOpHandler(OperationHandler):
                     size_name = size_name[1:]
                 size_expr = state.get_expr(size_name)
                 if size_expr is None:
-                    size_expr = z3.FreshConst(
-                        z3.IntSort(), f"dim_{op.dest}_{dynamic_idx}"
-                    )
+                    size_expr = z3.FreshConst(z3.IntSort(), f"dim_{op.dest}_{dynamic_idx}")
                     state.set_value(size_name, size_expr, "index")
                 shape.append(size_expr)
                 dynamic_idx += 1
@@ -482,9 +474,7 @@ class TensorGenerateOpHandler(OperationHandler):
                     size_name = size_name[1:]
                 size_expr = state.get_expr(size_name)
                 if size_expr is None:
-                    size_expr = z3.FreshConst(
-                        z3.IntSort(), f"dim_{op.dest}_{dynamic_idx}"
-                    )
+                    size_expr = z3.FreshConst(z3.IntSort(), f"dim_{op.dest}_{dynamic_idx}")
                     state.set_value(size_name, size_expr, "index")
                 shape.append(size_expr)
                 dynamic_idx += 1

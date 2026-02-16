@@ -50,9 +50,7 @@ class ScfDialectParser(BaseDialectParser):
         return None
 
     # Individual operation parsers
-    def _parse_scf_for_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[LoopOperation]:
+    def _parse_scf_for_operation(self, op_node: mast.Operation) -> Optional[LoopOperation]:
         """Parse scf.for operation."""
         op_obj = op_node.op
 
@@ -137,9 +135,7 @@ class ScfDialectParser(BaseDialectParser):
             result_types=result_types,
         )
 
-    def _parse_scf_yield_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[YieldOperation]:
+    def _parse_scf_yield_operation(self, op_node: mast.Operation) -> Optional[YieldOperation]:
         """Parse scf.yield operation."""
         op_obj = op_node.op
 
@@ -162,9 +158,7 @@ class ScfDialectParser(BaseDialectParser):
             value=value,
         )
 
-    def _parse_scf_condition_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_scf_condition_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse scf.condition operation."""
         op_obj = op_node.op
 

@@ -67,7 +67,11 @@ class EmitCConstantOpHandler(ConstantOperationHandler):
         # Also store concrete value if we have it
         if isinstance(value, (int, float)):
             state.set_concrete_value(op.dest, value)
-            logger.debug("after set_concrete_value: state.get_concrete_value(%s) = %s", op.dest, state.get_concrete_value(op.dest))
+            logger.debug(
+                "after set_concrete_value: state.get_concrete_value(%s) = %s",
+                op.dest,
+                state.get_concrete_value(op.dest),
+            )
 
     def _try_concrete_evaluation(
         self, op: ConstantOperation, state: SymbolicState, func: MLIRFunction

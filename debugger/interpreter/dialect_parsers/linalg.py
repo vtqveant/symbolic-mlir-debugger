@@ -56,9 +56,7 @@ class LinalgDialectParser(BaseDialectParser):
         if hasattr(op_obj, "__class__"):
             class_name = op_obj.__class__.__name__
             # Debug
-            print(
-                f"[LinalgDialectParser] Trying to parse {class_name}", file=sys.stderr
-            )
+            print(f"[LinalgDialectParser] Trying to parse {class_name}", file=sys.stderr)
 
             # Map operation class names to parser methods
             if class_name == "LinalgGeneric":
@@ -123,24 +121,15 @@ class LinalgDialectParser(BaseDialectParser):
         output_types = []
 
         if hasattr(op_obj, "inargs") and op_obj.inargs:
-            inputs = [
-                arg.value if hasattr(arg, "value") else str(arg)
-                for arg in op_obj.inargs
-            ]
+            inputs = [arg.value if hasattr(arg, "value") else str(arg) for arg in op_obj.inargs]
             input_types = [self._type_to_string(t) for t in op_obj.in_types]
 
         # Extract output arguments (could be outargs or init_args)
         if hasattr(op_obj, "outargs") and op_obj.outargs:
-            outputs = [
-                arg.value if hasattr(arg, "value") else str(arg)
-                for arg in op_obj.outargs
-            ]
+            outputs = [arg.value if hasattr(arg, "value") else str(arg) for arg in op_obj.outargs]
             output_types = [self._type_to_string(t) for t in op_obj.out_types]
         elif hasattr(op_obj, "init_args") and op_obj.init_args:
-            outputs = [
-                arg.value if hasattr(arg, "value") else str(arg)
-                for arg in op_obj.init_args
-            ]
+            outputs = [arg.value if hasattr(arg, "value") else str(arg) for arg in op_obj.init_args]
             output_types = [self._type_to_string(t) for t in op_obj.init_types]
 
         # Extract attributes
@@ -173,8 +162,7 @@ class LinalgDialectParser(BaseDialectParser):
                         for arg in block.label.arg_ids
                     ]
                     block_arg_types = [
-                        self._type_to_string(arg_type)
-                        for arg_type in block.label.arg_types
+                        self._type_to_string(arg_type) for arg_type in block.label.arg_types
                     ]
 
                 # Parse operations in the block
@@ -318,16 +306,12 @@ class LinalgDialectParser(BaseDialectParser):
             C_type=C_type,
         )
 
-    def _parse_linalg_conv_1d_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_linalg_conv_1d_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse linalg.conv_1d operation."""
         # For now, treat as generic operation
         return self._parse_linalg_generic_operation(op_node)
 
-    def _parse_linalg_conv_2d_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_linalg_conv_2d_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse linalg.conv_2d operation."""
         # For now, treat as generic operation
         return self._parse_linalg_generic_operation(op_node)

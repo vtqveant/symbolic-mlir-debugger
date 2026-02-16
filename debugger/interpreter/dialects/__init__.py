@@ -10,7 +10,6 @@ import importlib
 
 from .base import DialectRegistry, OperationHandler
 
-
 # Global dialect registry
 _registry: Optional[DialectRegistry] = None
 

@@ -178,9 +178,7 @@ class ControlFlowExecutor:
 
                 # Create new MLIRValue for parameter (with same value/expression)
                 # Copy the value but with parameter name
-                param_value = MLIRValue(
-                    name=param_name, expr=mlir_value.expr, type=param_type
-                )
+                param_value = MLIRValue(name=param_name, expr=mlir_value.expr, type=param_type)
                 state.values[param_name] = param_value
 
                 # Also copy concrete value if present

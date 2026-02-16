@@ -42,11 +42,7 @@ class AffineForOpHandler(OperationHandler):
         ub_concrete = interpreter._try_get_concrete_value(ub_expr, state)
         step_concrete = interpreter._try_get_concrete_value(step_expr, state)
 
-        if (
-            lb_concrete is not None
-            and ub_concrete is not None
-            and step_concrete is not None
-        ):
+        if lb_concrete is not None and ub_concrete is not None and step_concrete is not None:
             # Concrete bounds, unroll loop
             current_acc = init_expr
             i = 0
@@ -58,9 +54,7 @@ class AffineForOpHandler(OperationHandler):
                 if step_concrete < 0 and iv_val <= ub_concrete:
                     break
                 if i >= max_iterations:
-                    print(
-                        f"Warning: Loop unrolling limited to {max_iterations} iterations"
-                    )
+                    print(f"Warning: Loop unrolling limited to {max_iterations} iterations")
                     break
 
                 # Create temporary state for this iteration (fork of current state)
@@ -72,13 +66,9 @@ class AffineForOpHandler(OperationHandler):
                     iter_state.set_concrete_value(iv_name, iv_val)
                 # Set iteration argument value
                 if iter_arg and init_expr is not None:
-                    iter_arg_name = (
-                        iter_arg[1:] if iter_arg.startswith("%") else iter_arg
-                    )
+                    iter_arg_name = iter_arg[1:] if iter_arg.startswith("%") else iter_arg
                     if current_acc is not None:
-                        iter_state.set_value(
-                            iter_arg_name, current_acc, op.result_type or "index"
-                        )
+                        iter_state.set_value(iter_arg_name, current_acc, op.result_type or "index")
 
                 # Execute body operations
                 yield_value = None
@@ -86,9 +76,7 @@ class AffineForOpHandler(OperationHandler):
                     if body_op.dialect == "affine" and body_op.name == "yield":
                         # This is the yield operation - get its value
                         if hasattr(body_op, "value") and body_op.value is not None:
-                            yield_expr = interpreter._get_operand_expr(
-                                body_op.value, iter_state
-                            )
+                            yield_expr = interpreter._get_operand_expr(body_op.value, iter_state)
                             yield_value = yield_expr
                         else:
                             # yield with no value (loop without iter_args)

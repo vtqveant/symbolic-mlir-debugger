@@ -221,9 +221,7 @@ class ArithDialectParser(BaseDialectParser):
                 attributes=attributes,
             )
 
-    def _parse_binary_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[BinaryOperation]:
+    def _parse_binary_operation(self, op_node: mast.Operation) -> Optional[BinaryOperation]:
         """Parse binary arithmetic operation (addi, subi, muli, etc.)."""
         op_obj = op_node.op
 
@@ -271,9 +269,7 @@ class ArithDialectParser(BaseDialectParser):
             attributes={},  # Binary arith ops typically have no attributes
         )
 
-    def _parse_unary_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[UnaryOperation]:
+    def _parse_unary_operation(self, op_node: mast.Operation) -> Optional[UnaryOperation]:
         """Parse unary arithmetic operation (absf, ceilf, etc.)."""
         op_obj = op_node.op
 
@@ -315,9 +311,7 @@ class ArithDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_cmpi_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[CompareOperation]:
+    def _parse_cmpi_operation(self, op_node: mast.Operation) -> Optional[CompareOperation]:
         """Parse arith.cmpi operation."""
         op_obj = op_node.op
 
@@ -361,9 +355,7 @@ class ArithDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_cmpf_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[CompareOperation]:
+    def _parse_cmpf_operation(self, op_node: mast.Operation) -> Optional[CompareOperation]:
         """Parse arith.cmpf operation."""
         op_obj = op_node.op
 
@@ -403,9 +395,7 @@ class ArithDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_constant_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[ConstantOperation]:
+    def _parse_constant_operation(self, op_node: mast.Operation) -> Optional[ConstantOperation]:
         """Parse arith.constant operation."""
         op_obj = op_node.op
 
@@ -471,9 +461,7 @@ class ArithDialectParser(BaseDialectParser):
             },
         )
 
-    def _parse_index_cast_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[UnaryOperation]:
+    def _parse_index_cast_operation(self, op_node: mast.Operation) -> Optional[UnaryOperation]:
         """Parse arith.index_cast operation."""
         op_obj = op_node.op
 

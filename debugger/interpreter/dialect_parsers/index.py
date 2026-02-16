@@ -65,9 +65,7 @@ class IndexDialectParser(BaseDialectParser):
         # No handler found
         return None
 
-    def _parse_binary_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[BinaryOperation]:
+    def _parse_binary_operation(self, op_node: mast.Operation) -> Optional[BinaryOperation]:
         """Parse binary index operation (add, sub, mul, etc.)."""
         op_obj = op_node.op
 
@@ -113,9 +111,7 @@ class IndexDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_unary_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[UnaryOperation]:
+    def _parse_unary_operation(self, op_node: mast.Operation) -> Optional[UnaryOperation]:
         """Parse unary index operation (currently none, but generic)."""
         op_obj = op_node.op
 
@@ -153,9 +149,7 @@ class IndexDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_cmp_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[CompareOperation]:
+    def _parse_cmp_operation(self, op_node: mast.Operation) -> Optional[CompareOperation]:
         """Parse index.cmp operation."""
         op_obj = op_node.op
 
@@ -194,9 +188,7 @@ class IndexDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_constant_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[ConstantOperation]:
+    def _parse_constant_operation(self, op_node: mast.Operation) -> Optional[ConstantOperation]:
         """Parse index.constant operation."""
         op_obj = op_node.op
 

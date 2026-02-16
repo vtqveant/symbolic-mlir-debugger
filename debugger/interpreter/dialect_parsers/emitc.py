@@ -51,11 +51,7 @@ class EmitcDialectParser(BaseDialectParser):
                 return self._parse_constant_operation(op_node)
 
             # Binary operations (Add, BitwiseAnd, BitwiseLeftShift, BitwiseOr, BitwiseRightShift, BitwiseXor, Assign)
-            elif (
-                class_name.endswith("Op")
-                and hasattr(op_obj, "lhs")
-                and hasattr(op_obj, "rhs")
-            ):
+            elif class_name.endswith("Op") and hasattr(op_obj, "lhs") and hasattr(op_obj, "rhs"):
                 return self._parse_binary_operation(op_node)
 
             # Unary operations (AddressOf, BitwiseNot, Cast)
@@ -68,9 +64,7 @@ class EmitcDialectParser(BaseDialectParser):
 
         return None
 
-    def _parse_binary_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[BinaryOperation]:
+    def _parse_binary_operation(self, op_node: mast.Operation) -> Optional[BinaryOperation]:
         """Parse binary emitc operation (add, bitwise_and, assign, etc.)."""
         op_obj = op_node.op
 
@@ -111,9 +105,7 @@ class EmitcDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_unary_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[UnaryOperation]:
+    def _parse_unary_operation(self, op_node: mast.Operation) -> Optional[UnaryOperation]:
         """Parse unary emitc operation (address_of, bitwise_not, cast)."""
         op_obj = op_node.op
 
@@ -230,9 +222,7 @@ class EmitcDialectParser(BaseDialectParser):
             attributes=attributes,
         )
 
-    def _parse_call_opaque_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_call_opaque_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse emitc.call_opaque operation."""
         op_obj = op_node.op
 
@@ -295,9 +285,7 @@ class EmitcDialectParser(BaseDialectParser):
             attributes=attributes,
         )
 
-    def _parse_cmp_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[CompareOperation]:
+    def _parse_cmp_operation(self, op_node: mast.Operation) -> Optional[CompareOperation]:
         """Parse emitc.cmp operation."""
         op_obj = op_node.op
 
@@ -330,9 +318,7 @@ class EmitcDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_conditional_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_conditional_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse emitc.conditional operation."""
         op_obj = op_node.op
 
@@ -365,9 +351,7 @@ class EmitcDialectParser(BaseDialectParser):
             attributes=attributes,
         )
 
-    def _parse_constant_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[ConstantOperation]:
+    def _parse_constant_operation(self, op_node: mast.Operation) -> Optional[ConstantOperation]:
         """Parse emitc.constant operation."""
         op_obj = op_node.op
 
@@ -420,11 +404,7 @@ class EmitcDialectParser(BaseDialectParser):
                 name = full_name
 
             # Determine if binary or unary based on args length
-            args = (
-                op_obj.args
-                if hasattr(op_obj, "args") and op_obj.args is not None
-                else []
-            )
+            args = op_obj.args if hasattr(op_obj, "args") and op_obj.args is not None else []
             num_args = len(args)
 
             # Extract result type
@@ -548,9 +528,7 @@ class EmitcDialectParser(BaseDialectParser):
                     attributes[field_name] = [self._ssa_use_to_string(v) for v in value]
                 elif field_name.endswith("_type") or field_name == "type":
                     attributes[field_name] = self._type_to_string(value)
-                elif isinstance(
-                    value, (mast.SsaId, mast.StringLiteral, int, float, str)
-                ):
+                elif isinstance(value, (mast.SsaId, mast.StringLiteral, int, float, str)):
                     attributes[field_name] = self._ssa_use_to_string(value)
                 else:
                     attributes[field_name] = str(value)

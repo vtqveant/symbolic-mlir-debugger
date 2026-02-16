@@ -12,6 +12,29 @@ markers = [
     "concolic: concolic execution tests",
 ]
 
+[tool.black]
+line-length = 100
+target-version = ['py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | vscode/.*     # EXCLUDE vscode directory
+  | node_modules/.*  # EXCLUDE node_modules
+  | .*/__pycache__/.*
+  | .*/\.pytest_cache/.*
+)/
+'''
+
 [build-system]
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"

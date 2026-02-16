@@ -7,7 +7,6 @@ from .. import astnodes as mast
 from typing import List, Tuple, Optional, Union
 from dataclasses import dataclass
 
-
 Literal = Union[mast.StringLiteral, float, int, bool]
 SsaUse = Union[mast.SsaId, Literal]
 
@@ -25,9 +24,7 @@ class BuiltinModuleOp(DialectOp):
 class BuiltinUnrealizedConversionCastOp(DialectOp):
     inputs: List[SsaUse]
     outputs: List[mast.Type]
-    _syntax_ = (
-        "builtin.unrealized_conversion_cast {inputs.ssa_use_list} : {outputs.type_list}"
-    )
+    _syntax_ = "builtin.unrealized_conversion_cast {inputs.ssa_use_list} : {outputs.type_list}"
     _opname_ = "builtin.unrealized_conversion_cast"
 
 
@@ -38,11 +35,6 @@ type_list: type_list_no_parens
 
 builtin = Dialect(
     "builtin",
-    ops=[
-        m[1]
-        for m in inspect.getmembers(
-            sys.modules[__name__], lambda obj: is_op(obj, __name__)
-        )
-    ],
+    ops=[m[1] for m in inspect.getmembers(sys.modules[__name__], lambda obj: is_op(obj, __name__))],
     preamble=builtin_preamble,
 )

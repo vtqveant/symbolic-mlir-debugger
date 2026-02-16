@@ -52,9 +52,7 @@ class AffineDialectParser(BaseDialectParser):
         return None
 
     # Individual operation parsers
-    def _parse_affine_for_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[LoopOperation]:
+    def _parse_affine_for_operation(self, op_node: mast.Operation) -> Optional[LoopOperation]:
         """Parse affine.for operation."""
         op_obj = op_node.op
 
@@ -111,9 +109,7 @@ class AffineDialectParser(BaseDialectParser):
             attributes={},
         )
 
-    def _parse_affine_if_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[Operation]:
+    def _parse_affine_if_operation(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse affine.if operation."""
         op_obj = op_node.op
 
@@ -154,9 +150,7 @@ class AffineDialectParser(BaseDialectParser):
             attributes=attributes,
         )
 
-    def _parse_affine_load_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[LoadOperation]:
+    def _parse_affine_load_operation(self, op_node: mast.Operation) -> Optional[LoadOperation]:
         """Parse affine.load operation."""
         op_obj = op_node.op
 
@@ -189,9 +183,7 @@ class AffineDialectParser(BaseDialectParser):
             },
         )
 
-    def _parse_affine_store_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[StoreOperation]:
+    def _parse_affine_store_operation(self, op_node: mast.Operation) -> Optional[StoreOperation]:
         """Parse affine.store operation."""
         op_obj = op_node.op
 
@@ -224,9 +216,7 @@ class AffineDialectParser(BaseDialectParser):
             },
         )
 
-    def _parse_affine_yield_operation(
-        self, op_node: mast.Operation
-    ) -> Optional[YieldOperation]:
+    def _parse_affine_yield_operation(self, op_node: mast.Operation) -> Optional[YieldOperation]:
         """Parse affine.yield operation."""
         op_obj = op_node.op
 
@@ -270,9 +260,7 @@ class AffineDialectParser(BaseDialectParser):
 
     def _affine_expr_to_string(self, affine_expr) -> str:
         """Convert affine expression to string using parser context."""
-        if self.parser_context and hasattr(
-            self.parser_context, "_affine_expr_to_string"
-        ):
+        if self.parser_context and hasattr(self.parser_context, "_affine_expr_to_string"):
             return self.parser_context._affine_expr_to_string(affine_expr)
         # Fallback
         try:
@@ -282,9 +270,7 @@ class AffineDialectParser(BaseDialectParser):
 
     def _map_or_set_id_to_string(self, map_or_set_id) -> str:
         """Convert map_or_set_id to string using parser context."""
-        if self.parser_context and hasattr(
-            self.parser_context, "_map_or_set_id_to_string"
-        ):
+        if self.parser_context and hasattr(self.parser_context, "_map_or_set_id_to_string"):
             return self.parser_context._map_or_set_id_to_string(map_or_set_id)
         # Fallback
         if hasattr(map_or_set_id, "value"):

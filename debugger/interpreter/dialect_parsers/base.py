@@ -79,9 +79,7 @@ class BaseDialectParser:
             prefix = (
                 "i"
                 if type_node.signedness == "signless"
-                else "si"
-                if type_node.signedness == "signed"
-                else "ui"
+                else "si" if type_node.signedness == "signed" else "ui"
             )
             return f"{prefix}{type_node.width}"
         elif isinstance(type_node, mast.IndexType):
@@ -181,9 +179,7 @@ class BaseDialectParser:
         elif isinstance(attr_node, mast.ArrayAttr):
             # ArrayAttr has value list
             return [self._parse_attribute(sub) for sub in attr_node.value]
-        elif hasattr(mast, "AttributeDict") and isinstance(
-            attr_node, mast.AttributeDict
-        ):
+        elif hasattr(mast, "AttributeDict") and isinstance(attr_node, mast.AttributeDict):
             # AttributeDict has values list of AttributeEntry
             result = {}
             for entry in attr_node.values:
@@ -191,9 +187,7 @@ class BaseDialectParser:
                 if hasattr(entry, "name") and hasattr(entry, "value"):
                     result[entry.name] = self._parse_attribute(entry.value)
             return result
-        elif hasattr(mast, "DictionaryAttr") and isinstance(
-            attr_node, mast.DictionaryAttr
-        ):
+        elif hasattr(mast, "DictionaryAttr") and isinstance(attr_node, mast.DictionaryAttr):
             # DictionaryAttr has value list of AttributeEntry
             result = {}
             for entry in attr_node.value:

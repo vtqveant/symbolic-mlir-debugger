@@ -65,10 +65,5 @@ class FuncReturnOp(DialectOp):
 # Inspect current module to get all classes defined above
 func = Dialect(
     "func",
-    ops=[
-        m[1]
-        for m in inspect.getmembers(
-            sys.modules[__name__], lambda obj: is_op(obj, __name__)
-        )
-    ],
+    ops=[m[1] for m in inspect.getmembers(sys.modules[__name__], lambda obj: is_op(obj, __name__))],
 )
