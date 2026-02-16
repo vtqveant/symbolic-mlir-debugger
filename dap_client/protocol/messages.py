@@ -10,6 +10,10 @@ from .constants import (
     COMMAND_SET_BREAKPOINTS,
     COMMAND_CONFIGURATION_DONE,
     COMMAND_CONTINUE,
+    COMMAND_SYMBOLIC_SET_MODE,
+    COMMAND_SYMBOLIC_EVALUATE,
+    COMMAND_SYMBOLIC_EXPLORE_PATHS,
+    COMMAND_SYMBOLIC_GET_CONSTRAINTS,
 )
 
 
@@ -135,7 +139,11 @@ class DAPEvent:
 class InitializeRequest(DAPRequest):
     """Initialize request"""
 
-    def __init__(self, adapter_id: str = "mlir-debugger", client_id: str = "automated-test-client"):
+    def __init__(
+        self,
+        adapter_id: str = "mlir-debugger",
+        client_id: str = "automated-test-client",
+    ):
         arguments = {
             "adapterID": adapter_id,
             "clientID": client_id,
@@ -199,3 +207,35 @@ class DisconnectRequest(DAPRequest):
         if terminate_debuggee is not None:
             arguments["terminateDebuggee"] = terminate_debuggee
         super().__init__(COMMAND_DISCONNECT, arguments)
+
+
+class SymbolicSetModeRequest(DAPRequest):
+    """Symbolic set mode request"""
+
+    def __init__(self, enabled: bool = True):
+        arguments = {"enabled": enabled}
+        super().__init__(COMMAND_SYMBOLIC_SET_MODE, arguments)
+
+
+class SymbolicEvaluateRequest(DAPRequest):
+    """Symbolic evaluate request"""
+
+    def __init__(self, expression: str, frame_id: int = 0):
+        arguments = {"expression": expression, "frameId": frame_id}
+        super().__init__(COMMAND_SYMBOLIC_EVALUATE, arguments)
+
+
+class SymbolicExplorePathsRequest(DAPRequest):
+    """Symbolic explore paths request"""
+
+    def __init__(self, max_paths: int = 10):
+        arguments = {"maxPaths": max_paths}
+        super().__init__(COMMAND_SYMBOLIC_EXPLORE_PATHS, arguments)
+
+
+class SymbolicGetConstraintsRequest(DAPRequest):
+    """Symbolic get constraints request"""
+
+    def __init__(self):
+        arguments = {}
+        super().__init__(COMMAND_SYMBOLIC_GET_CONSTRAINTS, arguments)

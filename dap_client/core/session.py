@@ -10,6 +10,10 @@ from dap_client.protocol import (
     ConfigurationDoneRequest,
     ContinueRequest,
     DisconnectRequest,
+    SymbolicSetModeRequest,
+    SymbolicEvaluateRequest,
+    SymbolicExplorePathsRequest,
+    SymbolicGetConstraintsRequest,
 )
 from .connection import DAPConnection
 
@@ -72,7 +76,9 @@ class DAPSession:
         if self.status != "launched":
             raise RuntimeError("Program not launched")
 
-        request = SetBreakpointsRequest(source, breakpoints, line_breakpoints, column_breakpoints)
+        request = SetBreakpointsRequest(
+            source, breakpoints, line_breakpoints, column_breakpoints
+        )
         result = self.connection.request(request)
         self.breakpoints[source["path"]] = result
         logger.info(f"Set {len(result.get('breakpoints', []))} breakpoints")
@@ -149,7 +155,9 @@ class DAPSession:
         # For now, return stub
         return {"variables": []}
 
-    def evaluate(self, expression: str, frame_id: Optional[int] = None) -> Dict[str, Any]:
+    def evaluate(
+        self, expression: str, frame_id: Optional[int] = None
+    ) -> Dict[str, Any]:
         """Evaluate expression"""
         if not self.connection:
             raise RuntimeError("Not connected to debug server")
@@ -157,6 +165,46 @@ class DAPSession:
         # This would be a real DAP request implementation
         # For now, return stub
         return {"result": None}
+
+    def symbolic_set_mode(self, enabled: bool = True) -> Dict[str, Any]:
+        """Enable or disable symbolic debugging mode"""
+        if not self.connection:
+            raise RuntimeError("Not connected to debug server")
+
+        request = SymbolicSetModeRequest(enabled)
+        result = self.connection.request(request)
+        logger.info(f"Symbolic mode {'enabled' if enabled else 'disabled'}")
+        return result or {}
+
+    def symbolic_evaluate(self, expression: str, frame_id: int = 0) -> Dict[str, Any]:
+        """Evaluate symbolic expression"""
+        if not self.connection:
+            raise RuntimeError("Not connected to debug server")
+
+        request = SymbolicEvaluateRequest(expression, frame_id)
+        result = self.connection.request(request)
+        logger.info(f"Symbolic expression evaluated: {expression}")
+        return result or {}
+
+    def symbolic_explore_paths(self, max_paths: int = 10) -> Dict[str, Any]:
+        """Explore execution paths using symbolic execution"""
+        if not self.connection:
+            raise RuntimeError("Not connected to debug server")
+
+        request = SymbolicExplorePathsRequest(max_paths)
+        result = self.connection.request(request)
+        logger.info(f"Explored up to {max_paths} execution paths")
+        return result or {}
+
+    def symbolic_get_constraints(self) -> Dict[str, Any]:
+        """Get current symbolic constraints"""
+        if not self.connection:
+            raise RuntimeError("Not connected to debug server")
+
+        request = SymbolicGetConstraintsRequest()
+        result = self.connection.request(request)
+        logger.info("Retrieved symbolic constraints")
+        return result or {}
 
     def __enter__(self):
         """Context manager entry"""

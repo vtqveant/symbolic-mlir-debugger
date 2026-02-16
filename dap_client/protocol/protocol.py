@@ -7,6 +7,10 @@ from .constants import (
     COMMAND_SET_BREAKPOINTS,
     COMMAND_CONFIGURATION_DONE,
     COMMAND_CONTINUE,
+    COMMAND_SYMBOLIC_SET_MODE,
+    COMMAND_SYMBOLIC_EVALUATE,
+    COMMAND_SYMBOLIC_EXPLORE_PATHS,
+    COMMAND_SYMBOLIC_GET_CONSTRAINTS,
     EVENT_INITIALIZED,
     EVENT_TERMINATED,
     EVENT_EXECEPTION,
@@ -28,6 +32,10 @@ from .messages import (
     ConfigurationDoneRequest,
     ContinueRequest,
     DisconnectRequest,
+    SymbolicSetModeRequest,
+    SymbolicEvaluateRequest,
+    SymbolicExplorePathsRequest,
+    SymbolicGetConstraintsRequest,
 )
 
 __all__ = [
@@ -42,6 +50,10 @@ __all__ = [
     "ConfigurationDoneRequest",
     "ContinueRequest",
     "DisconnectRequest",
+    "SymbolicSetModeRequest",
+    "SymbolicEvaluateRequest",
+    "SymbolicExplorePathsRequest",
+    "SymbolicGetConstraintsRequest",
     # Constants
     "COMMAND_INITIALIZE",
     "COMMAND_LAUNCH",
@@ -49,6 +61,10 @@ __all__ = [
     "COMMAND_SET_BREAKPOINTS",
     "COMMAND_CONFIGURATION_DONE",
     "COMMAND_CONTINUE",
+    "COMMAND_SYMBOLIC_SET_MODE",
+    "COMMAND_SYMBOLIC_EVALUATE",
+    "COMMAND_SYMBOLIC_EXPLORE_PATHS",
+    "COMMAND_SYMBOLIC_GET_CONSTRAINTS",
     "EVENT_INITIALIZED",
     "EVENT_TERMINATED",
     "EVENT_EXECEPTION",

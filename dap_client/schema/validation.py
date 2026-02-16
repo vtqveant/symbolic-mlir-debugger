@@ -30,7 +30,10 @@ def load_test_script_schema() -> Dict[str, Any]:
                 "title": "DAP Test Script",
                 "type": "object",
                 "properties": {
-                    "name": {"type": "string", "description": "Name of the test script"},
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the test script",
+                    },
                     "program": {
                         "type": "string",
                         "description": "Path to the MLIR program to debug",
@@ -49,6 +52,10 @@ def load_test_script_schema() -> Dict[str, Any]:
                                         "configurationDone",
                                         "continue",
                                         "disconnect",
+                                        "symbolic/setMode",
+                                        "symbolic/evaluate",
+                                        "symbolic/explorePaths",
+                                        "symbolic/getConstraints",
                                     ],
                                 },
                                 "arguments": {"type": "object"},
@@ -183,6 +190,4 @@ class TestScript:
         Returns:
             String representation of test script
         """
-        return (
-            f"TestScript(name={self.name}, program={self.program}, steps={len(self.session_steps)})"
-        )
+        return f"TestScript(name={self.name}, program={self.program}, steps={len(self.session_steps)})"

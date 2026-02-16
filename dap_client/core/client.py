@@ -35,7 +35,9 @@ class DAPClient:
     def connect(self) -> bool:
         """Establish connection to DAP server"""
         try:
-            self.connection = DAPConnection(self.host, self.port, self.timeout, self.read_timeout)
+            self.connection = DAPConnection(
+                self.host, self.port, self.timeout, self.read_timeout
+            )
             if self.connection.connect():
                 self.connected = True
                 self._setup_event_handlers()
@@ -158,12 +160,42 @@ class DAPClient:
 
         return self.session.get_variables(variable_reference)
 
-    def evaluate(self, expression: str, frame_id: Optional[int] = None) -> Dict[str, Any]:
+    def evaluate(
+        self, expression: str, frame_id: Optional[int] = None
+    ) -> Dict[str, Any]:
         """Evaluate expression"""
         if not self.session:
             raise RuntimeError("Session not initialized")
 
         return self.session.evaluate(expression, frame_id)
+
+    def symbolic_set_mode(self, enabled: bool = True) -> Dict[str, Any]:
+        """Enable or disable symbolic debugging mode"""
+        if not self.session:
+            raise RuntimeError("Session not initialized")
+
+        return self.session.symbolic_set_mode(enabled)
+
+    def symbolic_evaluate(self, expression: str, frame_id: int = 0) -> Dict[str, Any]:
+        """Evaluate symbolic expression"""
+        if not self.session:
+            raise RuntimeError("Session not initialized")
+
+        return self.session.symbolic_evaluate(expression, frame_id)
+
+    def symbolic_explore_paths(self, max_paths: int = 10) -> Dict[str, Any]:
+        """Explore execution paths using symbolic execution"""
+        if not self.session:
+            raise RuntimeError("Session not initialized")
+
+        return self.session.symbolic_explore_paths(max_paths)
+
+    def symbolic_get_constraints(self) -> Dict[str, Any]:
+        """Get current symbolic constraints"""
+        if not self.session:
+            raise RuntimeError("Session not initialized")
+
+        return self.session.symbolic_get_constraints()
 
     def close(self) -> None:
         """Close connection and cleanup"""

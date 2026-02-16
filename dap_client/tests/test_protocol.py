@@ -12,6 +12,10 @@ from dap_client.protocol import (
     ConfigurationDoneRequest,
     ContinueRequest,
     DisconnectRequest,
+    SymbolicSetModeRequest,
+    SymbolicEvaluateRequest,
+    SymbolicExplorePathsRequest,
+    SymbolicGetConstraintsRequest,
 )
 
 
@@ -125,7 +129,12 @@ class TestDAPEvent:
 
     def test_event_from_dict(self):
         """Test creating event from dict"""
-        data = {"seq": 1, "type": "event", "event": "testEvent", "body": {"key": "value"}}
+        data = {
+            "seq": 1,
+            "type": "event",
+            "event": "testEvent",
+            "body": {"key": "value"},
+        }
 
         event = DAPEvent.from_dict(data)
         assert event.event == "testEvent"
@@ -204,3 +213,70 @@ class TestDisconnectRequest:
 
         assert request.command == "disconnect"
         assert request.arguments["terminateDebuggee"] == True
+
+
+class TestSymbolicSetModeRequest:
+    """Test SymbolicSetModeRequest"""
+
+    def test_create_symbolic_set_mode_request(self):
+        """Test creating symbolic set mode request"""
+        request = SymbolicSetModeRequest(enabled=True)
+
+        assert request.command == "symbolic/setMode"
+        assert request.arguments["enabled"] == True
+
+    def test_create_symbolic_set_mode_request_disabled(self):
+        """Test creating symbolic set mode request with disabled"""
+        request = SymbolicSetModeRequest(enabled=False)
+
+        assert request.command == "symbolic/setMode"
+        assert request.arguments["enabled"] == False
+
+
+class TestSymbolicEvaluateRequest:
+    """Test SymbolicEvaluateRequest"""
+
+    def test_create_symbolic_evaluate_request(self):
+        """Test creating symbolic evaluate request"""
+        request = SymbolicEvaluateRequest(expression="%a + %b", frame_id=0)
+
+        assert request.command == "symbolic/evaluate"
+        assert request.arguments["expression"] == "%a + %b"
+        assert request.arguments["frameId"] == 0
+
+    def test_create_symbolic_evaluate_request_with_default_frame(self):
+        """Test creating symbolic evaluate request with default frame"""
+        request = SymbolicEvaluateRequest(expression="%a < %b")
+
+        assert request.command == "symbolic/evaluate"
+        assert request.arguments["expression"] == "%a < %b"
+        assert request.arguments["frameId"] == 0
+
+
+class TestSymbolicExplorePathsRequest:
+    """Test SymbolicExplorePathsRequest"""
+
+    def test_create_symbolic_explore_paths_request(self):
+        """Test creating symbolic explore paths request"""
+        request = SymbolicExplorePathsRequest(max_paths=10)
+
+        assert request.command == "symbolic/explorePaths"
+        assert request.arguments["maxPaths"] == 10
+
+    def test_create_symbolic_explore_paths_request_default(self):
+        """Test creating symbolic explore paths request with default"""
+        request = SymbolicExplorePathsRequest()
+
+        assert request.command == "symbolic/explorePaths"
+        assert request.arguments["maxPaths"] == 10
+
+
+class TestSymbolicGetConstraintsRequest:
+    """Test SymbolicGetConstraintsRequest"""
+
+    def test_create_symbolic_get_constraints_request(self):
+        """Test creating symbolic get constraints request"""
+        request = SymbolicGetConstraintsRequest()
+
+        assert request.command == "symbolic/getConstraints"
+        assert request.arguments == {}
