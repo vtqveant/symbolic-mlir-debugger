@@ -101,7 +101,7 @@ class DAPPipeClient:
 @pytest.fixture
 def dap_server_process():
     """Fixture that starts DAP server subprocess."""
-    debugger_path = Path(__file__).parent.parent.parent / "debugger" / "dap_server.py"
+    debugger_path = Path(__file__).parent.parent.parent.parent / "debugger" / "dap_server.py"
     if not debugger_path.exists():
         pytest.skip("DAP server not found")
 
@@ -173,7 +173,9 @@ def test_launch(dap_client):
     )
 
     # Use existing fixture file
-    fixture_path = Path(__file__).parent.parent.parent / "debugger" / "fixtures" / "simple_add.mlir"
+    fixture_path = (
+        Path(__file__).parent.parent.parent.parent / "debugger" / "fixtures" / "simple_add.mlir"
+    )
     if not fixture_path.exists():
         pytest.skip(f"Fixture not found: {fixture_path}")
 
@@ -196,7 +198,9 @@ def test_set_breakpoints(dap_client):
     # Initialize and launch
     dap_client.send_request("initialize", {"adapterID": "mlir-debugger"})
 
-    fixture_path = Path(__file__).parent.parent.parent / "debugger" / "fixtures" / "simple_add.mlir"
+    fixture_path = (
+        Path(__file__).parent.parent.parent.parent / "debugger" / "fixtures" / "simple_add.mlir"
+    )
     if not fixture_path.exists():
         pytest.skip(f"Fixture not found: {fixture_path}")
 
@@ -225,7 +229,9 @@ def test_configuration_done(dap_client):
     """Test configurationDone command."""
     dap_client.send_request("initialize", {"adapterID": "mlir-debugger"})
 
-    fixture_path = Path(__file__).parent.parent.parent / "debugger" / "fixtures" / "simple_add.mlir"
+    fixture_path = (
+        Path(__file__).parent.parent.parent.parent / "debugger" / "fixtures" / "simple_add.mlir"
+    )
     if not fixture_path.exists():
         pytest.skip(f"Fixture not found: {fixture_path}")
 
@@ -240,8 +246,9 @@ def test_symbolic_commands(dap_client):
     dap_client.send_request("initialize", {"adapterID": "mlir-debugger"})
 
     fixture_path = (
-        Path(__file__).parent.parent.parent / "debugger" / "fixtures" / "conditional_branch.mlir"
+        Path(__file__).parent.parent.parent.parent / "debugger" / "fixtures" / "simple_add.mlir"
     )
+    print(f"Looking for fixture at: {fixture_path}")
     if not fixture_path.exists():
         pytest.skip(f"Fixture not found: {fixture_path}")
 

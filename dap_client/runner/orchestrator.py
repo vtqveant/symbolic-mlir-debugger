@@ -24,8 +24,7 @@ class TestOrchestrator:
 
     def __init__(
         self,
-        host: str = "localhost",
-        port: int = 5678,
+        debugger_path: Optional[str] = None,
         timeout: int = 30,
         read_timeout: int = 10,
         max_workers: Optional[int] = None,
@@ -33,20 +32,18 @@ class TestOrchestrator:
         """Initialize test orchestrator.
 
         Args:
-            host: DAP server host
-            port: DAP server port
+            debugger_path: Path to DAP server script. If None, auto-detected.
             timeout: Connection timeout
             read_timeout: Read timeout
             max_workers: Maximum number of parallel workers (default: CPU count)
         """
-        self.host = host
-        self.port = port
+        self.debugger_path = debugger_path
         self.timeout = timeout
         self.read_timeout = read_timeout
         self.max_workers = max_workers or multiprocessing.cpu_count()
         self.results: List[Dict[str, Any]] = []
-        self.generator = TestCaseGenerator(host, port, timeout, read_timeout)
-        self.path_aware_generator = PathAwareGenerator(host, port, timeout, read_timeout)
+        self.generator = TestCaseGenerator(debugger_path, timeout, read_timeout)
+        self.path_aware_generator = PathAwareGenerator(debugger_path, timeout, read_timeout)
 
     def run_test_files(
         self,
@@ -92,7 +89,7 @@ class TestOrchestrator:
         results = []
         for test_file in test_files:
             try:
-                with TestRunner(self.host, self.port, self.timeout, self.read_timeout) as runner:
+                with TestRunner(self.debugger_path, self.timeout, self.read_timeout) as runner:
                     result = runner.run_test_file(test_file)
                     results.append(result)
             except Exception as e:
@@ -123,7 +120,7 @@ class TestOrchestrator:
 
         def run_single(test_file: str) -> Dict[str, Any]:
             try:
-                with TestRunner(self.host, self.port, self.timeout, self.read_timeout) as runner:
+                with TestRunner(self.debugger_path, self.timeout, self.read_timeout) as runner:
                     return runner.run_test_file(test_file)
             except Exception as e:
                 logger.error(f"Failed to run test file {test_file}: {e}")

@@ -27,16 +27,10 @@ The Symbolic MLIR Debugger is a powerful tool for analyzing MLIR (Multi-Level In
 ### Core Components
 
 ```
-┌─────────────────┐    stdin/stdout    ┌─────────────────┐    TCP 5678    ┌─────────────────┐
-│   DAP Client    │ ◄────────────────► │  TCP Wrapper    │ ◄────────────► │   Your Code     │
-│  (dap_client/)  │   (DAP Protocol)   │ (server.py)     │   (Socket)     │                 │
-└─────────────────┘                    └─────────────────┘                └─────────────────┘
-                                         │
-                                         ▼ stdin/stdout
-                                 ┌─────────────────┐
-                                 │  DAP Server     │
-                                 │ (dap_server.py) │
-                                 └─────────────────┘
+┌─────────────────┐    stdin/stdout    ┌─────────────────┐
+│   DAP Client    │ ◄────────────────► │  DAP Server     │
+│  (dap_client/)  │   (DAP Protocol)   │ (dap_server.py) │
+└─────────────────┘                    └─────────────────┘
 ```
 
 ### Key Directories
@@ -57,16 +51,6 @@ cd symbolic-mlir-debugger
 
 # Run the setup script
 ./setup.sh
-```
-
-**Windows:**
-```powershell
-# Clone repository (using Git Bash or PowerShell)
-git clone https://github.com/vtqveant/symbolic-mlir-debugger.git
-cd symbolic-mlir-debugger
-
-# Run the setup script
-.\setup.ps1
 ```
 
 The setup script automatically:
@@ -98,25 +82,6 @@ pip install -r requirements.txt
 python verify_setup.py
 ```
 
-**Windows:**
-```powershell
-# 1. Clone repository
-git clone https://github.com/vtqveant/symbolic-mlir-debugger.git
-cd symbolic-mlir-debugger
-
-# 2. Create virtual environment
-python -m venv .venv
-
-# 3. Activate virtual environment
-.\venv\Scripts\Activate.ps1
-
-# 4. Install dependencies
-python -m pip install -r requirements.txt
-
-# 5. Verify installation
-python verify_setup.py
-```
-
 ### 3.3 Verify Installation
 
 After setup, verify everything is working:
@@ -124,9 +89,6 @@ After setup, verify everything is working:
 ```bash
 # Check Python version (should be 3.8+)
 python --version
-
-# Run the verification script
-python verify_setup.py
 
 # Run a simple test
 cd debugger
@@ -156,36 +118,27 @@ symbolic-mlir-debugger/
 
 ## 4. Your First Debugging Session
 
-### 4.1 Start the TCP Wrapper
-The DAP server uses stdin/stdout protocol, but clients expect TCP. The TCP wrapper bridges this gap:
+### 4.1 Run the Basic Example
+
+The DAP client directly communicates with the DAP server via stdio. Simply run:
 
 ```bash
-# Terminal 1 - Start the wrapper
-python dap_client/integration/server.py --debug
-```
-
-You should see:
-```
-✅ TCP wrapper listening on localhost:5678
-✅ DAP server subprocess started
-✅ Ready for DAP client connections
-```
-
-### 4.2 Run the Basic Example
-```bash
-# Terminal 2 - Run basic example
 python dap_client/examples/basic_session.py
 ```
 
-### 4.3 What Happens
+This will automatically launch the DAP server as a subprocess and establish a debugging session.
+
+
+
+### 4.2 What Happens
 The basic example:
-1. Connects to the TCP wrapper on port 5678
+1. Automatically launches the DAP server as a subprocess
 2. Initializes a DAP session
 3. Launches an MLIR program (`debugger/fixtures/simple_add.mlir`)
 4. Sets a breakpoint
 5. Starts execution
 
-### 4.4 Expected Output
+### 4.3 Expected Output
 ```
 DAP Client Basic Session Example
 ==================================================
@@ -208,10 +161,10 @@ DAP Client Basic Session Example
 
 ## 5. Understanding the DAP Protocol
 
-### 5.1 Why the TCP Wrapper is Needed
+### 5.1 Connection Architecture
 - **DAP Server**: Uses stdin/stdout (standard DAP protocol)
-- **DAP Client**: Expects TCP socket connection
-- **TCP Wrapper**: Bridges stdin/stdout ↔ TCP
+- **DAP Client**: Communicates via stdio pipes
+- **Direct Communication**: Client automatically launches server as subprocess
 
 ### 5.2 Manual Communication (Advanced)
 You can communicate directly with the DAP server:
@@ -228,8 +181,8 @@ python debugger/dap_server.py
 ```python
 from dap_client.core.client import DAPClient
 
-# Connect to TCP wrapper (not directly to DAP server)
-with DAPClient(host="localhost", port=5678) as client:
+# DAP client automatically launches DAP server as subprocess
+with DAPClient() as client:
     # Initialize session
     client.initialize(adapter_id="mlir-debugger", client_id="my-client")
     
@@ -252,7 +205,7 @@ with DAPClient(host="localhost", port=5678) as client:
 ```python
 from dap_client.core.client import DAPClient
 
-with DAPClient(host="localhost", port=5678) as client:
+with DAPClient() as client:
     client.initialize(adapter_id="mlir-debugger")
     client.launch(program="debugger/fixtures/conditional_branch.mlir")
     
@@ -309,7 +262,7 @@ The DAP client includes powerful test generators:
 ```python
 from dap_client.generator.test_case_generator import TestCaseGenerator
 
-generator = TestCaseGenerator(host="localhost", port=5678)
+generator = TestCaseGenerator()
 generator.connect()
 
 # Generate test cases from MLIR program
@@ -329,7 +282,7 @@ for i, test_script in enumerate(test_scripts):
 ```python
 from dap_client.generator.path_aware_generator import PathAwareTestCaseGenerator
 
-generator = PathAwareTestCaseGenerator(host="localhost", port=5678)
+generator = PathAwareTestCaseGenerator()
 generator.connect()
 
 # Generate tests targeting specific paths
@@ -343,7 +296,7 @@ targeted_tests = generator.generate_targeted_tests(
 ```python
 from dap_client.runner.test_runner import TestRunner
 
-runner = TestRunner(host="localhost", port=5678)
+runner = TestRunner()
 
 # Run a single test
 result = runner.run_test("test_case_0.json")
@@ -353,8 +306,6 @@ print(f"Test result: {result['success']}")
 from dap_client.runner.orchestrator import TestOrchestrator
 
 orchestrator = TestOrchestrator(
-    host="localhost",
-    port=5678,
     max_parallel_sessions=3
 )
 
@@ -389,16 +340,10 @@ Add constraints for target architectures.
 ### Common Issues
 
 #### Issue: "Connection refused" when connecting DAP client
-**Solution:** Make sure TCP wrapper is running:
-```bash
-python dap_client/integration/server.py
-```
+**Solution:** The DAP client now automatically launches the DAP server as a subprocess. Ensure the debugger path is correct and the DAP server script exists.
 
 #### Issue: DAP client connects but commands fail
-**Solution:** Check DAP server logs (wrapper captures stderr):
-```bash
-python dap_client/integration/server.py --debug
-```
+**Solution:** Check DAP server subprocess logs (the client captures stderr). Ensure the DAP server script (`debugger/dap_server.py`) exists and is executable.
 
 #### Issue: Symbolic debugging not working
 **Solution:** Ensure Z3 is installed:
@@ -417,19 +362,9 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 ```
 
-2. **Check TCP wrapper status**:
-```python
-from dap_client.integration.server import DAPServerWrapper
-wrapper = DAPServerWrapper()
-wrapper.start()
-print(f"Status: {wrapper.get_status()}")
-```
 
-3. **Test DAP communication manually**:
-```bash
-# Use netcat to send raw DAP messages
-echo -e 'Content-Length: 45\r\n\r\n{"command":"initialize","type":"request"}' | nc localhost 5678
-```
+
+
 
 ## 🎓 Next Steps
 

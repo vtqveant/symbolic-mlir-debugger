@@ -149,62 +149,7 @@ class TestParser:
         assert len(ast.functions) == expected_function_count
 ```
 
-### 3.2 Integration Test Structure
 
-```python
-import pytest
-from dap_client.core.client import DAPClient
-from dap_client.integration.server import DAPServerWrapper
-
-class TestIntegration:
-    """Integration tests for DAP client-server communication."""
-    
-    @pytest.fixture
-    def server_wrapper(self):
-        """Fixture to start and stop TCP wrapper."""
-        wrapper = DAPServerWrapper()
-        wrapper.start()
-        yield wrapper
-        wrapper.stop()
-    
-    def test_basic_session(self, server_wrapper):
-        """Test basic DAP session lifecycle."""
-        # Wait for wrapper to be ready
-        assert server_wrapper.wait_for_connection(timeout=10.0)
-        
-        # Create client and connect
-        with DAPClient() as client:
-            # Initialize session
-            response = client.initialize(
-                adapter_id="mlir-debugger",
-                client_id="integration-test"
-            )
-            assert response["success"] is True
-            
-            # Launch program
-            response = client.launch(
-                program="../debugger/fixtures/simple_add.mlir"
-            )
-            assert response["success"] is True
-            
-            # Set breakpoints
-            response = client.set_breakpoints(
-                source={"path": "../debugger/fixtures/simple_add.mlir"},
-                breakpoints=[{"line": 1}]
-            )
-            assert response["success"] is True
-            
-            # Configuration done
-            response = client.configuration_done()
-            assert response["success"] is True
-    
-    def test_connection_timeout(self):
-        """Test connection timeout when server not running."""
-        with pytest.raises(ConnectionError) as exc_info:
-            DAPClient(host="localhost", port=9999, timeout=1.0)
-        
-        assert "timeout" in str(exc_info.value).lower()
-```
 
 ### 3.3 Test Fixtures
 
@@ -391,95 +336,9 @@ if not is_valid:
 
 ## 5. Integration Testing
 
-### 5.1 TCP Integration Tests
 
-```python
-import pytest
-import socket
-import time
-from dap_client.integration.server import DAPServerWrapper
 
-def test_tcp_wrapper_connection():
-    """Test TCP wrapper accepts connections."""
-    wrapper = DAPServerWrapper(port=5679)  # Use different port
-    try:
-        assert wrapper.start()
-        
-        # Test socket connection
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(5.0)
-        sock.connect(("localhost", 5679))
-        
-        # Send test data
-        test_data = b"test data"
-        sock.send(test_data)
-        
-        sock.close()
-        
-        # Check wrapper status
-        status = wrapper.get_status()
-        assert status["client_connected"] is True
-        assert status["connection_count"] > 0
-        
-    finally:
-        wrapper.stop()
 
-def test_wrapper_restart():
-    """Test wrapper can be restarted."""
-    wrapper = DAPServerWrapper(port=5680)
-    
-    # Start first time
-    assert wrapper.start()
-    assert wrapper.is_alive()
-    
-    # Stop
-    wrapper.stop()
-    assert not wrapper.is_alive()
-    
-    # Restart
-    assert wrapper.start()
-    assert wrapper.is_alive()
-    
-    wrapper.stop()
-```
-
-### 5.2 End-to-End Tests
-
-```python
-def test_end_to_end_workflow():
-    """Complete end-to-end workflow test."""
-    import subprocess
-    import json
-    
-    # Start wrapper
-    wrapper_proc = subprocess.Popen(
-        ["python", "dap_client/integration/server.py"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    
-    try:
-        # Wait for wrapper to start
-        time.sleep(2)
-        
-        # Run end-to-end example
-        result = subprocess.run(
-            ["python", "dap_client/examples/end_to_end_workflow.py"],
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
-        
-        # Check results
-        assert result.returncode == 0
-        assert "✅" in result.stdout  # Success markers
-        assert "error" not in result.stdout.lower()
-        
-    finally:
-        # Cleanup
-        wrapper_proc.terminate()
-        wrapper_proc.wait()
-```
 
 ## 6. Performance Testing
 

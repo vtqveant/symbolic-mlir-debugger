@@ -29,20 +29,18 @@ class PathAwareGenerator(TestCaseGenerator):
 
     def __init__(
         self,
-        host: str = "localhost",
-        port: int = 5678,
+        debugger_path: Optional[str] = None,
         timeout: int = 30,
         read_timeout: int = 10,
     ):
         """Initialize path-aware generator.
 
         Args:
-            host: DAP server host
-            port: DAP server port
+            debugger_path: Path to DAP server script. If None, auto-detected.
             timeout: Connection timeout
             read_timeout: Read timeout
         """
-        super().__init__(host, port, timeout, read_timeout)
+        super().__init__(debugger_path, timeout, read_timeout)
         self.z3_solver = None
         if Z3_AVAILABLE:
             self.z3_solver = z3.Solver()

@@ -13,14 +13,12 @@ class TestDAPClient:
 
     def test_client_init(self):
         """Test client initialization"""
-        client = DAPClient(host="localhost", port=5678, timeout=30, read_timeout=10)
+        client = DAPClient(debugger_path="/some/path", timeout=30, read_timeout=10)
 
-        assert client.host == "localhost"
-        assert client.port == 5678
+        assert client.debugger_path == "/some/path"
         assert client.timeout == 30
         assert client.read_timeout == 10
         assert client.connected is False
-        assert client.sequence == 1
 
     @patch.object(DAPClient, "connect")
     def test_connect_success(self, mock_connect_method, client):
@@ -41,7 +39,7 @@ class TestDAPClient:
 
         assert result is False
 
-    @patch("dap_client.core.session.DAPConnection")
+    @patch("dap_client.core.stdio_connection.StdioConnection")
     def test_initialize(self, mock_connection_class, client):
         """Test session initialization"""
         client.connection = MagicMock()
@@ -67,7 +65,7 @@ class TestDAPClient:
 
     def test_launch(self, client):
         """Test launching program"""
-        client.session = DAPSession("localhost", 5678)
+        client.session = MagicMock()
         client.session.initialize = MagicMock(return_value={})
         client.session.launch = MagicMock(return_value={"status": "running"})
 
@@ -86,10 +84,13 @@ class TestDAPClient:
 
     def test_set_breakpoints(self, client):
         """Test setting breakpoints"""
-        client.session = DAPSession("localhost", 5678)
+        client.session = MagicMock()
         client.session.set_breakpoints = MagicMock(
             return_value={
-                "breakpoints": [{"line": 10, "verified": True}, {"line": 15, "verified": True}]
+                "breakpoints": [
+                    {"line": 10, "verified": True},
+                    {"line": 15, "verified": True},
+                ]
             }
         )
 
@@ -101,7 +102,7 @@ class TestDAPClient:
 
     def test_continue_execution(self, client):
         """Test continuing execution"""
-        client.session = DAPSession("localhost", 5678)
+        client.session = MagicMock()
         client.session.continue_execution = MagicMock(return_value={"allThreadsContinued": True})
 
         result = client.continue_execution(thread_id=1)
@@ -110,7 +111,7 @@ class TestDAPClient:
 
     def test_continue_requires_thread_id(self, client):
         """Test that continue requires threadId"""
-        client.session = DAPSession("localhost", 5678)
+        client.session = DAPSession()
 
         with pytest.raises(RuntimeError) as exc_info:
             client.continue_execution(thread_id=1)
@@ -119,7 +120,7 @@ class TestDAPClient:
 
     def test_disconnect(self, client):
         """Test disconnect"""
-        client.session = DAPSession("localhost", 5678)
+        client.session = MagicMock()
         client.session.disconnect = MagicMock(return_value={"status": "disconnected"})
 
         result = client.disconnect(terminate_debuggee=True)
@@ -138,7 +139,7 @@ class TestDAPClient:
         client.connection = None
         assert client.session is None
 
-    @patch("dap_client.core.client.DAPConnection")
+    @patch("dap_client.core.stdio_connection.StdioConnection")
     def test_context_manager(self, mock_dap_connection):
         """Test context manager usage"""
         mock_connection = MagicMock()
@@ -146,7 +147,7 @@ class TestDAPClient:
         mock_connection.return_value.connect.return_value = True
         mock_dap_connection.return_value = mock_connection.return_value
 
-        client = DAPClient(host="localhost", port=5678)
+        client = DAPClient()
 
         with client as ctx:
             assert ctx is client

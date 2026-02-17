@@ -6,7 +6,7 @@ from typing import Optional, Dict, Any, Callable
 from ..protocol import (
     InitializeRequest,
 )
-from .connection import DAPConnection, DAPConnectionError
+from .stdio_connection import StdioConnection, DAPConnectionError
 from .session import DAPSession
 
 logger = logging.getLogger(__name__)
@@ -17,25 +17,22 @@ class DAPClient:
 
     def __init__(
         self,
-        host: str = "localhost",
-        port: int = 5678,
+        debugger_path: Optional[str] = None,
         timeout: int = 30,
         read_timeout: int = 10,
     ):
-        self.host = host
-        self.port = port
+        self.debugger_path = debugger_path
         self.timeout = timeout
         self.read_timeout = read_timeout
-        self.connection: Optional[DAPConnection] = None
+        self.connection: Optional[StdioConnection] = None
         self.session: Optional[DAPSession] = None
-        self.sequence = 1
         self.event_handlers: Dict[str, Callable] = {}
         self.connected = False
 
     def connect(self) -> bool:
         """Establish connection to DAP server"""
         try:
-            self.connection = DAPConnection(self.host, self.port, self.timeout, self.read_timeout)
+            self.connection = StdioConnection(self.debugger_path, self.timeout, self.read_timeout)
             if self.connection.connect():
                 self.connected = True
                 self._setup_event_handlers()
@@ -48,6 +45,7 @@ class DAPClient:
 
     def _setup_event_handlers(self) -> None:
         """Set up event handlers for DAP events"""
+        assert self.connection is not None
         self.connection.set_event_handler(self._handle_event)
 
     def _handle_event(self, event_data: Dict[str, Any]) -> None:
@@ -73,7 +71,7 @@ class DAPClient:
 
         request = InitializeRequest(adapter_id, client_id)
         result = self.connection.request(request)
-        self.session = DAPSession(self.host, self.port, connection=self.connection)
+        self.session = DAPSession(debugger_path=None, connection=self.connection)
         self.session.initialize(adapter_id, client_id, skip_request=True)
 
         # Event handler already set up on client connection

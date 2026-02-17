@@ -2,11 +2,10 @@
 
 Get started with the Symbolic MLIR Debugger in **5 minutes** or less!
 
-## 🚀 Installation (1 minute)
+## Installation
 
 ### Prerequisites
-- Python 3.8 or higher
-- Git (optional, for cloning)
+- Python 3.9 or higher
 
 ### Method 1: One-Command Setup (Recommended)
 
@@ -17,15 +16,11 @@ cd symbolic-mlir-debugger
 
 # Run the setup script (Linux/macOS)
 ./setup.sh
-
-# Or run the setup script (Windows PowerShell)
-.\setup.ps1
 ```
 
 The setup script will automatically:
 - Create a virtual environment
 - Install all dependencies
-- Verify the installation
 - Show you how to activate the environment
 
 ### Method 2: Manual Setup
@@ -43,45 +38,28 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # 3. Install dependencies
 pip install -r requirements.txt
-
-# 4. Verify installation
-python verify_setup.py
 ```
 
 ✅ **Done!** You're ready to use the debugger.
 
-## 🎯 Your First Debugging Session (4 minutes)
+## Your First Debugging Session
 
-### Step 1: Start the TCP Wrapper
+### Step 1: Run a Basic Example
 
-The DAP server uses stdin/stdout, but the DAP client expects TCP. You need the TCP wrapper:
-
-```bash
-# Terminal 1 - Start the wrapper
-python dap_client/integration/server.py
-```
-
-You should see:
-```
-✅ TCP wrapper listening on localhost:5678
-✅ Ready for DAP client connections
-```
-
-### Step 2: Run a Basic Example
+The DAP client directly communicates with the DAP server via stdio. Simply run:
 
 ```bash
-# Terminal 2 - Run basic example
 python dap_client/examples/basic_session.py
 ```
 
 This will:
-1. Connect to the TCP wrapper
+1. Automatically launch the DAP server as a subprocess
 2. Initialize a debugging session
 3. Launch an MLIR program
 4. Set breakpoints
 5. Start execution
 
-### Step 3: Verify It Works
+### Step 2: Verify It Works
 
 You should see output like:
 ```
@@ -92,17 +70,13 @@ You should see output like:
 ✅ Configuration done
 ```
 
-## 📚 Next Steps
+## Next Steps
 
 ### 1. Try More Examples
 
 ```bash
-# TCP wrapper example
-python dap_client/examples/tcp_wrapper_example.py
-
-# Manual wrapper test
-python dap_client/integration/server.py
-python dap_client/examples/basic_session.py
+# Full workflow example
+python dap_client/examples/full_workflow.py
 ```
 
 ### 2. Explore MLIR Examples
@@ -119,18 +93,13 @@ cd debugger
 python -m pytest tests/ -v
 ```
 
-## 🔧 Quick Reference
+## Quick Reference
 
 ### Activate Virtual Environment
 
 **Linux/macOS:**
 ```bash
 source .venv/bin/activate
-```
-
-**Windows:**
-```powershell
-.\venv\Scripts\Activate.ps1
 ```
 
 ### Deactivate Virtual Environment
@@ -152,11 +121,7 @@ python -m pytest tests/test_parser.py -v
 python -m pytest --cov=. --cov-report=html
 ```
 
-### Start TCP Wrapper
 
-```bash
-python dap_client/integration/server.py
-```
 
 ### Verify Installation
 
@@ -164,7 +129,7 @@ python dap_client/integration/server.py
 python verify_setup.py
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Issue: "Command not found: python"
 **Solution:** Use `python3` instead:
@@ -176,56 +141,35 @@ python3 setup.sh
 ### Issue: Virtual environment not found
 **Solution:** Run the setup script first:
 ```bash
-./setup.sh  # or powershell .\setup.ps1
+./setup.sh  
 ```
 
 ### Issue: "Connection refused" error
-**Solution:** Make sure the TCP wrapper is running:
-```bash
-python dap_client/integration/server.py
-```
+**Solution:** The DAP client now uses direct stdio communication and automatically launches the DAP server. Ensure the debugger path is correct and the DAP server (`debugger/dap_server.py`) is present.
 
 ### Issue: "No module named 'z3'"
 **Solution:** Ensure virtual environment is activated and dependencies are installed:
 ```bash
-source .venv/bin/activate  # or activate on Windows
+source .venv/bin/activate
 python verify_setup.py
 ```
 
-### Issue: Python version too old
-**Solution:** Use Python 3.8 or higher. Check version:
-```bash
-python3 --version  # Should show 3.8 or higher
-```
-
-### Issue: Setup script fails on macOS
-**Solution:** You may need to enable script execution:
-```bash
-chmod +x setup.sh
-```
-
-### Issue: Windows PowerShell execution policy
-**Solution:** Run PowerShell as Administrator and execute:
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
-## 🎓 Learning Path
+## Learning Path
 
 1. **Start Here** → Quick Start Guide (this file)
 2. **Basic Usage** → `dap_client/examples/basic_session.py`
-3. **Complete Workflow** → `dap_client/examples/tcp_wrapper_example.py`
+3. **Complete Workflow** → `dap_client/examples/full_workflow.py`
 4. **Advanced Features** → Check `dap_client/examples/` directory
 5. **API Reference** → See inline docstrings in code
 
-## 📞 Getting Help
+## Getting Help
 
 - **Documentation**: Read the main [README.md](README.md)
 - **DAP Client Docs**: See [dap_client/README.md](dap_client/README.md)
 - **Issues**: Check [GitHub Issues](https://github.com/vtqveant/symbolic-mlir-debugger/issues)
 - **Examples**: Explore the `examples/` directories
 
-## 🚀 Ready for More?
+## Ready for More?
 
 Now that you have the basics working, explore:
 - **Symbolic debugging** with Z3 integration

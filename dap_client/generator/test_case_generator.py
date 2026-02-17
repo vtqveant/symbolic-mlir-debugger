@@ -21,21 +21,18 @@ class TestCaseGenerator:
 
     def __init__(
         self,
-        host: str = "localhost",
-        port: int = 5678,
+        debugger_path: Optional[str] = None,
         timeout: int = 30,
         read_timeout: int = 10,
     ):
         """Initialize test case generator.
 
         Args:
-            host: DAP server host
-            port: DAP server port
+            debugger_path: Path to DAP server script. If None, auto-detected.
             timeout: Connection timeout
             read_timeout: Read timeout
         """
-        self.host = host
-        self.port = port
+        self.debugger_path = debugger_path
         self.timeout = timeout
         self.read_timeout = read_timeout
         self.client: Optional[DAPClient] = None
@@ -48,8 +45,7 @@ class TestCaseGenerator:
         """
         try:
             self.client = DAPClient(
-                host=self.host,
-                port=self.port,
+                debugger_path=self.debugger_path,
                 timeout=self.timeout,
                 read_timeout=self.read_timeout,
             )

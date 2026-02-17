@@ -10,11 +10,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║  Symbolic MLIR Debugger - Setup Script              ║${NC}"
-echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
-echo ""
-
 # Check Python version
 echo -e "${YELLOW}[1/7] Checking Python version...${NC}"
 python3 --version
@@ -57,33 +52,13 @@ pip install -r requirements.txt
 echo -e "${GREEN}✓ All dependencies installed${NC}"
 echo ""
 
-# Verify installation
-echo -e "${YELLOW}[6/7] Verifying installation...${NC}"
-python verify_setup.py
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✓ All checks passed${NC}"
-else
-    echo -e "${RED}✗ Verification failed. Please check the errors above.${NC}"
-    deactivate
-    exit 1
-fi
-echo ""
 
 # Installation summary
 echo -e "${YELLOW}[7/7] Setup complete!${NC}"
 echo ""
-echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║  Installation Summary                                  ║${NC}"
-echo -e "${GREEN}╠════════════════════════════════════════════════════════╣${NC}"
-echo -e "${GREEN}║  • Virtual Environment: .venv                         ║${NC}"
-echo -e "${GREEN}║  • Dependencies: requirements.txt                     ║${NC}"
-echo -e "${GREEN}║  • Python Version: $PYTHON_VERSION                      ║${NC}"
-echo -e "${GREEN}║  • Status: READY TO USE                               ║${NC}"
-echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
-echo ""
 echo -e "${YELLOW}Next steps:${NC}"
 echo -e "  1. Activate the virtual environment: ${GREEN}source .venv/bin/activate${NC}"
-echo -e "  2. Run tests: ${GREEN}python -m pytest debugger/tests/ -v${NC}"
-echo -e "  3. Start the TCP wrapper: ${GREEN}python dap_client/integration/server.py${NC}"
+echo -e "  2. Run tests: ${GREEN}python -m pytest -v${NC}"
+echo -e "  3. Run an example: ${GREEN}python dap_client/examples/basic_session.py${NC}"
 echo -e "  4. Read QUICKSTART.md for more details"
 echo ""

@@ -1,7 +1,12 @@
 """Core DAP client modules"""
 
 from .client import DAPClient
-from .connection import DAPConnection, DAPConnectionError
+from .stdio_connection import StdioConnection, DAPConnectionError
 from .session import DAPSession
 
-__all__ = ["DAPClient", "DAPConnection", "DAPConnectionError", "DAPSession"]
+__all__ = [
+    "DAPClient",
+    "DAPConnectionError",
+    "StdioConnection",
+    "DAPSession",
+]

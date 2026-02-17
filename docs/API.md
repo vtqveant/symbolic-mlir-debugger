@@ -4,11 +4,10 @@ Complete API reference for the Symbolic MLIR Debugger.
 
 ## 📋 Table of Contents
 1. [DAP Client API](#dap-client-api)
-2. [TCP Wrapper API](#tcp-wrapper-api)
-3. [Test Generation API](#test-generation-api)
-4. [Test Runner API](#test-runner-api)
-5. [Core Debugger API](#core-debugger-api)
-6. [Utility Functions](#utility-functions)
+2. [Test Generation API](#test-generation-api)
+3. [Test Runner API](#test-runner-api)
+4. [Core Debugger API](#core-debugger-api)
+5. [Utility Functions](#utility-functions)
 
 ## 1. DAP Client API
 
@@ -22,17 +21,17 @@ The DAP client provides a Python interface to communicate with the MLIR debugger
 
 **Constructor:**
 ```python
-DAPClient(host="localhost", port=5678, timeout=30.0)
+DAPClient(debugger_path=None, timeout=30.0, read_timeout=10.0)
 ```
 
 **Parameters:**
-- `host` (str): Server hostname (default: "localhost")
-- `port` (int): Server port (default: 5678)
+- `debugger_path` (str, optional): Path to DAP server script (`debugger/dap_server.py`). If None, auto-detected.
 - `timeout` (float): Connection timeout in seconds (default: 30.0)
+- `read_timeout` (float): Read timeout in seconds (default: 10.0)
 
 **Context Manager Usage:**
 ```python
-with DAPClient(host="localhost", port=5678) as client:
+with DAPClient() as client:
     # Use client here
     # Connection automatically closed on exit
 ```
@@ -200,7 +199,7 @@ def on_stopped(event):
 def on_output(event):
     print(f"Output: {event['body']['output']}")
 
-client = DAPClient(host="localhost", port=5678)
+client = DAPClient()
 client.register_callback("stopped", on_stopped)
 client.register_callback("output", on_output)
 ```
@@ -213,97 +212,6 @@ client.register_callback("output", on_output)
 - `"exited"`: Program exited
 - `"terminated"`: Debug session terminated
 
-## 2. TCP Wrapper API
-
-**Location:** `dap_client.integration.server.DAPServerWrapper`
-
-**Description:** TCP wrapper that bridges stdin/stdout DAP server to TCP socket.
-
-### 2.1 DAPServerWrapper Class
-
-**Constructor:**
-```python
-DAPServerWrapper(
-    host="localhost",
-    port=5678,
-    debugger_path=None
-)
-```
-
-**Parameters:**
-- `host` (str): Host to bind to (default: "localhost")
-- `port` (int): Port to bind to (default: 5678)
-- `debugger_path` (str, optional): Path to DAP server script
-
-### 2.2 Methods
-
-#### `start()`
-Start DAP server subprocess and TCP wrapper.
-
-```python
-success = wrapper.start()
-```
-
-**Returns:** bool - True if started successfully
-
-#### `stop()`
-Stop DAP server wrapper and subprocess.
-
-```python
-wrapper.stop()
-```
-
-#### `is_alive()`
-Check if wrapper and subprocess are alive.
-
-```python
-alive = wrapper.is_alive()
-```
-
-**Returns:** bool - True if wrapper is running
-
-#### `get_status()`
-Get detailed status of wrapper.
-
-```python
-status = wrapper.get_status()
-```
-
-**Returns:** dict - Status information including:
-- `running`: Wrapper running state
-- `subprocess_alive`: DAP server subprocess state
-- `client_connected`: Client connection state
-- `connection_count`: Total connections handled
-- `host`: Bound host
-- `port`: Bound port
-
-#### `wait_for_connection()`
-Wait for a client connection.
-
-```python
-connected = wrapper.wait_for_connection(timeout=30.0)
-```
-
-**Parameters:**
-- `timeout` (float): Timeout in seconds
-
-**Returns:** bool - True if client connected within timeout
-
-### 2.3 Command Line Interface
-
-```bash
-# Basic usage
-python dap_client/integration/server.py
-
-# With options
-python dap_client/integration/server.py --host 0.0.0.0 --port 9999 --debug
-
-# Available options:
-# --host: Host to bind to (default: localhost)
-# --port: Port to bind to (default: 5678)
-# --debug: Enable debug logging
-```
-
 ## 3. Test Generation API
 
 ### 3.1 TestCaseGenerator Class
@@ -314,7 +222,7 @@ python dap_client/integration/server.py --host 0.0.0.0 --port 9999 --debug
 
 **Constructor:**
 ```python
-TestCaseGenerator(host="localhost", port=5678)
+TestCaseGenerator(debugger_path=None, timeout=30.0, read_timeout=10.0)
 ```
 
 **Methods:**
@@ -362,7 +270,7 @@ test_scripts = generator.generate_basic_tests(
 
 **Constructor:**
 ```python
-PathAwareTestCaseGenerator(host="localhost", port=5678)
+PathAwareTestCaseGenerator(debugger_path=None, timeout=30.0, read_timeout=10.0)
 ```
 
 **Methods:**
@@ -406,7 +314,7 @@ tests = generator.generate_coverage_tests(
 
 **Constructor:**
 ```python
-TestRunner(host="localhost", port=5678)
+TestRunner(debugger_path=None, timeout=30.0, read_timeout=10.0)
 ```
 
 **Methods:**
@@ -450,8 +358,9 @@ results = runner.run_tests(
 **Constructor:**
 ```python
 TestOrchestrator(
-    host="localhost",
-    port=5678,
+    debugger_path=None,
+    timeout=30.0,
+    read_timeout=10.0,
     max_parallel_sessions=3
 )
 ```
@@ -559,7 +468,7 @@ is_valid = validate_test_script(test_script)
 
 **Location:** `dap_client.core.connection`
 
-**Description:** Socket connection management.
+**Description:** Stdio connection management.
 
 **Classes:**
 - `DAPConnection`: Managed DAP connection
@@ -570,24 +479,17 @@ is_valid = validate_test_script(test_script)
 ### Complete Workflow Example
 
 ```python
-from dap_client.core.client import DAPClient
-from dap_client.integration.server import DAPServerWrapper
 from dap_client.generator.test_case_generator import TestCaseGenerator
 from dap_client.runner.test_runner import TestRunner
 
-# 1. Start TCP wrapper
-wrapper = DAPServerWrapper()
-wrapper.start()
-
-# 2. Generate test cases
+# Generate test cases
 generator = TestCaseGenerator()
-generator.connect()
 test_scripts = generator.generate_from_program(
     program_path="example.mlir",
     max_paths=3
 )
 
-# 3. Run tests
+# Run tests
 runner = TestRunner()
 results = []
 for i, test_script in enumerate(test_scripts):
@@ -600,10 +502,7 @@ for i, test_script in enumerate(test_scripts):
     result = runner.run_test(f"test_{i}.json")
     results.append(result)
 
-# 4. Cleanup
-wrapper.stop()
-
-# 5. Report results
+# Report results
 print(f"Tests run: {len(results)}")
 print(f"Tests passed: {sum(1 for r in results if r['success'])}")
 ```
