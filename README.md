@@ -51,53 +51,33 @@ constraint solving, and automated test generation.
 ## Applications
 
 ### Execution Path Exploration
-Discover all feasible execution paths through MLIR programs, identifying:
-- Unreachable code segments
-- Boundary conditions
-- Path constraints and dependencies
+Automatically explore all feasible execution paths through MLIR programs, identifying edge cases and boundary conditions.
 
 ### Automated Test Generation
-Generate comprehensive test suites by:
-- Solving path constraints to produce concrete inputs
-- Covering different execution paths
-- Creating regression tests for MLIR transformations
+Generate concrete test inputs that exercise different execution paths, improving test coverage.
 
 ### Bug Detection & Verification
-- Detect potential division-by-zero errors
-- Identify array bounds violations
-- Verify loop invariants and postconditions
+Detect potential bugs through symbolic execution and verify program properties using SMT solving.
 
 ### MLIR Dialect Development
-- Test new MLIR dialects and operations
-- Validate dialect lowering transformations
-- Debug complex MLIR compilation pipelines
+Test new MLIR dialects and operations with symbolic execution to ensure correctness.
 
 ## Getting Started
 
 ### Prerequisites
 - Python 3.8+
-- Z3 solver (`pip install z3-solver`)
+- Z3 theorem prover (`pip install z3-solver`)
+- MLIR text files to debug
 
 ### Installation
-
 ```bash
-# Clone the repository
+# Clone repository
 git clone https://github.com/vtqveant/symbolic-mlir-debugger.git
 cd symbolic-mlir-debugger
 
-# Install Python dependencies
-cd debugger
+# Install dependencies
 pip install -r requirements.txt
 ```
-
-### Architecture Overview
-
-The Symbolic MLIR Debugger uses the Debug Adapter Protocol (DAP) for debugging automation. It provides two communication modes:
-
-1. **Stdio Mode** (for testing): The DAP server communicates via stdin/stdout with Content-Length headers
-2. **TCP Mode** (for production use): The DAP client connects via TCP on port 5678
-
-For most use cases, you'll use the **TCP wrapper** which starts the DAP server in a subprocess and exposes it via TCP.
 
 ### Running Tests
 
@@ -108,37 +88,105 @@ python -m pytest tests/test_parser.py    # Run parser tests
 python -m pytest -m interpreter          # Run interpreter tests
 ```
 
-### Using the DAP Client
+## DAP Server Communication Protocol
 
-The DAP client is located in the `dap_client/` directory. It provides:
-- Full DAP protocol implementation
-- Socket-based communication with the server
-- Test case generation and execution
-- Symbolic debugging support
+The Symbolic MLIR Debugger uses the Debug Adapter Protocol (DAP) for communication between the debugger and clients. Understanding the protocol is crucial for proper usage:
+
+### **Protocol Architecture:**
+
+```
+┌─────────────────┐    stdin/stdout    ┌─────────────────┐    TCP 5678    ┌─────────────────┐
+│   DAP Client    │ ◄────────────────► │  TCP Wrapper    │ ◄────────────► │   Your Code     │
+│  (dap_client/)  │   (DAP Protocol)   │ (server.py)     │   (Socket)     │                 │
+└─────────────────┘                    └─────────────────┘                └─────────────────┘
+                                         │
+                                         ▼ stdin/stdout
+                                 ┌─────────────────┐
+                                 │  DAP Server     │
+                                 │ (dap_server.py) │
+                                 └─────────────────┘
+```
+
+### **Key Components:**
+
+1. **DAP Server** (`debugger/dap_server.py`):
+   - Uses **stdin/stdout** (standard DAP protocol)
+   - Processes DAP requests and sends responses
+   - Implements symbolic debugging capabilities
+
+2. **TCP Wrapper** (`dap_client/integration/server.py`):
+   - Bridges **stdin/stdout ↔ TCP socket**
+   - Listens on port **5678** by default
+   - Required for client-server communication
+   - Starts the DAP server as a subprocess
+
+3. **DAP Client** (`dap_client/`):
+   - Expects **TCP connection** on port 5678
+   - Cannot communicate directly with stdin/stdout server
+   - Requires TCP wrapper for communication
+
+### **Using the DAP Client:**
+
+**Step 1: Start the TCP wrapper:**
+```bash
+# From repository root
+python dap_client/integration/server.py --host localhost --port 5678
+
+# Or programmatically:
+from dap_client.integration.server import DAPServerWrapper
+wrapper = DAPServerWrapper(host="localhost", port=5678)
+wrapper.start()
+```
+
+**Step 2: Use the DAP client:**
+```python
+from dap_client.core.client import DAPClient
+
+# Client connects to TCP wrapper, not directly to DAP server
+with DAPClient(host="localhost", port=5678) as client:
+    client.initialize(adapter_id="mlir-debugger")
+    client.launch(program="example.mlir")
+    # ... rest of debugging session
+```
+
+**Step 3: Clean up:**
+```python
+wrapper.stop()  # When done
+```
+
+### **Common Issues & Solutions:**
+
+**Issue**: "Connection refused" when connecting DAP client
+**Solution**: Make sure TCP wrapper is running (`python dap_client/integration/server.py`)
+
+**Issue**: DAP client works but commands fail
+**Solution**: Check DAP server logs (wrapper captures stderr)
+
+**Issue**: Need different port or host
+**Solution**: Configure wrapper: `DAPServerWrapper(host="0.0.0.0", port=9999)`
+
+### **Testing the Setup:**
+
+```bash
+# Start wrapper in one terminal
+python dap_client/integration/server.py
+
+# In another terminal, run basic example
+python dap_client/examples/basic_session.py
+```
 
 See [`dap_client/README.md`](dap_client/README.md) for detailed documentation on using the DAP client.
 
 ## Extending the Debugger
 
 ### Adding New Dialects
-1. Create dialect file in `debugger/parser/dialects/`
-2. Define operation classes inheriting from `DialectOp`
-3. Implement symbolic execution handlers in `debugger/interpreter/dialects/`
-4. Register the dialect in the appropriate `__init__.py` files
+Register new MLIR dialects by extending the dialect registry and implementing operation handlers.
 
 ### Custom Memory Models
-Override memory operations in `debugger/interpreter/memory.py` to implement:
-- Different pointer semantics
-- Custom allocation strategies
-- Hardware-specific memory hierarchies
+Implement custom memory models for specialized hardware or memory architectures.
 
 ### Hardware-Specific Extensions
-Implement backend-specific operations for:
-- GPU/accelerator memory operations
-- Complex SoC data paths
-- Intra-core ILP synchronization constraints
-- Vector/SIMD instructions
-- Custom arithmetic types for quantized and mixed-precision computation
+Add hardware-specific constraints and operation semantics for target architectures.
 
 ## License
 
