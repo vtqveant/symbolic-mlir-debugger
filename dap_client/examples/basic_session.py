@@ -1,4 +1,13 @@
-"""Basic usage example for DAP client"""
+"""Basic usage example for DAP client
+
+IMPORTANT: This example requires the TCP wrapper to be running.
+The DAP server uses stdin/stdout protocol, but the DAP client expects TCP.
+
+Start the TCP wrapper first:
+    python dap_client/integration/server.py
+
+Then run this example.
+"""
 
 import logging
 import sys

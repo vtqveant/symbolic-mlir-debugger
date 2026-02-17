@@ -99,6 +99,93 @@ python -m pytest tests/test_parser.py    # Run parser tests
 python -m pytest -m interpreter          # Run interpreter tests
 ```
 
+## DAP Server Communication Protocol
+
+The Symbolic MLIR Debugger uses the Debug Adapter Protocol (DAP) for communication between the debugger and clients. Understanding the protocol is crucial for proper usage:
+
+### **Protocol Architecture:**
+
+```
+┌─────────────────┐    stdin/stdout    ┌─────────────────┐    TCP 5678    ┌─────────────────┐
+│   DAP Client    │ ◄────────────────► │  TCP Wrapper    │ ◄────────────► │   Your Code     │
+│  (dap_client/)  │   (DAP Protocol)   │ (server.py)     │   (Socket)     │                 │
+└─────────────────┘                    └─────────────────┘                └─────────────────┘
+                                         │
+                                         ▼ stdin/stdout
+                                 ┌─────────────────┐
+                                 │  DAP Server     │
+                                 │ (dap_server.py) │
+                                 └─────────────────┘
+```
+
+### **Key Components:**
+
+1. **DAP Server** (`debugger/dap_server.py`):
+   - Uses **stdin/stdout** (standard DAP protocol)
+   - Processes DAP requests and sends responses
+   - Implements symbolic debugging capabilities
+
+2. **TCP Wrapper** (`dap_client/integration/server.py`):
+   - Bridges **stdin/stdout ↔ TCP socket**
+   - Listens on port **5678** by default
+   - Required for client-server communication
+   - Starts the DAP server as a subprocess
+
+3. **DAP Client** (`dap_client/`):
+   - Expects **TCP connection** on port 5678
+   - Cannot communicate directly with stdin/stdout server
+   - Requires TCP wrapper for communication
+
+### **Usage Instructions:**
+
+**Step 1: Start the TCP wrapper:**
+```bash
+# From repository root
+python dap_client/integration/server.py --host localhost --port 5678
+
+# Or programmatically:
+from dap_client.integration.server import DAPServerWrapper
+wrapper = DAPServerWrapper(host="localhost", port=5678)
+wrapper.start()
+```
+
+**Step 2: Use the DAP client:**
+```python
+from dap_client.core.client import DAPClient
+
+# Client connects to TCP wrapper, not directly to DAP server
+with DAPClient(host="localhost", port=5678) as client:
+    client.initialize(adapter_id="mlir-debugger")
+    client.launch(program="example.mlir")
+    # ... rest of debugging session
+```
+
+**Step 3: Clean up:**
+```python
+wrapper.stop()  # When done
+```
+
+### **Common Issues & Solutions:**
+
+**Issue**: "Connection refused" when connecting DAP client
+**Solution**: Make sure TCP wrapper is running (`python dap_client/integration/server.py`)
+
+**Issue**: DAP client works but commands fail
+**Solution**: Check DAP server logs (wrapper captures stderr)
+
+**Issue**: Need different port or host
+**Solution**: Configure wrapper: `DAPServerWrapper(host="0.0.0.0", port=9999)`
+
+### **Testing the Setup:**
+
+```bash
+# Start wrapper in one terminal
+python dap_client/integration/server.py
+
+# In another terminal, run basic example
+python dap_client/examples/basic_session.py
+```
+
 ## Extending the Debugger
 
 ### Adding New Dialects

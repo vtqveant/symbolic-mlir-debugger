@@ -77,6 +77,54 @@ cd dap_client
 pip install -e .
 ```
 
+## TCP Wrapper Server
+
+**Important**: The DAP client expects a **TCP connection** on port 5678, but the DAP server (`debugger/dap_server.py`) uses **stdin/stdout** (standard DAP protocol). You need the TCP wrapper server to bridge between them.
+
+### **Starting the TCP Wrapper:**
+
+```bash
+# From repository root
+python dap_client/integration/server.py --host localhost --port 5678
+
+# With debug logging
+python dap_client/integration/server.py --host localhost --port 5678 --debug
+```
+
+### **Programmatic Usage:**
+
+```python
+from dap_client.integration.server import DAPServerWrapper
+
+# Start wrapper
+wrapper = DAPServerWrapper(host="localhost", port=5678)
+if wrapper.start():
+    print("TCP wrapper running")
+    
+    # Wait for client connection
+    if wrapper.wait_for_connection(timeout=10.0):
+        print("Client connected")
+    
+    # ... use DAP client ...
+    
+    # Stop when done
+    wrapper.stop()
+```
+
+### **Wrapper Features:**
+- **Automatic DAP server startup**: Starts `debugger/dap_server.py` as subprocess
+- **Bidirectional forwarding**: TCP ↔ stdin/stdout
+- **Connection management**: Handles multiple client connections
+- **Health monitoring**: `wrapper.is_alive()` checks status
+- **Configurable**: Custom host, port, and debugger path
+
+### **Without Wrapper (Direct stdin/stdout):**
+If you want to communicate directly with the DAP server (not recommended for most users):
+```bash
+python debugger/dap_server.py
+# Then send DAP protocol messages via stdin, read responses from stdout
+```
+
 ## Usage
 
 ### Basic Session
