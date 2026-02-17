@@ -2,7 +2,7 @@
 
 import json
 
-from dap_client.protocol import (
+from ..protocol import (
     DAPRequest,
     DAPResponse,
     DAPEvent,

@@ -9,20 +9,22 @@ This script demonstrates the complete workflow:
 4. Generate a comprehensive test report
 
 Requirements:
-- DAP server running on localhost:5678
+- DAP server script available (debugger/dap_server.py)
 - MLIR program to test (default: conditional_branch.mlir)
 """
 
-import json
-import logging
 import sys
 from pathlib import Path
 
-# Add parent directory to path to import dap_client modules
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add project root to Python path (two levels up from this file)
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+import json  # noqa: E402
+import logging  # noqa: E402
 
 from dap_client.generator.test_case_generator import TestCaseGenerator  # noqa: E402
-from dap_client.generator.path_aware_generator import PathAwareTestCaseGenerator  # noqa: E402
+from dap_client.generator.path_aware_generator import PathAwareGenerator  # noqa: E402
 from dap_client.runner.orchestrator import TestOrchestrator  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
@@ -51,11 +53,11 @@ def generate_test_cases(program_path: str, output_dir: str = "generated_tests") 
 
     # Use basic generator
     print(f"\nUsing basic test case generator for: {program_path}")
-    generator = TestCaseGenerator(host="localhost", port=5678)
+    generator = TestCaseGenerator()
 
     if not generator.connect():
         print("ERROR: Failed to connect to DAP server")
-        print("Make sure the DAP server is running on localhost:5678")
+        print("Make sure the DAP server script is available (debugger/dap_server.py)")
         return []
 
     try:
@@ -78,13 +80,13 @@ def generate_test_cases(program_path: str, output_dir: str = "generated_tests") 
         # Try path-aware generator if Z3 is available
         print("\nTrying path-aware generator (requires Z3)...")
         try:
-            path_aware_generator = PathAwareTestCaseGenerator(host="localhost", port=5678)
+            path_aware_generator = PathAwareGenerator()
 
             if path_aware_generator.connect():
-                # Generate targeted test cases
-                targeted_scripts = path_aware_generator.generate_targeted_tests(
+                # Generate targeted test cases for first two paths
+                targeted_scripts = path_aware_generator.generate_from_program(
                     program_path=program_path,
-                    target_path_ids=[0, 1],  # Target first two paths
+                    max_paths=2,  # Target first two paths
                     test_name=f"{Path(program_path).stem}_targeted",
                 )
 
@@ -127,16 +129,14 @@ def run_test_cases(test_script_paths: list, output_file: str = "test_report.json
         return {}
 
     # Create orchestrator for parallel execution
-    orchestrator = TestOrchestrator(
-        host="localhost", port=5678, max_parallel_sessions=2, timeout_seconds=30
-    )
+    orchestrator = TestOrchestrator()
 
     # Run tests using orchestrator
     print(f"\nRunning {len(test_script_paths)} test scripts...")
-    results = orchestrator.run_tests(test_script_paths)
-
-    # Generate summary report
-    report = orchestrator.generate_report(results)
+    report = orchestrator.run_test_files(
+        test_files=test_script_paths,
+        parallel=True,
+    )
 
     # Save report
     with open(output_file, "w") as f:
@@ -148,18 +148,18 @@ def run_test_cases(test_script_paths: list, output_file: str = "test_report.json
     print("\nTest Results Summary:")
     print("-" * 40)
     print(f"Total tests run: {report.get('total_tests', 0)}")
-    print(f"Passed: {report.get('passed', 0)}")
-    print(f"Failed: {report.get('failed', 0)}")
-    print(f"Skipped: {report.get('skipped', 0)}")
-    print(f"Success rate: {report.get('success_rate', 0):.1f}%")
+    print(f"Passed: {report.get('passed_tests', 0)}")
+    print(f"Failed: {report.get('failed_tests', 0)}")
+    success_rate = report.get("success_rate", 0) * 100
+    print(f"Success rate: {success_rate:.1f}%")
 
     # Print detailed results
     print("\nDetailed Results:")
     print("-" * 40)
-    for test_result in report.get("test_results", []):
-        status = "✓ PASS" if test_result.get("passed") else "✗ FAIL"
-        print(f"{status}: {test_result.get('test_name', 'Unknown')}")
-        if not test_result.get("passed") and test_result.get("error"):
+    for test_result in report.get("results", []):
+        status = "✓ PASS" if test_result.get("success") else "✗ FAIL"
+        print(f"{status}: {test_result.get('name', 'Unknown')}")
+        if not test_result.get("success") and test_result.get("error"):
             print(f"     Error: {test_result.get('error')}")
 
     return report
@@ -187,7 +187,7 @@ def generate_memory_model_tests(program_path: str, output_dir: str = "generated_
 
     # Use path-aware generator for memory tests
     try:
-        generator = PathAwareTestCaseGenerator(host="localhost", port=5678)
+        generator = PathAwareGenerator()
 
         if not generator.connect():
             print("Failed to connect to DAP server for memory tests")

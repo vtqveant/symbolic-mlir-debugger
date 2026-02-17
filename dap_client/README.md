@@ -7,14 +7,36 @@ A Python DAP (Debug Adapter Protocol) client for automated testing of the Symbol
 This module provides a comprehensive DAP client implementation that can communicate with the MLIR debugger DAP server.
 It serves as the foundation for automated testing and programmable debugging workflows.
 
+## Communication Protocol
+
+The DAP client uses **stdio communication** (stdin/stdout pipes) to connect directly to the DAP server, following the standard Debug Adapter Protocol. The client automatically launches the DAP server as a subprocess and manages the complete lifecycle.
+
+### Protocol Overview
+
+1. **DAP Server** (`debugger/dap_server.py`):
+   - Reads DAP messages from `stdin`
+   - Sends responses via `stdout`
+   - Uses standard DAP protocol with Content-Length headers
+   - Implements symbolic debugging capabilities
+
+2. **DAP Client** (`dap_client/core/client.py`):
+   - Automatically launches the DAP server as a subprocess
+   - Communicates via **stdio pipes** (stdin/stdout)
+   - Manages the complete debug session lifecycle
+   - Implements all DAP commands
+   - Direct stdio communication, no network ports required
+
+**Simplified Architecture**: The DAP client directly connects to the DAP server using stdio, simplifying deployment.
+
 ## Features
 
 - **Complete DAP Protocol Support**: Implements all core DAP commands
 - **Modular Architecture**: Clear separation of concerns with dedicated modules
-- **Socket Communication**: Robust socket-based connection management
+- **Stdio Communication**: Direct stdio (stdin/stdout) connection to DAP server
 - **Session Management**: Full debug session lifecycle support
 - **Event Handling**: Support for DAP events
 - **Test Script Validation**: JSON schema validation for test scripts
+- **Automatic Server Management**: Launches and manages DAP server subprocess
 
  ## Architecture
 
@@ -22,7 +44,7 @@ It serves as the foundation for automated testing and programmable debugging wor
 dap_client/
 ├── core/
 │   ├── client.py          # Main DAP client class
-│   ├── connection.py      # Socket connection management
+│   ├── stdio_connection.py # Stdio connection (active)
 │   └── session.py         # Debug session management
 ├── protocol/
 │   ├── protocol.py        # DAP protocol definitions
@@ -46,11 +68,48 @@ dap_client/
 │   ├── path_exploration_test.json # Path exploration example
 │   ├── constraint_generation_test.json # Constraint extraction example
 │   └── full_workflow.py           # Complete workflow demonstration
-└── tests/
+└── tests/                # Test suite
+    ├── integration/      # Integration testing
+    │   ├── test_pipe_integration.py  # Pipe integration tests
+    │   └── __init__.py
     ├── test_client.py     # Unit tests for client
-    ├── test_connection.py # Unit tests for connection
+    ├── test_stdio_connection.py # Unit tests for stdio connection
     └── test_protocol.py   # Unit tests for protocol
 ```
+
+## Connection Architecture
+
+The DAP client uses direct **stdio communication** (stdin/stdout pipes) to connect to the DAP server, simplifying the architecture and improving reliability.
+
+### **Current Architecture:**
+
+```
+┌─────────────────┐    stdin/stdout    ┌─────────────────┐
+│   DAP Client    │ ◄────────────────► │  DAP Server     │
+│  (dap_client/)  │   (DAP Protocol)   │ (dap_server.py) │
+└─────────────────┘                    └─────────────────┘
+```
+
+### **How It Works:**
+
+1. **Automatic Server Launch**: The DAP client automatically starts the DAP server (`debugger/dap_server.py`) as a subprocess
+2. **Stdio Communication**: The client communicates via stdin/stdout pipes using standard DAP protocol with Content-Length headers
+3. **Lifecycle Management**: The client manages the complete lifecycle of the DAP server subprocess
+
+### **Configuration Options:**
+
+```python
+from dap_client.core.client import DAPClient
+
+# Customize connection settings
+client = DAPClient(
+    debugger_path="/custom/path/dap_server.py",  # Default: auto-detected
+    timeout=30,      # Connection timeout in seconds
+    read_timeout=10  # Read timeout in seconds
+)
+```
+
+
 
  ## Core DAP Commands
 
@@ -77,14 +136,49 @@ cd dap_client
 pip install -e .
 ```
 
-## Usage
+## Connection Setup
 
-### Basic Session
+The DAP client uses direct **stdio communication** and automatically launches the DAP server as a subprocess.
+
+### **Using the DAP Client:**
 
 ```python
-from core.client import DAPClient
+from dap_client.core.client import DAPClient
 
-with DAPClient(host="localhost", port=5678) as client:
+# The client automatically starts the DAP server
+with DAPClient() as client:
+    # Initialize session
+    client.initialize(adapter_id="mlir-debugger", client_id="automated-test")
+    
+    # Launch program
+    client.launch(program="example.mlir", no_debug=False)
+    
+    # ... rest of debugging session
+```
+
+### **Configuration Options:**
+
+```python
+# Customize connection settings
+client = DAPClient(
+    debugger_path="/custom/path/dap_server.py",  # Default: auto-detected
+    timeout=30,      # Connection timeout in seconds
+    read_timeout=10  # Read timeout in seconds
+)
+```
+
+
+
+## Usage
+
+The DAP client automatically launches the DAP server as a subprocess and communicates via stdio (stdin/stdout).
+
+#### Basic Session
+
+```python
+from dap_client.core.client import DAPClient
+
+with DAPClient() as client:
     # Initialize session
     client.initialize(adapter_id="mlir-debugger", client_id="automated-test")
 
@@ -107,7 +201,7 @@ with DAPClient(host="localhost", port=5678) as client:
  ### Test Script Example
 
 ```python
-from schema import load_test_script
+from dap_client.schema import load_test_script
 
 test_script = load_test_script("examples/test_script.json")
 ```
@@ -115,9 +209,9 @@ test_script = load_test_script("examples/test_script.json")
 ### Symbolic Debugging Example
 
 ```python
-from core.client import DAPClient
+from dap_client.core.client import DAPClient
 
-with DAPClient(host="localhost", port=5678) as client:
+with DAPClient() as client:
     # Initialize and launch program
     client.initialize(adapter_id="mlir-debugger", client_id="symbolic-test")
     client.launch(program="conditional_branch.mlir", no_debug=False)
@@ -144,10 +238,10 @@ The DAP client includes powerful test case generators:
 
 ```python
 from generator.test_case_generator import TestCaseGenerator
-from generator.path_aware_generator import PathAwareTestCaseGenerator
+from generator.path_aware_generator import PathAwareGenerator
 
 # Basic generator
-generator = TestCaseGenerator(host="localhost", port=5678)
+generator = TestCaseGenerator()
 generator.connect()
 test_scripts = generator.generate_from_program(
     program_path="conditional_branch.mlir",
@@ -155,11 +249,11 @@ test_scripts = generator.generate_from_program(
 )
 
 # Path-aware generator (requires Z3)
-path_aware = PathAwareTestCaseGenerator(host="localhost", port=5678)
+path_aware = PathAwareGenerator()
 path_aware.connect()
-targeted_tests = path_aware.generate_targeted_tests(
+targeted_tests = path_aware.generate_from_program(
     program_path="nested_conditional.mlir",
-    target_path_ids=[0, 1, 2]
+    max_paths=3
 )
 
 # Memory model tests
@@ -175,23 +269,19 @@ from runner.test_runner import TestRunner
 from runner.orchestrator import TestOrchestrator
 
 # Single test runner
-runner = TestRunner(host="localhost", port=5678)
-result = runner.run_test("test_script.json")
+runner = TestRunner()
+result = runner.run_test_file("test_script.json")
 
 # Parallel test orchestration
-orchestrator = TestOrchestrator(
-    host="localhost",
-    port=5678,
-    max_parallel_sessions=3
-)
+orchestrator = TestOrchestrator(max_workers=3)
 
-results = orchestrator.run_tests([
+results = orchestrator.run_test_files([
     "test1.json",
     "test2.json",
     "test3.json"
 ])
 
-report = orchestrator.generate_report(results)
+report = orchestrator.get_summary()
 ```
 
 ### Full Workflow Demonstration
@@ -207,6 +297,25 @@ This script:
 2. Saves generated test scripts to JSON files
 3. Executes the generated test scripts using the test runner
 4. Generates a comprehensive test report in JSON format
+
+### Quick Start Example
+
+Run the basic session example directly:
+
+```bash
+cd dap_client
+python examples/basic_session.py
+```
+
+The example script:
+1. Automatically launches the DAP server as a subprocess
+2. Initializes a debug session
+3. Launches an MLIR program
+4. Sets and hits a breakpoint
+5. Inspects variables
+6. Cleanly shuts down the DAP server
+
+For more examples, see the `examples/` directory.
 
 ## Running Tests
 

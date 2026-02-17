@@ -1,4 +1,8 @@
-# Core dependencies for symbolic MLIR debugger
+# Symbolic MLIR Debugger - Unified Dependencies
+# Python 3.8+ compatible
+# This file consolidates dependencies from both debugger and dap_client
+
+# Core symbolic execution dependencies
 z3-solver>=4.12.0
 
 # MLIR parser dependencies (pymlir in-tree)
@@ -8,8 +12,10 @@ parse>=1.14.0
 # DAP client dependencies
 jsonschema>=4.0.0
 
-# Testing dependencies
+# Development dependencies
 pytest>=7.0.0
 pytest-cov>=4.0.0
-
+pytest-mock>=3.0.0
 black>=26.1.0
+flake8>=6.0.0
+mypy>=1.0.0

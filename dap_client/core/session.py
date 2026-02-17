@@ -3,7 +3,7 @@
 import logging
 from typing import Optional, Dict, Any
 
-from dap_client.protocol import (
+from ..protocol import (
     InitializeRequest,
     LaunchRequest,
     SetBreakpointsRequest,
@@ -15,7 +15,7 @@ from dap_client.protocol import (
     SymbolicExplorePathsRequest,
     SymbolicGetConstraintsRequest,
 )
-from .connection import DAPConnection
+from .stdio_connection import StdioConnection
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +25,11 @@ class DAPSession:
 
     def __init__(
         self,
-        host: str = "localhost",
-        port: int = 5678,
-        connection: Optional[DAPConnection] = None,
+        debugger_path: Optional[str] = None,
+        connection: Optional[StdioConnection] = None,
     ):
-        self.host = host
-        self.port = port
-        self.connection: Optional[DAPConnection] = connection
+        self.debugger_path = debugger_path
+        self.connection: Optional[StdioConnection] = connection
         self.thread_id: Optional[int] = None
         self.process_id: Optional[int] = None
         self.breakpoints: Dict[str, Any] = {}
@@ -48,7 +46,7 @@ class DAPSession:
             raise RuntimeError("Session already initialized")
 
         if self.connection is None:
-            self.connection = DAPConnection(self.host, self.port)
+            self.connection = StdioConnection(self.debugger_path)
             self.connection.connect()
 
         request = InitializeRequest(adapter_id, client_id)

@@ -1,10 +1,20 @@
-"""Basic usage example for DAP client"""
+"""Basic usage example for DAP client
+
+This example uses stdio connection directly to the DAP server.
+The DAP client automatically launches the DAP server subprocess.
+"""
 
 import logging
 import sys
+import os
+from pathlib import Path
 
-from core.client import DAPClient
-from schema import load_test_script
+# Add project root directory to Python path (two levels up from this file)
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, project_root)
+
+from dap_client.core.client import DAPClient  # noqa: E402
+from dap_client.schema import load_test_script  # noqa: E402
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -18,7 +28,7 @@ def basic_session_example():
     try:
         # Connect to DAP server
         print("\n1. Connecting to DAP server...")
-        with DAPClient(host="localhost", port=5678) as client:
+        with DAPClient() as client:
             print("   Connected successfully!")
 
             # Initialize session
@@ -30,14 +40,18 @@ def basic_session_example():
 
             # Launch program
             print("\n3. Launching MLIR program...")
-            program = "examples/arithmetic.mlir"
+            fixture_path = Path(project_root) / "debugger" / "fixtures" / "simple_add.mlir"
+            if not fixture_path.exists():
+                print(f"   ERROR: Fixture not found: {fixture_path}")
+                return False
+            program = str(fixture_path)
             result = client.launch(program=program, no_debug=False)
             print(f"   Program launched: {result}")
 
             # Set breakpoints
             print("\n4. Setting breakpoints...")
             source = {"path": program}
-            breakpoints = [{"line": 10}, {"line": 15}]
+            breakpoints = [{"line": 6}]
             result = client.set_breakpoints(source=source, breakpoints=breakpoints)
             print(f"   Breakpoints set: {result}")
 
@@ -72,7 +86,7 @@ def test_script_example():
         print(f"Loaded test script: {test_script['name']}")
 
         # Execute test script
-        with DAPClient(host="localhost", port=5678) as client:
+        with DAPClient() as client:
             print("\nExecuting test script...")
 
             for step in test_script["session"]:
@@ -113,7 +127,7 @@ def symbolic_session_example():
     try:
         # Connect to DAP server
         print("\n1. Connecting to DAP server...")
-        with DAPClient(host="localhost", port=5678) as client:
+        with DAPClient() as client:
             print("   Connected successfully!")
 
             # Initialize session

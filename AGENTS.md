@@ -9,8 +9,6 @@ This document provides guidelines for AI agents working on the Symbolic MLIR Deb
   - `parser/`: MLIR parser and dialect definitions
   - `tests/`: Python unit tests
   - `fixtures/`: Test MLIR files
-- `vscode/`: VS Code extension (TypeScript)
-  - `src/`: Extension source code
 
 ## Build and Test Commands
 
@@ -104,18 +102,6 @@ npm run publish          # Publish extension to marketplace
 
 **Testing:** Write unit tests in `tests/` directory. Use `pytest` fixtures defined in `conftest.py`. Use descriptive test function names prefixed with `test_`. Use `@pytest.mark.*` decorators for test markers. Provide docstrings explaining test purpose.
 
-### TypeScript (VS Code Extension)
-
-**Imports:** Use ES6 imports/exports. Group imports: external modules, internal modules. Use relative paths for internal modules.
-
-**Naming:** `camelCase` for variables, functions, methods. `PascalCase` for classes, interfaces, types, enums. `UPPER_SNAKE_CASE` for constants. Prefix private members with `_`.
-
-**Types:** Use TypeScript strict mode. Explicitly type function parameters and return values. Use interfaces for object shapes. Avoid `any`; use `unknown` or specific types.
-
-**Error handling:** Use `try/catch` for synchronous errors. Use promise `.catch()` or `async/await` with `try/catch` for async. Log errors with `console.error` or extension logger.
-
-**Formatting:** Follow ESLint configuration (see `.eslintrc`). Use 2-space indentation (as per TypeScript/VS Code conventions). Use semicolons. Use double quotes for strings (consistent with existing code).
-
 ## Development Workflow
 
 1. **Before making changes:** Ensure tests pass (`python -m pytest` / `npm run test`). Run linting if available (`npm run lint` for TypeScript). For Python, run `python -m black --check .` and `python -m flake8 .` (see Linting and formatting section).
@@ -128,6 +114,7 @@ npm run publish          # Publish extension to marketplace
 - **Z3 version:** Requires `z3-solver>=4.12.0`.
 - **MLIR parsing:** The parser uses Lark grammar; dialect definitions are in `parser/dialects/`.
 - **DAP server:** The debug adapter uses stdin/stdout JSON‑RPC; see `dap_server.py`.
+- **Emoji not allowed:** Never use emoji in documentation, scripts and comments.
 
 ## Resources
 
