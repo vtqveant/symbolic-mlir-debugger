@@ -265,17 +265,14 @@ class DAPServerWrapper:
 
         # Thread to forward TCP -> subprocess stdin
         tcp_to_stdin = threading.Thread(
-            target=self._forward_tcp_to_stdin,
-            args=(client_socket,),
-            daemon=True,
-            name="TCP->stdin"
+            target=self._forward_tcp_to_stdin, args=(client_socket,), daemon=True, name="TCP->stdin"
         )
         # Thread to forward subprocess stdout -> TCP
         stdout_to_tcp = threading.Thread(
             target=self._forward_stdout_to_tcp,
             args=(client_socket,),
             daemon=True,
-            name="stdout->TCP"
+            name="stdout->TCP",
         )
 
         tcp_to_stdin.start()

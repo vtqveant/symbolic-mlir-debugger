@@ -143,12 +143,14 @@ def test_wrapper_method_signature():
     try:
         # Check expected methods exist
         print("1. Checking method signatures...")
-        assert hasattr(wrapper, 'start'), "Missing start() method"
-        assert hasattr(wrapper, 'stop'), "Missing stop() method"
-        assert hasattr(wrapper, 'is_alive'), "Missing is_alive() method"
-        assert hasattr(wrapper, 'wait_for_connection'), "Missing wait_for_connection() method"
-        assert hasattr(wrapper, 'get_connections_handled'), "Missing get_connections_handled() method"
-        assert hasattr(wrapper, '_resolve_debugger_path'), "Missing _resolve_debugger_path() method"
+        assert hasattr(wrapper, "start"), "Missing start() method"
+        assert hasattr(wrapper, "stop"), "Missing stop() method"
+        assert hasattr(wrapper, "is_alive"), "Missing is_alive() method"
+        assert hasattr(wrapper, "wait_for_connection"), "Missing wait_for_connection() method"
+        assert hasattr(
+            wrapper, "get_connections_handled"
+        ), "Missing get_connections_handled() method"
+        assert hasattr(wrapper, "_resolve_debugger_path"), "Missing _resolve_debugger_path() method"
         print("   ✓ All expected methods exist")
 
         # Check method call signatures
@@ -204,6 +206,7 @@ def main():
         except Exception as e:
             print(f"\n✗ Test '{test_name}' crashed: {e}\n")
             import traceback
+
             traceback.print_exc()
             results.append((test_name, False))
 

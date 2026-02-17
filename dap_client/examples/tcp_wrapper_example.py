@@ -56,7 +56,10 @@ class DAPExample:
         # Try to find fixture in common locations
         possible_paths = [
             Path(__file__).parent.parent.parent / "debugger" / "fixtures" / "simple_add.mlir",
-            Path(__file__).parent.parent.parent / "debugger" / "fixtures" / "conditional_branch.mlir",
+            Path(__file__).parent.parent.parent
+            / "debugger"
+            / "fixtures"
+            / "conditional_branch.mlir",
             Path(__file__).parent.parent.parent / "debugger" / "fixtures" / "basic.mlir",
         ]
 
@@ -184,7 +187,9 @@ class DAPExample:
         if stack_result and "stackFrames" in stack_result:
             logger.info(f"✓ Stack trace retrieved ({len(stack_result['stackFrames'])} frames)")
             for i, frame in enumerate(stack_result["stackFrames"]):
-                logger.info(f"    Frame {i+1}: {frame.get('name', 'unknown')} (line {frame.get('line', 0)})")
+                logger.info(
+                    f"    Frame {i+1}: {frame.get('name', 'unknown')} (line {frame.get('line', 0)})"
+                )
 
         # Step 6: Get variables
         logger.info("  Step 6: Getting variables...")
