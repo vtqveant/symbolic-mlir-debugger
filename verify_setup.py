@@ -11,6 +11,7 @@ from typing import Dict, List, Tuple
 
 class VerificationError(Exception):
     """Custom exception for verification failures"""
+
     pass
 
 
@@ -46,10 +47,7 @@ class SetupVerifier:
             self.log(f"✓ Python {major}.{minor} is compatible (>= 3.8)", "passed")
             return True
         else:
-            self.log(
-                f"✗ Python {major}.{minor} is too old (requires >= 3.8)",
-                "error"
-            )
+            self.log(f"✗ Python {major}.{minor} is too old (requires >= 3.8)", "error")
             return False
 
     def check_import(self, module_name: str, expected_version: str = None) -> bool:
@@ -60,7 +58,7 @@ class SetupVerifier:
             # Get version using importlib.metadata if available (Python 3.8+)
             version = "unknown"
             try:
-                if hasattr(importlib, 'metadata'):
+                if hasattr(importlib, "metadata"):
                     version = importlib.metadata.version(module_name)
             except (importlib.metadata.PackageNotFoundError, AttributeError):
                 # Fallback for older Python or when metadata not available
@@ -75,15 +73,12 @@ class SetupVerifier:
                 else:
                     self.log(
                         f"⚠ {module_name} version {version} < expected {expected_version}",
-                        "warning"
+                        "warning",
                     )
             return True
 
         except ImportError as e:
-            self.log(
-                f"✗ {module_name}: Import failed - {e}",
-                "error"
-            )
+            self.log(f"✗ {module_name}: Import failed - {e}", "error")
             return False
 
     def check_z3(self) -> bool:
@@ -92,6 +87,7 @@ class SetupVerifier:
 
         try:
             import z3
+
             version = z3.get_version_string()
             self.log(f"Z3 version: {version}", "passed")
             return True
@@ -134,6 +130,7 @@ class SetupVerifier:
 
         # Check if debugger directory exists
         import os
+
         if not os.path.exists("debugger"):
             self.log("✓ Debugger directory exists", "passed")
             return True
@@ -151,13 +148,17 @@ class SetupVerifier:
         for module_name, expected_version in modules_to_check:
             modules_tried += 1
             # Only try to import if directory exists
-            if not os.path.exists(f"debugger/{module_name}.py") and not os.path.exists(f"debugger/{module_name}"):
+            if not os.path.exists(f"debugger/{module_name}.py") and not os.path.exists(
+                f"debugger/{module_name}"
+            ):
                 self.log(f"⚠ {module_name}: Directory not found (skipping)", "warning")
                 continue
 
             try:
                 module = importlib.import_module(module_name)
-                self.log(f"✓ {module_name}: {getattr(module, '__version__', 'installed')}", "passed")
+                self.log(
+                    f"✓ {module_name}: {getattr(module, '__version__', 'installed')}", "passed"
+                )
             except ImportError:
                 self.log(f"⚠ {module_name}: Not installed (code in debugger/ directory)", "warning")
                 # This is not a fatal error - modules are in the repo
@@ -165,7 +166,9 @@ class SetupVerifier:
         if modules_tried == 0:
             self.log("✓ No debugger modules to check", "passed")
         else:
-            self.log(f"⚠ Note: Debugger modules are in repository, not installed in venv", "warning")
+            self.log(
+                f"⚠ Note: Debugger modules are in repository, not installed in venv", "warning"
+            )
 
         return True
 
@@ -176,13 +179,15 @@ class SetupVerifier:
         try:
             # Try importing and using Z3
             import z3
-            x = z3.Int('x')
-            y = z3.Int('y')
+
+            x = z3.Int("x")
+            y = z3.Int("y")
             expr = x + y
             self.log(f"✓ Z3 basic operations work", "passed")
 
             # Try importing Lark
             import lark
+
             self.log(f"✓ Lark parser available", "passed")
 
             return True
