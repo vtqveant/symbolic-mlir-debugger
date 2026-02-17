@@ -82,13 +82,22 @@ Generate comprehensive test suites by:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/symbolic-mlir-debugger.git
+git clone https://github.com/vtqveant/symbolic-mlir-debugger.git
 cd symbolic-mlir-debugger
 
 # Install Python dependencies
 cd debugger
 pip install -r requirements.txt
 ```
+
+### Architecture Overview
+
+The Symbolic MLIR Debugger uses the Debug Adapter Protocol (DAP) for debugging automation. It provides two communication modes:
+
+1. **Stdio Mode** (for testing): The DAP server communicates via stdin/stdout with Content-Length headers
+2. **TCP Mode** (for production use): The DAP client connects via TCP on port 5678
+
+For most use cases, you'll use the **TCP wrapper** which starts the DAP server in a subprocess and exposes it via TCP.
 
 ### Running Tests
 
@@ -98,6 +107,16 @@ python -m pytest                         # Run all tests
 python -m pytest tests/test_parser.py    # Run parser tests
 python -m pytest -m interpreter          # Run interpreter tests
 ```
+
+### Using the DAP Client
+
+The DAP client is located in the `dap_client/` directory. It provides:
+- Full DAP protocol implementation
+- Socket-based communication with the server
+- Test case generation and execution
+- Symbolic debugging support
+
+See [`dap_client/README.md`](dap_client/README.md) for detailed documentation on using the DAP client.
 
 ## Extending the Debugger
 
