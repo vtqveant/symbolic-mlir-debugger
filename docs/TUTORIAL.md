@@ -47,28 +47,101 @@ The Symbolic MLIR Debugger is a powerful tool for analyzing MLIR (Multi-Level In
 
 ## 3. Setting Up Your Environment
 
-### 3.1 Installation
-Follow the [QUICKSTART.md](../QUICKSTART.md) for the fastest setup.
+### 3.1 Installation (Recommended: One-Command Setup)
 
-### 3.2 Verify Installation
+**Linux/macOS:**
 ```bash
-# Check Python version
-python --version  # Should be 3.8+
+# Clone repository
+git clone https://github.com/vtqveant/symbolic-mlir-debugger.git
+cd symbolic-mlir-debugger
 
-# Check dependencies
-python -c "import z3; print('Z3 installed:', z3.get_version_string())"
-python -c "import jsonschema; print('jsonschema installed')"
+# Run the setup script
+./setup.sh
+```
+
+**Windows:**
+```powershell
+# Clone repository (using Git Bash or PowerShell)
+git clone https://github.com/vtqveant/symbolic-mlir-debugger.git
+cd symbolic-mlir-debugger
+
+# Run the setup script
+.\setup.ps1
+```
+
+The setup script automatically:
+- Creates a virtual environment at `.venv`
+- Installs all dependencies from `requirements.txt`
+- Verifies the installation
+- Provides next steps
+
+### 3.2 Manual Installation
+
+If you prefer manual setup:
+
+**Linux/macOS:**
+```bash
+# 1. Clone repository
+git clone https://github.com/vtqveant/symbolic-mlir-debugger.git
+cd symbolic-mlir-debugger
+
+# 2. Create virtual environment
+python3 -m venv .venv
+
+# 3. Activate virtual environment
+source .venv/bin/activate
+
+# 4. Install dependencies
+pip install -r requirements.txt
+
+# 5. Verify installation
+python verify_setup.py
+```
+
+**Windows:**
+```powershell
+# 1. Clone repository
+git clone https://github.com/vtqveant/symbolic-mlir-debugger.git
+cd symbolic-mlir-debugger
+
+# 2. Create virtual environment
+python -m venv .venv
+
+# 3. Activate virtual environment
+.\venv\Scripts\Activate.ps1
+
+# 4. Install dependencies
+python -m pip install -r requirements.txt
+
+# 5. Verify installation
+python verify_setup.py
+```
+
+### 3.3 Verify Installation
+
+After setup, verify everything is working:
+
+```bash
+# Check Python version (should be 3.8+)
+python --version
+
+# Run the verification script
+python verify_setup.py
 
 # Run a simple test
 cd debugger
 python -m pytest tests/test_parser.py -v
 ```
 
-### 3.3 Understanding the Project Structure
+### 3.4 Understanding the Project Structure
 ```bash
 symbolic-mlir-debugger/
 ├── README.md          # Main documentation
-├── QUICKSTART.md      # Quick start guide (this file)
+├── QUICKSTART.md      # Quick start guide
+├── setup.sh           # Setup script (Linux/macOS)
+├── setup.ps1          # Setup script (Windows)
+├── verify_setup.py    # Installation verification script
+├── requirements.txt   # All project dependencies
 ├── debugger/          # Core debugger implementation
 │   ├── dap_server.py      # DAP server (stdin/stdout)
 │   ├── fixtures/          # Example MLIR programs
@@ -378,3 +451,157 @@ Now that you've completed this tutorial:
 ---
 
 **Need help?** Check the [GitHub Issues](https://github.com/vtqveant/symbolic-mlir-debugger/issues) or create a new issue with your question.
+
+---
+
+## 🔧 Setup Troubleshooting
+
+This section covers common setup issues and their solutions.
+
+### Common Setup Issues
+
+#### Issue: "Command not found: python"
+**Solution:** Use `python3` instead:
+```bash
+python3 --version
+python3 -m venv .venv
+python3 setup.sh
+```
+
+#### Issue: Virtual environment not found
+**Solution:** Run the setup script first:
+```bash
+./setup.sh  # Linux/macOS
+# or
+.\setup.ps1  # Windows
+```
+
+#### Issue: Setup script fails with "Permission denied"
+**Solution:** Make the script executable on Linux/macOS:
+```bash
+chmod +x setup.sh
+```
+
+#### Issue: Windows PowerShell execution policy error
+**Solution:** Run PowerShell as Administrator and execute:
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+#### Issue: "No module named 'z3'" or missing dependencies
+**Solution:**
+1. Ensure virtual environment is activated
+2. Run `python verify_setup.py` to check installation
+3. Reinstall dependencies:
+```bash
+pip install -r requirements.txt --force-reinstall
+```
+
+#### Issue: Python version too old (below 3.8)
+**Solution:** Install Python 3.8+:
+- **Linux**: Use your package manager (e.g., `apt install python3.8`)
+- **macOS**: Use `brew install python@3.8` or download from python.org
+- **Windows**: Download installer from python.org
+
+#### Issue: Setup script hangs or fails
+**Solution:**
+1. Check internet connection (dependencies are downloaded from PyPI)
+2. Try manual installation:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+python verify_setup.py
+```
+
+#### Issue: Build errors during dependency installation
+**Solution:**
+1. Update pip and setuptools:
+```bash
+pip install --upgrade pip setuptools wheel
+```
+2. Try installing from requirements.txt:
+```bash
+pip install -r requirements.txt --no-cache-dir
+```
+
+### Verification Issues
+
+#### Issue: `python verify_setup.py` fails
+**Solution:**
+1. Check that you're in the correct directory
+2. Verify Python version:
+```bash
+python --version
+```
+3. Check all dependencies are installed:
+```bash
+python -c "import z3; print('Z3 OK')"
+python -c "import lark; print('Lark OK')"
+python -c "import jsonschema; print('jsonschema OK')"
+```
+
+#### Issue: Import errors in scripts
+**Solution:**
+1. Make sure virtual environment is activated:
+```bash
+source .venv/bin/activate  # Linux/macOS
+.\venv\Scripts\Activate.ps1  # Windows
+```
+2. Reinstall the package:
+```bash
+pip install -e .
+```
+
+### Advanced Troubleshooting
+
+#### Issue: Multiple Python versions installed
+**Solution:** Use the same Python interpreter for setup and execution:
+```bash
+# Find which Python you're using
+which python
+
+# Use that exact Python for setup
+python -m venv .venv
+source .venv/bin/activate
+```
+
+#### Issue: Virtual environment fails to create
+**Solution:**
+1. Check disk space
+2. Remove existing .venv and try again:
+```bash
+rm -rf .venv
+python -m venv .venv
+```
+
+#### Issue: Performance issues with symbolic execution
+**Solution:**
+1. Ensure Z3 is properly installed:
+```bash
+pip install z3-solver
+```
+2. Check solver configuration in your code
+3. Limit path exploration to reduce state explosion
+
+### Getting Help
+
+If you're still having issues:
+
+1. **Check existing issues**: https://github.com/vtqveant/symbolic-mlir-debugger/issues
+2. **Create a new issue**: Include:
+   - Python version (`python --version`)
+   - OS and version
+   - Full error message
+   - Steps to reproduce
+   - Output from `python verify_setup.py`
+3. **Review documentation**: See QUICKSTART.md for basic setup help
+4. **Join the community**: Ask in GitHub Discussions
+
+---
+
+**Remember:** Most setup issues are resolved by:
+1. Running `python verify_setup.py` to check your installation
+2. Ensuring virtual environment is activated
+3. Using Python 3.8+
