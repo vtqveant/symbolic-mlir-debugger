@@ -6,7 +6,7 @@ import select
 import socket
 from typing import Optional, Callable, Any, Dict
 
-from dap_client.protocol import DAPRequest, DAPResponse
+from ..protocol import DAPRequest, DAPResponse
 
 logger = logging.getLogger(__name__)
 

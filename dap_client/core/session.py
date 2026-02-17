@@ -3,7 +3,7 @@
 import logging
 from typing import Optional, Dict, Any
 
-from dap_client.protocol import (
+from ..protocol import (
     InitializeRequest,
     LaunchRequest,
     SetBreakpointsRequest,

@@ -18,12 +18,9 @@ import logging
 import sys
 from pathlib import Path
 
-# Add parent directory to path to import dap_client modules
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from dap_client.generator.test_case_generator import TestCaseGenerator  # noqa: E402
-from dap_client.generator.path_aware_generator import PathAwareTestCaseGenerator  # noqa: E402
-from dap_client.runner.orchestrator import TestOrchestrator  # noqa: E402
+from ..generator.test_case_generator import TestCaseGenerator  # noqa: E402
+from ..generator.path_aware_generator import PathAwareTestCaseGenerator  # noqa: E402
+from ..runner.orchestrator import TestOrchestrator  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

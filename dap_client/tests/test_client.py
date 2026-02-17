@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from dap_client.core.client import DAPClient
-from dap_client.core.session import DAPSession
+from ..core.client import DAPClient
+from ..core.session import DAPSession
 
 
 class TestDAPClient:

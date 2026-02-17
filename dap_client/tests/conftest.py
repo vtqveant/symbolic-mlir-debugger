@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 
-from dap_client.core.client import DAPClient
+from ..core.client import DAPClient
 
 
 @pytest.fixture

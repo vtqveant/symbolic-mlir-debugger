@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from dap_client.core.connection import DAPConnection, DAPConnectionError
+from ..core.connection import DAPConnection, DAPConnectionError
 
 
 class TestDAPConnection:

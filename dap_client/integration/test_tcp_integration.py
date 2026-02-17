@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from .server import DAPServerWrapper
-from dap_client.core.client import DAPClient
+from ..core.client import DAPClient
 
 logger = logging.getLogger(__name__)
 
