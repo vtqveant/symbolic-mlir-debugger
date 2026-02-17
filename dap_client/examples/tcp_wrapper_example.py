@@ -20,17 +20,18 @@ Usage:
   python examples/tcp_wrapper_example.py
 """
 
+import sys
+from pathlib import Path
+
+# Add project root to Python path (three levels up from this file)
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 import argparse
 import logging
-import sys
 import time
-from pathlib import Path
 
 from dap_client.core.client import DAPClient
 from dap_client.integration.server import DAPServerWrapper
-
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 logging.basicConfig(
     level=logging.INFO,
@@ -188,7 +189,7 @@ class DAPExample:
             logger.info(f"✓ Stack trace retrieved ({len(stack_result['stackFrames'])} frames)")
             for i, frame in enumerate(stack_result["stackFrames"]):
                 logger.info(
-                    f"    Frame {i+1}: {frame.get('name', 'unknown')} (line {frame.get('line', 0)})"
+                    f"    Frame {i + 1}: {frame.get('name', 'unknown')} (line {frame.get('line', 0)})"
                 )
 
         # Step 6: Get variables

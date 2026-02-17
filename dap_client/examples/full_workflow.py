@@ -13,14 +13,19 @@ Requirements:
 - MLIR program to test (default: conditional_branch.mlir)
 """
 
-import json
-import logging
 import sys
 from pathlib import Path
 
-from ..generator.test_case_generator import TestCaseGenerator  # noqa: E402
-from ..generator.path_aware_generator import PathAwareTestCaseGenerator  # noqa: E402
-from ..runner.orchestrator import TestOrchestrator  # noqa: E402
+# Add project root to Python path (two levels up from this file)
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+import json
+import logging
+
+from dap_client.generator.test_case_generator import TestCaseGenerator
+from dap_client.generator.path_aware_generator import PathAwareGenerator
+from dap_client.runner.orchestrator import TestOrchestrator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -75,7 +80,7 @@ def generate_test_cases(program_path: str, output_dir: str = "generated_tests") 
         # Try path-aware generator if Z3 is available
         print("\nTrying path-aware generator (requires Z3)...")
         try:
-            path_aware_generator = PathAwareTestCaseGenerator(host="localhost", port=5678)
+            path_aware_generator = PathAwareGenerator(host="localhost", port=5678)
 
             if path_aware_generator.connect():
                 # Generate targeted test cases
@@ -184,7 +189,7 @@ def generate_memory_model_tests(program_path: str, output_dir: str = "generated_
 
     # Use path-aware generator for memory tests
     try:
-        generator = PathAwareTestCaseGenerator(host="localhost", port=5678)
+        generator = PathAwareGenerator(host="localhost", port=5678)
 
         if not generator.connect():
             print("Failed to connect to DAP server for memory tests")

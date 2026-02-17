@@ -11,9 +11,14 @@ Then run this example.
 
 import logging
 import sys
+import os
 
-from core.client import DAPClient
-from schema import load_test_script
+# Add project root directory to Python path (two levels up from this file)
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, project_root)
+
+from dap_client.core.client import DAPClient
+from dap_client.schema import load_test_script
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
