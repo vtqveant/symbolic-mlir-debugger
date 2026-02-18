@@ -17,8 +17,13 @@ SsaUse = Union[mast.SsaId, Literal]
 class BufferizationAllocTensorOp(DialectOp):
     shape: List[SsaUse]
     type: mast.TensorType
-    _syntax_ = "bufferization.alloc_tensor {shape.ssa_use_list} : {type.tensor_type}"
+    _syntax_ = "bufferization.alloc_tensor({shape.ssa_use_list}) : {type.tensor_type}"
     _opname_ = "bufferization.alloc_tensor"
+
+    # Debug: print the generated Lark rule
+    @classmethod
+    def make_rules(cls):
+        super().make_rules()
 
 
 # Clone a buffer (deep copy)
@@ -55,7 +60,10 @@ class BufferizationMaterializeInDestinationOp(DialectOp):
     dst: SsaUse
     src_type: mast.Type
     dst_type: mast.Type
-    _syntax_ = "bufferization.materialize_in_destination {src.ssa_use} , {dst.ssa_use} : {src_type.type} to {dst_type.type}"
+    _syntax_ = (
+        "bufferization.materialize_in_destination {src.ssa_use} , {dst.ssa_use} : "
+        "{src_type.type} to {dst_type.type}"
+    )
     _opname_ = "bufferization.materialize_in_destination"
 
 
@@ -65,7 +73,10 @@ class BufferizationToBufferOp(DialectOp):
     tensor: SsaUse
     tensor_type: mast.TensorType
     buffer_type: mast.MemRefType
-    _syntax_ = "bufferization.to_buffer {tensor.ssa_use} : {tensor_type.tensor_type} to {buffer_type.memref_type}"
+    _syntax_ = (
+        "bufferization.to_buffer {tensor.ssa_use} : {tensor_type.tensor_type} to "
+        "{buffer_type.memref_type}"
+    )
     _opname_ = "bufferization.to_buffer"
 
 
@@ -75,7 +86,10 @@ class BufferizationToTensorOp(DialectOp):
     buffer: SsaUse
     buffer_type: mast.MemRefType
     tensor_type: mast.TensorType
-    _syntax_ = "bufferization.to_tensor {buffer.ssa_use} : {buffer_type.memref_type} to {tensor_type.tensor_type}"
+    _syntax_ = (
+        "bufferization.to_tensor {buffer.ssa_use} : {buffer_type.memref_type} to "
+        "{tensor_type.tensor_type}"
+    )
     _opname_ = "bufferization.to_tensor"
 
 

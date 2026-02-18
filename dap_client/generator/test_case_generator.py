@@ -211,17 +211,9 @@ class TestCaseGenerator:
             }
         )
 
-        # Add constraint retrieval
-        session_steps.append(
-            {
-                "command": "symbolic/getConstraints",
-                "arguments": {},
-                "expect": {
-                    "success": True,
-                    "count": len(path_condition),
-                },
-            }
-        )
+        # Note: constraint retrieval removed because getConstraints returns
+        # constraints from current state, not from explored path.
+        # To validate constraints, use path_condition from path_info.
 
         # Disconnect
         session_steps.append(
@@ -291,15 +283,6 @@ class TestCaseGenerator:
                 "expect": {
                     "success": True,
                     "totalPaths": len(paths),
-                },
-            },
-            {
-                "command": "symbolic/getConstraints",
-                "arguments": {},
-                "expect": {
-                    "success": True,
-                    # At least some constraints should exist
-                    "count": {"min": 1},
                 },
             },
             {
