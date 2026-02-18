@@ -230,12 +230,12 @@ def main():
     )
     parser.add_argument(
         "--program",
-        default="../debugger/fixtures/conditional_branch.mlir",
+        default=str(project_root / "debugger" / "fixtures" / "conditional_branch.mlir"),
         help="Path to MLIR program to test",
     )
     parser.add_argument(
         "--memory-program",
-        default="../debugger/fixtures/memref_basic.mlir",
+        default=str(project_root / "debugger" / "fixtures" / "memref_basic.mlir"),
         help="Path to MLIR program with memory operations for memory model tests",
     )
     parser.add_argument(

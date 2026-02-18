@@ -5,8 +5,8 @@
     {
       "command": "initialize",
       "arguments": {
-        "adapterID": "mlir-debugger",
-        "clientID": "automated-test-client"
+        "adapter_id": "mlir-debugger",
+        "client_id": "automated-test-client"
       },
       "expect": {
         "success": true
