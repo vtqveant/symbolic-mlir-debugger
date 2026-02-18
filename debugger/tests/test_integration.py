@@ -33,7 +33,9 @@ def test_shape_dialect_variables(test_data_dir):
 
     # Check variable formatting
     for var in variables:
-        print(f"  {var['name']}: {var.get('value', '?')} ({var.get('type', 'unknown')})")
+        print(
+            f"  {var['name']}: {var.get('value', '?')} ({var.get('type', 'unknown')})"
+        )
         if "presentationHint" in var:
             print(f"    hint: {var['presentationHint']}")
 
@@ -59,10 +61,14 @@ def test_memory_debugging(test_data_dir):
 
     # Find memory region
     memory_regions = [v for v in variables if v.get("type") == "memory_region"]
-    assert len(memory_regions) == 1, f"Expected 1 memory region, got {len(memory_regions)}"
+    assert (
+        len(memory_regions) == 1
+    ), f"Expected 1 memory region, got {len(memory_regions)}"
 
     mem_region = memory_regions[0]
-    assert mem_region["variablesReference"] > 0, "Memory region should have variablesReference > 0"
+    assert (
+        mem_region["variablesReference"] > 0
+    ), "Memory region should have variablesReference > 0"
 
     # Test expansion
     ref_id = mem_region["variablesReference"]
@@ -74,7 +80,9 @@ def test_memory_debugging(test_data_dir):
     assert cell["value"] == "5", f"Expected cell value '5', got {cell['value']}"
     assert cell["variablesReference"] == 0, "Memory cell should be leaf node"
 
-    print(f"Memory debugging test passed: {mem_region['name']} with {len(children)} cells")
+    print(
+        f"Memory debugging test passed: {mem_region['name']} with {len(children)} cells"
+    )
 
 
 @pytest.mark.integration
@@ -86,12 +94,12 @@ module {
   func.func @test(%a: i32, %b: i32) -> i32 {
     // arith operation
     %sum = arith.addi %a, %b : i32
-    
+
     // memref allocation and store
     %mem = memref.alloc() : memref<5xi32>
     %idx = arith.constant 0 : index
     memref.store %sum, %mem[%idx] : memref<5xi32>
-    
+
     // load and return
     %result = memref.load %mem[%idx] : memref<5xi32>
     return %result : i32

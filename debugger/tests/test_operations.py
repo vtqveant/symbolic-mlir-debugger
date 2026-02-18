@@ -13,7 +13,7 @@ module {
   func.func @test() -> i32 {
     %c = arith.constant 42 : i32
      cf.br ^exit
-    
+
   ^exit:
     return %c : i32
   }
@@ -23,7 +23,9 @@ module {
     assert len(functions) == 1
     func = functions["test"]
     if len(func.basic_blocks) != 2:
-        pytest.skip("pymlir does not expose block labels (multiple blocks not supported)")
+        pytest.skip(
+            "pymlir does not expose block labels (multiple blocks not supported)"
+        )
 
     # Check if pymlir exposes real block labels (not our synthetic ones)
     block_labels = [bb.label for bb in func.basic_blocks.values()]
@@ -52,10 +54,10 @@ module {
     %c1 = arith.constant 42 : i32
     %c2 = arith.constant 24 : i32
      cf.cond_br %cond, ^true, ^false
-    
+
   ^true:
     return %c1 : i32
-    
+
   ^false:
     return %c2 : i32
   }
@@ -67,24 +69,26 @@ module {
         assert len(functions) == 1
         func = functions["test"]
         if len(func.basic_blocks) != 3:
-            pytest.skip("pymlir does not expose block labels (multiple blocks not supported)")
+            pytest.skip(
+                "pymlir does not expose block labels (multiple blocks not supported)"
+            )
     else:
         pytest.skip("cf.cond_br parsing failed (known limitation)")
 
 
 @pytest.mark.parser
 def test_cf_cond_br_with_caret_parsing(parser):
-    """Test parsing of cf.cond_br with caret syntax (cf.cond_br %cond, ^true, ^false)."""
+    """Test parsing of cf.cond_br with caret syntax."""
     mlir_code = """
 module {
   func.func @test(%cond: i1) -> i32 {
     %c1 = arith.constant 42 : i32
     %c2 = arith.constant 24 : i32
     cf.cond_br %cond, ^true, ^false
-    
+
   ^true:
     return %c1 : i32
-    
+
   ^false:
     return %c2 : i32
   }
@@ -100,7 +104,9 @@ module {
         assert len(functions) == 1
         func = functions["test"]
         if len(func.basic_blocks) != 3:
-            pytest.skip("pymlir does not expose block labels (multiple blocks not supported)")
+            pytest.skip(
+                "pymlir does not expose block labels (multiple blocks not supported)"
+            )
     else:
         pytest.skip("cf.cond_br with caret parsing failed (known limitation)")
 
@@ -113,10 +119,10 @@ module {
   func.func @test(%a: i32, %b: i32) -> i1 {
     %cmp = arith.cmpi slt, %a, %b : i32
     cf.cond_br %cmp, ^true, ^false
-    
+
   ^true:
     return %cmp : i1
-    
+
   ^false:
     return %cmp : i1
   }
@@ -142,10 +148,10 @@ module {
     %c1 = arith.constant 42 : i32
     %c2 = arith.constant 24 : i32
      cf.cond_br %cond, ^true, ^false
-    
+
    ^true:
     return %c1 : i32
-    
+
    ^false:
     return %c2 : i32
   }
@@ -160,7 +166,9 @@ module {
         assert len(functions) == 1
         func = functions["test"]
         if len(func.basic_blocks) != 3:
-            pytest.skip("pymlir does not expose block labels (multiple blocks not supported)")
+            pytest.skip(
+                "pymlir does not expose block labels (multiple blocks not supported)"
+            )
     else:
         pytest.skip("cond_br without caret parsing failed")
 
@@ -174,10 +182,10 @@ module {
     %c1 = arith.constant 42 : i32
     %c2 = arith.constant 24 : i32
      cf.cond_br %cond, ^bb1, ^bb2
-    
+
   ^bb1:
     return %c1 : i32
-    
+
   ^bb2:
     return %c2 : i32
   }
@@ -188,7 +196,9 @@ module {
         assert len(functions) == 1
         func = functions["test"]
         if len(func.basic_blocks) != 3:
-            pytest.skip("pymlir does not expose block labels (multiple blocks not supported)")
+            pytest.skip(
+                "pymlir does not expose block labels (multiple blocks not supported)"
+            )
     else:
         pytest.skip("std cond_br parsing failed (known limitation)")
 
