@@ -8,6 +8,7 @@ Supports both concrete and symbolic debugging commands.
 
 import json
 import logging
+import re
 import time
 from typing import Dict, List, Any, Optional
 
@@ -192,25 +193,39 @@ class TestRunner:
         if not self.client:
             raise RuntimeError("Not connected to DAP server")
 
+        # Convert camelCase parameter names to snake_case for Python methods
+        def camel_to_snake(name: str) -> str:
+            """Convert camelCase to snake_case."""
+            import re
+            # Insert underscore before uppercase letters (except first char)
+            name = re.sub(r'(?<!^)(?=[A-Z])', '_', name)
+            return name.lower()
+        
+        # Convert arguments from camelCase to snake_case
+        converted_args = {}
+        for key, value in arguments.items():
+            snake_key = camel_to_snake(key)
+            converted_args[snake_key] = value
+
         # Map command to client method
         if command == "initialize":
-            return self.client.initialize(**arguments)
+            return self.client.initialize(**converted_args)
         elif command == "launch":
-            return self.client.launch(**arguments)
+            return self.client.launch(**converted_args)
         elif command == "setBreakpoints":
-            return self.client.set_breakpoints(**arguments)
+            return self.client.set_breakpoints(**converted_args)
         elif command == "configurationDone":
             return self.client.configuration_done()
         elif command == "continue":
-            return self.client.continue_execution(**arguments)
+            return self.client.continue_execution(**converted_args)
         elif command == "disconnect":
-            return self.client.disconnect(**arguments)
+            return self.client.disconnect(**converted_args)
         elif command == "symbolic/setMode":
-            return self.client.symbolic_set_mode(**arguments)
+            return self.client.symbolic_set_mode(**converted_args)
         elif command == "symbolic/evaluate":
-            return self.client.symbolic_evaluate(**arguments)
+            return self.client.symbolic_evaluate(**converted_args)
         elif command == "symbolic/explorePaths":
-            return self.client.symbolic_explore_paths(**arguments)
+            return self.client.symbolic_explore_paths(**converted_args)
         elif command == "symbolic/getConstraints":
             return self.client.symbolic_get_constraints()
         else:
