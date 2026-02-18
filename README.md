@@ -17,48 +17,60 @@ constraint solving, and automated test generation.
 
 ## Rationale
 
-This project addresses several critical needs in modern AI-driven code generation and hardware-aware compilation:
+This project provides a concrete implementation that bridges symbolic execution, MLIR compilation, and automated debugging for AI-driven code generation workflows. The current codebase delivers:
 
-### 1. Agentic AI Code Generation with Automated Feedback Loops
-Code generation using Agentic AI requires automatically obtaining rich feedback and implementing feedback loops consisting of:
-- **Code mutation and analysis** for iterative improvement
-- **Compile-time diagnostics** for early error detection  
-- **Functional testing** with comprehensive coverage
-- **Profiling with realistic workloads** for performance optimization
-- **Closed-loop refinement** where analysis results inform subsequent code generation
+### 1. Automated Feedback for Agentic AI Code Generation
+**Current Implementation:**
+- **DAP-based debugging automation**: Full Debug Adapter Protocol implementation (`debugger/dap_server.py`) enables programmatic control of debugging sessions
+- **Test generation and execution**: Automated test case generation (`dap_client/generator/test_case_generator.py`) and execution (`dap_client/runner/orchestrator.py`)
+- **End-to-end workflows**: Complete examples (`dap_client/examples/full_workflow.py`) demonstrating automated testing pipelines
+- **Structured feedback**: JSON-based test scripts with validation against schemas (`dap_client/schema/`)
 
-### 2. MLIR as Semantic Abstraction Layer
-MLIR provides a powerful abstraction layer for program semantics and enables:
-- **Hardware-aware compilation** through dialect mechanisms
-- **Precise knowledge incorporation** of hardware design and constraints
-- **Multi-level optimization** across different abstraction levels
-- **Extensible operation semantics** for domain-specific computations
-- **Portable performance** across diverse hardware targets
+**How it helps:** AI coding agents can programmatically launch debugging sessions, generate tests, and receive structured feedback without manual intervention.
 
-### 3. Symbolic Execution for Comprehensive Correctness
-Symbolic execution enables setting comprehensive and verifiable correctness criteria:
-- **Formal verification** of program properties
-- **Path coverage guarantees** for test generation
-- **Constraint-based validation** of hardware-specific invariants
-- **Automated bug detection** through SMT solving
-- **Operational environments** for coding agents with provable correctness
+### 2. MLIR-Centric Symbolic Execution Engine
+**Current Implementation:**
+- **MLIR parser and interpreter**: Complete MLIR text parser (`debugger/parser/`) and execution engine (`debugger/interpreter/`)
+- **Symbolic execution core**: Z3-based symbolic execution (`debugger/interpreter/symbolic_evaluator.py`) transforming MLIR operations to SMT constraints
+- **Path exploration**: Automated execution path discovery (`debugger/interpreter/path_explorer.py`)
+- **Concolic execution**: Mixed concrete-symbolic execution with state management
 
-### 4. Custom Hardware Integration
-Custom hardware (GPU, TPU, NPU, SoC, wafer-scale compute, etc.) is crucial for AI development. This system enables:
-- **Hardware constraint incorporation** into symbolic debugging
-- **Automated creation** of hardware-specific kernels and optimizations
-- **Hybrid algorithm development** with hardware-aware transformations
-- **Computation-communication overlap** optimizations (à la DeepSeek)
-- **Software-hardware co-design** through formal constraints
-- **ILP-related optimizations** with precise hardware modeling
+**How it helps:** Provides a working symbolic execution engine specifically designed for MLIR, enabling formal analysis of MLIR programs that can target diverse hardware backends.
 
-### 5. DAP Extensions for Concolic Execution
-Extensions of DAP with support for concolic execution provide:
-- **Easy-to-use general method** for including concolic debugging in agentic workflows
-- **Standardized interface** for debugging automation
-- **Mixed concrete-symbolic execution** for practical verification
-- **Integration with existing toolchains** through DAP protocol
-- **Scalable debugging infrastructure** for large-scale code generation
+### 3. Extensible DAP Protocol for Debugging Automation
+**Current Implementation:**
+- **Standard DAP compliance**: Full stdin/stdout DAP server with Content-Length headers
+- **Symbolic debugging extensions**: Custom DAP commands (`symbolic/setMode`, `symbolic/evaluate`, `symbolic/explorePaths`, `symbolic/getConstraints`)
+- **Capabilities advertising**: DAP server correctly advertises symbolic debugging features (PR #96)
+- **Client library**: Complete Python DAP client (`dap_client/core/client.py`) for easy integration
+
+**How it helps:** Enables integration with existing DAP-compatible tools (IDEs, CI systems) while providing specialized symbolic debugging capabilities.
+
+### 4. Practical Hardware-Aware Development Foundation
+**Current Implementation:**
+- **Dialect-extensible architecture**: Modular design allowing addition of hardware-specific MLIR dialects
+- **Memory model framework**: Foundation for hardware-specific memory models (`debugger/interpreter/memory.py`)
+- **Constraint propagation**: Symbolic constraints that can incorporate hardware-specific limitations
+- **Fixture-based testing**: Test programs (`debugger/fixtures/`) demonstrating hardware-relevant patterns
+
+**How it helps:** Provides the architectural foundation for incorporating hardware constraints, with working examples that can be extended for specific hardware targets.
+
+### 5. Production-Ready Integration Points
+**Current Implementation:**
+- **Comprehensive test suite**: Unit and integration tests covering parser, interpreter, and DAP layers
+- **CI/CD pipeline**: GitHub Actions workflow with linting and testing across Python versions
+- **Documentation**: Working examples, API documentation, and now this rationale
+- **Modular packaging**: Well-structured Python packages with clear dependencies
+
+**How it helps:** The project is not just a research prototype but a production-ready system that can be integrated into larger toolchains, extended for specific use cases, and maintained over time.
+
+### Current Limitations & Explicit Non-Goals
+- **Not a complete compiler**: Focuses on debugging and analysis, not code generation
+- **Limited dialect support**: Currently handles arithmetic, control flow, and basic memory operations
+- **No hardware-specific backends**: Provides framework but not concrete hardware implementations
+- **Research-oriented**: Prioritizes correctness and extensibility over performance optimization
+
+This codebase delivers a working, extensible system that addresses real needs in automated code verification while providing clear extension points for future hardware-specific and AI-integration work.
 
 ### Key Features
 
