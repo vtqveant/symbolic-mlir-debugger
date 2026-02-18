@@ -1,0 +1,45 @@
+repos:
+  - repo: local
+    hooks:
+      - id: mlir-syntax-validation
+        name: MLIR Syntax Validation
+        entry: scripts/validate_mlir_precommit.py
+        language: system
+        types: [file]
+        files: \.(mlir|py)$
+        pass_filenames: true
+        args: ["--staged"]
+        
+      - id: black
+        name: Black Python Formatter
+        entry: black
+        language: system
+        types: [python]
+        args: ["--check"]
+        
+      - id: isort
+        name: isort Python Import Sorter
+        entry: isort
+        language: system
+        types: [python]
+        args: ["--check-only", "--profile", "black"]
+        
+      - id: flake8
+        name: flake8 Python Linter
+        entry: flake8
+        language: system
+        types: [python]
+        args: ["--max-line-length=88", "--extend-ignore=E203,W503"]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']

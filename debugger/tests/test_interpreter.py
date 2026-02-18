@@ -76,10 +76,10 @@ module {
   func.func @max(%a: i32, %b: i32) -> i32 {
     %cmp = arith.cmpi sgt, %a, %b : i32
     cf.cond_br %cmp, ^true, ^false
-    
+
   ^true:
     return %a : i32
-    
+
   ^false:
     return %b : i32
   }
@@ -147,17 +147,17 @@ module {
   func.func @nested(%a: i32, %b: i32, %c: i32) -> i32 {
     %cmp1 = arith.cmpi sgt, %a, %b : i32
     cf.cond_br %cmp1, ^then1, ^else1
-    
+
   ^then1:
     %cmp2 = arith.cmpi sgt, %b, %c : i32
     cf.cond_br %cmp2, ^then2, ^else2
-    
+
   ^then2:
     return %a : i32
-    
+
   ^else2:
     return %b : i32
-    
+
   ^else1:
     return %c : i32
   }
@@ -188,11 +188,11 @@ module {
     %c5 = arith.constant 5 : i32
     %cmp = arith.cmpi sgt, %x, %c5 : i32
     cf.cond_br %cmp, ^gt, ^le
-    
+
   ^gt:
     %c10 = arith.constant 10 : i32
     return %c10 : i32
-    
+
   ^le:
     %c0 = arith.constant 0 : i32
     return %c0 : i32
@@ -253,9 +253,10 @@ def test_scf_for_concolic(concolic_interpreter, parser, test_data_dir):
         assert "return_value" in path
         # For symbolic bounds, path condition may be empty or contain bounds
         if path["inputs"] and "n" in path["inputs"]:
-            n = path["inputs"]["n"]
+            # n = path["inputs"]["n"]  # Unused variable
             # Expected sum formula: sum_{i=0}^{n-1} i = n*(n-1)/2 for n > 0 else 0
             # We'll just verify that return value is a Z3 expression
+            pass
         assert isinstance(path["return_value"], z3.ExprRef)
 
 
@@ -370,15 +371,15 @@ def test_scf_for_symbolic(symbolic_interpreter, parser, test_data_dir):
 
 
 @pytest.mark.interpreter
-def test_affine_for_iter_args(symbolic_interpreter, parser):
+def test_scf_for_iter_args(symbolic_interpreter, parser):
     """Test symbolic execution of affine.for with iter_args."""
     mlir_code = """
 module {
   func.func @sum_first_n(%n: index) -> index {
     %zero = arith.constant 0 : index
-    %result = affine.for %i = %zero to %n step %zero iter_args(%sum = %zero) -> index {
+    %result = scf.for %i = %zero to %n step %zero iter_args(%sum = %zero) -> index {
       %new_sum = arith.addi %sum, %i : index
-      affine.yield %new_sum : index
+      scf.yield %new_sum : index
     }
     return %result : index
   }

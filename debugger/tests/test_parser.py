@@ -100,14 +100,42 @@ module {
 )
 def test_arithmetic_ops_parsing(parser, op, expected_op_name):
     """Test parsing of various arithmetic operations."""
-    mlir_code = f"""
-module {{
-  func.func @test(%a: i32, %b: i32) -> i32 {{
-    %result = arith.{op} %a, %b : i32
+    # Use a template approach to avoid f-string issues in MLIR validation
+    mlir_templates = {
+        "addi": """
+module {
+  func.func @test(%a: i32, %b: i32) -> i32 {
+    %result = arith.addi %a, %b : i32
     return %result : i32
-  }}
-}}
-"""
+  }
+}
+""",
+        "subi": """
+module {
+  func.func @test(%a: i32, %b: i32) -> i32 {
+    %result = arith.subi %a, %b : i32
+    return %result : i32
+  }
+}
+""",
+        "muli": """
+module {
+  func.func @test(%a: i32, %b: i32) -> i32 {
+    %result = arith.muli %a, %b : i32
+    return %result : i32
+  }
+}
+""",
+        "divi": """
+module {
+  func.func @test(%a: i32, %b: i32) -> i32 {
+    %result = arith.divsi %a, %b : i32
+    return %result : i32
+  }
+}
+""",
+    }
+    mlir_code = mlir_templates[op]
     functions = parser.parse_string(mlir_code)
     assert len(functions) == 1
     func = functions["test"]

@@ -13,7 +13,7 @@ module {
   func.func @test() -> i32 {
     %c = arith.constant 42 : i32
      cf.br ^exit
-    
+
   ^exit:
     return %c : i32
   }
@@ -52,10 +52,10 @@ module {
     %c1 = arith.constant 42 : i32
     %c2 = arith.constant 24 : i32
      cf.cond_br %cond, ^true, ^false
-    
+
   ^true:
     return %c1 : i32
-    
+
   ^false:
     return %c2 : i32
   }
@@ -74,17 +74,17 @@ module {
 
 @pytest.mark.parser
 def test_cf_cond_br_with_caret_parsing(parser):
-    """Test parsing of cf.cond_br with caret syntax (cf.cond_br %cond, ^true, ^false)."""
+    """Test parsing of cf.cond_br with caret syntax."""
     mlir_code = """
 module {
   func.func @test(%cond: i1) -> i32 {
     %c1 = arith.constant 42 : i32
     %c2 = arith.constant 24 : i32
     cf.cond_br %cond, ^true, ^false
-    
+
   ^true:
     return %c1 : i32
-    
+
   ^false:
     return %c2 : i32
   }
@@ -113,10 +113,10 @@ module {
   func.func @test(%a: i32, %b: i32) -> i1 {
     %cmp = arith.cmpi slt, %a, %b : i32
     cf.cond_br %cmp, ^true, ^false
-    
+
   ^true:
     return %cmp : i1
-    
+
   ^false:
     return %cmp : i1
   }
@@ -142,10 +142,10 @@ module {
     %c1 = arith.constant 42 : i32
     %c2 = arith.constant 24 : i32
      cf.cond_br %cond, ^true, ^false
-    
+
    ^true:
     return %c1 : i32
-    
+
    ^false:
     return %c2 : i32
   }
@@ -174,10 +174,10 @@ module {
     %c1 = arith.constant 42 : i32
     %c2 = arith.constant 24 : i32
      cf.cond_br %cond, ^bb1, ^bb2
-    
+
   ^bb1:
     return %c1 : i32
-    
+
   ^bb2:
     return %c2 : i32
   }
@@ -200,7 +200,9 @@ def test_preprocess_comma_syntax(parser):
 module {
   func.func @test(%a: i32, %b: i32) -> i1 {
     %cmp1 = arith.cmpi slt, %a, %b : i32
-    %cmp2 = arith.cmpf olt, %a, %b : f32
+    %a_f32 = arith.sitofp %a : i32 to f32
+    %b_f32 = arith.sitofp %b : i32 to f32
+    %cmp2 = arith.cmpf olt, %a_f32, %b_f32 : f32
     return %cmp1 : i1
   }
 }
@@ -210,10 +212,11 @@ module {
     func = functions["test"]
     bb = list(func.basic_blocks.values())[0]
 
-    # Should have 3 operations: 2 cmpi/cmpf and return
-    assert len(bb.operations) == 3
+    # Should have 5 operations: cmpi, 2 sitofp (type conversions), cmpf, and return
+    assert len(bb.operations) == 5
     ops = [op.full_name for op in bb.operations]
     assert "arith.cmpi" in ops
+    assert "arith.sitofp" in ops
     assert "arith.cmpf" in ops
     assert "func.return" in ops
 

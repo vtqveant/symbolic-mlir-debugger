@@ -86,13 +86,14 @@ module {
   func.func @test(%a: i32, %b: i32) -> i32 {
     // arith operation
     %sum = arith.addi %a, %b : i32
-    
+
     // memref allocation and store
     %mem = memref.alloc() : memref<5xi32>
-    memref.store %sum, %mem[0] : memref<5xi32>
-    
+    %idx = arith.constant 0 : index
+    memref.store %sum, %mem[%idx] : memref<5xi32>
+
     // load and return
-    %result = memref.load %mem[0] : memref<5xi32>
+    %result = memref.load %mem[%idx] : memref<5xi32>
     return %result : i32
   }
 }
