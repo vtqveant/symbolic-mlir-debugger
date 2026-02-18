@@ -63,11 +63,19 @@ class TreeToMlir(Transformer):
     BF16 = lambda self, tok: astnodes.FloatTypeEnum("bf16")
     F32 = lambda self, tok: astnodes.FloatTypeEnum("f32")
     F64 = lambda self, tok: astnodes.FloatTypeEnum("f64")
-    float_type = lambda self, tok: astnodes.FloatType(astnodes.FloatTypeEnum(tok[0].value))
+    float_type = lambda self, tok: astnodes.FloatType(
+        astnodes.FloatTypeEnum(tok[0].value)
+    )
     index_type = astnodes.IndexType.from_lark
-    signed_integer_type = lambda self, tok: astnodes.SignedIntegerType(int(tok[0].value[2:]))
-    unsigned_integer_type = lambda self, tok: astnodes.UnsignedIntegerType(int(tok[0].value[2:]))
-    signless_integer_type = lambda self, tok: astnodes.SignlessIntegerType(int(tok[0].value[1:]))
+    signed_integer_type = lambda self, tok: astnodes.SignedIntegerType(
+        int(tok[0].value[2:])
+    )
+    unsigned_integer_type = lambda self, tok: astnodes.UnsignedIntegerType(
+        int(tok[0].value[2:])
+    )
+    signless_integer_type = lambda self, tok: astnodes.SignlessIntegerType(
+        int(tok[0].value[1:])
+    )
     complex_type = astnodes.ComplexType.from_lark
     tuple_type = astnodes.TupleType.from_lark
     vector_type = astnodes.VectorType.from_lark
@@ -295,7 +303,7 @@ class TreeToMlir(Transformer):
         # Handle two cases:
         # 1. "(" optional_ssa_use_list ")" -> args = ['(', ssa_use_list, ')']
         # 2. optional_ssa_use_list -> args = [ssa_use_list] or []
-        if len(args) == 3 and args[0] == '(' and args[2] == ')':
+        if len(args) == 3 and args[0] == "(" and args[2] == ")":
             # Case 1: with parentheses
             return args[1]  # Return the ssa_use_list
         elif len(args) == 1:
@@ -306,9 +314,8 @@ class TreeToMlir(Transformer):
             return []
         else:
             # Unexpected case
-            raise ValueError(
-                f"Unexpected args for optional_paren_ssa_use_list: {args}"
-            )
+            raise ValueError(f"Unexpected args for optional_paren_ssa_use_list: {args}")
+
     ssa_id_and_type = tuple
     ssa_id_and_type_list = tuple
     ssa_use_and_type_list = list
@@ -386,7 +393,11 @@ class TreeToMlir(Transformer):
             fns = [astnodes.Operation([], fn) for fn in fns]
             return astnodes.MLIRFile(
                 defns,
-                [astnodes.Module(None, None, astnodes.Region([astnodes.Block(None, fns)]))],
+                [
+                    astnodes.Module(
+                        None, None, astnodes.Region([astnodes.Block(None, fns)])
+                    )
+                ],
             )
 
     def mlir_file_as_definition_and_module_list(self, defns_and_mods):
