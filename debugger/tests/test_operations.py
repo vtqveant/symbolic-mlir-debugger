@@ -200,7 +200,9 @@ def test_preprocess_comma_syntax(parser):
 module {
   func.func @test(%a: i32, %b: i32) -> i1 {
     %cmp1 = arith.cmpi slt, %a, %b : i32
-    %cmp2 = arith.cmpf olt, %a, %b : f32
+    %a_f32 = arith.sitofp %a : i32 to f32
+    %b_f32 = arith.sitofp %b : i32 to f32
+    %cmp2 = arith.cmpf olt, %a_f32, %b_f32 : f32
     return %cmp1 : i1
   }
 }
@@ -210,10 +212,11 @@ module {
     func = functions["test"]
     bb = list(func.basic_blocks.values())[0]
 
-    # Should have 3 operations: 2 cmpi/cmpf and return
-    assert len(bb.operations) == 3
+    # Should have 5 operations: cmpi, 2 sitofp (type conversions), cmpf, and return
+    assert len(bb.operations) == 5
     ops = [op.full_name for op in bb.operations]
     assert "arith.cmpi" in ops
+    assert "arith.sitofp" in ops
     assert "arith.cmpf" in ops
     assert "func.return" in ops
 

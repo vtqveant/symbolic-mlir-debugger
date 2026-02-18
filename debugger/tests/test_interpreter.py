@@ -370,15 +370,15 @@ def test_scf_for_symbolic(symbolic_interpreter, parser, test_data_dir):
 
 
 @pytest.mark.interpreter
-def test_affine_for_iter_args(symbolic_interpreter, parser):
+def test_scf_for_iter_args(symbolic_interpreter, parser):
     """Test symbolic execution of affine.for with iter_args."""
     mlir_code = """
 module {
   func.func @sum_first_n(%n: index) -> index {
     %zero = arith.constant 0 : index
-    %result = affine.for %i = %zero to %n step %zero iter_args(%sum = %zero) -> index {
+    %result = scf.for %i = %zero to %n step %zero iter_args(%sum = %zero) -> index {
       %new_sum = arith.addi %sum, %i : index
-      affine.yield %new_sum : index
+      scf.yield %new_sum : index
     }
     return %result : index
   }

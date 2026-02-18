@@ -1,27 +1,25 @@
 // Simple loop test for symbolic execution
 // Function: sum_first_n(i32 %n) -> i32 %total
 // Computes sum of integers from 1 to n
+// Using scf.for which is simpler and more compatible
 
 module {
   func.func @sum_first_n(%n: i32) -> i32 {
-    %c0 = arith.constant 0 : i32
-    %c1 = arith.constant 1 : i32
-    %i = arith.constant 0 : i32
-    %total = arith.constant 0 : i32
+    %c0 = arith.constant 0 : index
+    %c1 = arith.constant 1 : index
+    %c1_i32 = arith.constant 1 : i32
+    %total_init = arith.constant 0 : i32
     
-    // Start loop
-    cf.br ^loop_header(%i : i32, %total : i32)
+    // Convert n to index for loop
+    %n_index = arith.index_cast %n : i32 to index
     
-  ^loop_header(%i_val: i32, %total_val: i32):
-    %cond = arith.cmpi slt, %i_val, %n : i32
-    cf.cond_br %cond, ^loop_body, ^loop_exit
+    %result = scf.for %i = %c0 to %n_index step %c1 iter_args(%total_iter = %total_init) -> i32 {
+      %i_i32 = arith.index_cast %i : index to i32
+      %i_plus_one = arith.addi %i_i32, %c1_i32 : i32
+      %total_next = arith.addi %total_iter, %i_plus_one : i32
+      scf.yield %total_next : i32
+    }
     
-  ^loop_body:
-    %i_next = arith.addi %i_val, %c1 : i32
-    %total_next = arith.addi %total_val, %i_next : i32
-    cf.br ^loop_header(%i_next : i32, %total_next : i32)
-    
-  ^loop_exit:
-    return %total_val : i32
+    return %result : i32
   }
 }

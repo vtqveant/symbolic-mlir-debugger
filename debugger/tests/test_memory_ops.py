@@ -12,9 +12,10 @@ def test_memref_basic(symbolic_interpreter, parser):
 module {
   func.func @test_memref_basic() -> i32 {
     %mem = memref.alloc() : memref<10xi32>
+    %idx = arith.constant 0 : index
     %c5 = arith.constant 5 : i32
-    memref.store %c5, %mem[0] : memref<10xi32>
-    %val = memref.load %mem[0] : memref<10xi32>
+    memref.store %c5, %mem[%idx] : memref<10xi32>
+    %val = memref.load %mem[%idx] : memref<10xi32>
     return %val : i32
   }
 }
@@ -81,9 +82,10 @@ def test_concolic_memref(concolic_interpreter, parser):
 module {
   func.func @test_concolic_memref() -> i32 {
     %mem = memref.alloc() : memref<10xi32>
+    %idx = arith.constant 0 : index
     %c5 = arith.constant 5 : i32
-    memref.store %c5, %mem[0] : memref<10xi32>
-    %val = memref.load %mem[0] : memref<10xi32>
+    memref.store %c5, %mem[%idx] : memref<10xi32>
+    %val = memref.load %mem[%idx] : memref<10xi32>
     return %val : i32
   }
 }
