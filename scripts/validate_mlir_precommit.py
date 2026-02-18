@@ -168,7 +168,7 @@ def main():
         print("No MLIR or Python files to validate.")
         sys.exit(0)
 
-    print(f"🔍 Validating {len(files_to_validate)} files...")
+    print(f"Validating {len(files_to_validate)} files...")
 
     problems = []
     mlir_count = 0
@@ -176,7 +176,7 @@ def main():
 
     for file_path in sorted(files_to_validate):
         if not os.path.exists(file_path):
-            print(f"  ⚠️  {file_path} (not found)")
+            print(f"  [WARN] {file_path} (not found)")
             continue
 
         if file_path.endswith(".mlir"):
@@ -184,23 +184,23 @@ def main():
             result = validate_mlir_file(file_path)
             if result.get("error") or result.get("diagnostics"):
                 problems.append(result)
-                print(f"  ❌ {file_path}")
+                print(f"  [FAIL] {file_path}")
             else:
-                print(f"  ✅ {file_path}")
+                print(f"  [OK]   {file_path}")
 
         elif file_path.endswith(".py"):
             python_count += 1
             results = validate_python_file(file_path)
             if results:
                 problems.extend(results)
-                print(f"  ❌ {file_path}")
+                print(f"  [FAIL] {file_path}")
             else:
-                print(f"  ✅ {file_path}")
+                print(f"  [OK]   {file_path}")
 
     # Output results
     if problems:
         print("\n" + "=" * 80)
-        print("❌ MLIR SYNTAX VALIDATION FAILED")
+        print("MLIR SYNTAX VALIDATION FAILED")
         print("=" * 80)
         print(
             f"\nSummary: Validated {mlir_count} .mlir files "
@@ -228,12 +228,12 @@ def main():
             print()
 
         print("=" * 80)
-        print("💡 Fix the syntax errors above before committing.")
+        print("Fix the syntax errors above before committing.")
         print("=" * 80)
         sys.exit(1)
     else:
         print("\n" + "=" * 80)
-        print(f"✅ MLIR SYNTAX VALIDATION PASSED")
+        print(f"MLIR SYNTAX VALIDATION PASSED")
         print("=" * 80)
         print(f"Validated {mlir_count} .mlir files " f"and {python_count} Python files")
         print("All MLIR files and code blocks are syntactically valid!")

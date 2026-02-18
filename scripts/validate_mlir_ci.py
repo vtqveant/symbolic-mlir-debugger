@@ -98,14 +98,14 @@ def main():
     mlir_files = glob.glob("**/*.mlir", recursive=True)
     mlir_files = [f for f in mlir_files if ".venv" not in f and "__pycache__" not in f]
 
-    print(f"🔍 Validating {len(mlir_files)} .mlir files...")
+    print(f"Validating {len(mlir_files)} .mlir files...")
     for mlir_file in sorted(mlir_files):
         result = validate_mlir_file(mlir_file)
         if result.get("error") or result.get("diagnostics"):
             problems.append(result)
-            print(f"  ❌ {mlir_file}")
+            print(f"  [FAIL] {mlir_file}")
         else:
-            print(f"  ✅ {mlir_file}")
+            print(f"  [OK]   {mlir_file}")
 
     # Validate Python test files
     python_files = [
@@ -118,22 +118,22 @@ def main():
         "debugger/tests/test_parser.py",
     ]
 
-    print(f"\n🔍 Validating {len(python_files)} Python files " "for embedded MLIR...")
+    print(f"\nValidating {len(python_files)} Python files for embedded MLIR...")
     for py_file in python_files:
         if os.path.exists(py_file):
             results = validate_python_file(py_file)
             if results:
                 problems.extend(results)
-                print(f"  ❌ {py_file}")
+                print(f"  [FAIL] {py_file}")
             else:
-                print(f"  ✅ {py_file}")
+                print(f"  [OK]   {py_file}")
         else:
-            print(f"  ⚠️  {py_file} (not found)")
+            print(f"  [WARN] {py_file} (not found)")
 
     # Output results
     if problems:
         print("\n" + "=" * 80)
-        print("❌ MLIR SYNTAX VALIDATION FAILED")
+        print("MLIR SYNTAX VALIDATION FAILED")
         print("=" * 80)
 
         for problem in problems:
@@ -158,11 +158,11 @@ def main():
         with open("mlir_validation_report.json", "w") as f:
             json.dump(problems, f, indent=2)
 
-        print(f"\n📄 Detailed report saved to: mlir_validation_report.json")
+        print(f"\nDetailed report saved to: mlir_validation_report.json")
         sys.exit(1)
     else:
         print("\n" + "=" * 80)
-        print("✅ ALL MLIR FILES AND CODE BLOCKS ARE SYNTACTICALLY VALID!")
+        print("ALL MLIR FILES AND CODE BLOCKS ARE SYNTACTICALLY VALID!")
         print("=" * 80)
         sys.exit(0)
 
