@@ -106,15 +106,11 @@ class TestRunner:
 
                 # Check if step failed
                 if not step_result.get("success", True):
-                    test_result["error"] = (
-                        f"Step {step_index} failed: {step_result.get('error')}"
-                    )
+                    test_result["error"] = f"Step {step_index} failed: {step_result.get('error')}"
                     break
 
             # Determine overall test success
-            all_steps_success = all(
-                step.get("success", True) for step in test_result["steps"]
-            )
+            all_steps_success = all(step.get("success", True) for step in test_result["steps"])
             test_result["success"] = all_steps_success
 
             if test_result["success"]:
@@ -170,11 +166,11 @@ class TestRunner:
             step_result["validation_details"] = validation_result
 
             if not step_result["success"]:
-                step_result["error"] = validation_result.get("error")
-                logger.warning(
-                    f"Step {step_index} validation failed: "
-                    f"{validation_result.get('error')}"
-                )
+                # Get first error or "Validation failed"
+                errors = validation_result.get("errors", [])
+                error_msg = errors[0] if errors else "Validation failed"
+                step_result["error"] = error_msg
+                logger.warning(f"Step {step_index} validation failed: {error_msg}")
             else:
                 logger.debug(f"Step {step_index} executed successfully")
 
@@ -185,9 +181,7 @@ class TestRunner:
 
         return step_result
 
-    def _execute_command(
-        self, command: str, arguments: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _execute_command(self, command: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a DAP command via the client.
 
         Args:
@@ -237,9 +231,7 @@ class TestRunner:
         else:
             raise ValueError(f"Unsupported command: {command}")
 
-    def _validate_result(
-        self, result: Dict[str, Any], expect: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _validate_result(self, result: Dict[str, Any], expect: Dict[str, Any]) -> Dict[str, Any]:
         """Validate command result against expectations.
 
         Args:
@@ -258,9 +250,7 @@ class TestRunner:
         # Check success expectation
         expected_success = expect.get("success")
         if expected_success is not None:
-            actual_success = result.get(
-                "success", True
-            )  # Default to True if not specified
+            actual_success = result.get("success", True)  # Default to True if not specified
             if actual_success != expected_success:
                 validation["success"] = False
                 validation["errors"].append(
@@ -309,10 +299,7 @@ class TestRunner:
         if expected_total_paths is not None:
             actual_total_paths = result.get("totalPaths")
             if actual_total_paths is not None:
-                if (
-                    isinstance(expected_total_paths, dict)
-                    and "min" in expected_total_paths
-                ):
+                if isinstance(expected_total_paths, dict) and "min" in expected_total_paths:
                     # Minimum expectation
                     if actual_total_paths < expected_total_paths["min"]:
                         validation["success"] = False
@@ -325,8 +312,7 @@ class TestRunner:
                     if actual_total_paths != expected_total_paths:
                         validation["success"] = False
                         validation["errors"].append(
-                            f"Expected {expected_total_paths} paths, "
-                            f"got {actual_total_paths}"
+                            f"Expected {expected_total_paths} paths, " f"got {actual_total_paths}"
                         )
 
                 validation["details"]["totalPaths"] = {

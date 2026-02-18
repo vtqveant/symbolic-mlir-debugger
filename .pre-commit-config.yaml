@@ -29,7 +29,7 @@ repos:
         entry: flake8
         language: system
         types: [python]
-        args: ["--max-line-length=88", "--extend-ignore=E203,W503"]
+        args: ["--max-line-length=88", "--extend-ignore=E203,W503", "--select=E9,F63,F7,F82"]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0

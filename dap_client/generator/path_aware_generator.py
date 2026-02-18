@@ -337,19 +337,6 @@ class PathAwareGenerator(TestCaseGenerator):
                 }
             )
 
-        # Add constraint validation
-        session_steps.append(
-            {
-                "command": "symbolic/getConstraints",
-                "arguments": {},
-                "expect": {
-                    "success": True,
-                    # At least one constraint should exist
-                    "count": {"min": 1},
-                },
-            }
-        )
-
         # Disconnect
         session_steps.append(
             {

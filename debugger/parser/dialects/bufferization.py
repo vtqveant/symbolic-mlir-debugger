@@ -24,8 +24,6 @@ class BufferizationAllocTensorOp(DialectOp):
     @classmethod
     def make_rules(cls):
         super().make_rules()
-        print(f"DEBUG: BufferizationAllocTensorOp._syntax_ = {cls._syntax_}")
-        print(f"DEBUG: BufferizationAllocTensorOp._lark_ = {cls._lark_}")
 
 
 # Clone a buffer (deep copy)
@@ -98,10 +96,5 @@ class BufferizationToTensorOp(DialectOp):
 # Inspect current module to get all classes defined above
 bufferization = Dialect(
     "bufferization",
-    ops=[
-        m[1]
-        for m in inspect.getmembers(
-            sys.modules[__name__], lambda obj: is_op(obj, __name__)
-        )
-    ],
+    ops=[m[1] for m in inspect.getmembers(sys.modules[__name__], lambda obj: is_op(obj, __name__))],
 )
