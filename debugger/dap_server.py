@@ -823,6 +823,14 @@ class DAPServer:
                         "supportsInstructionBreakpoints": False,
                         "supportsExceptionFilterOptions": False,
                         "supportsSingleThreadExecutionRequests": False,
+                        # Symbolic debugging capabilities
+                        "supportsSymbolicDebugging": True,
+                        "symbolicDebuggingCapabilities": {
+                            "supportsSetMode": True,
+                            "supportsEvaluate": True,
+                            "supportsExplorePaths": True,
+                            "supportsGetConstraints": True,
+                        },
                     },
                 )
                 self.send_event("initialized")
