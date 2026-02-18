@@ -306,7 +306,9 @@ class TreeToMlir(Transformer):
             return []
         else:
             # Unexpected case
-            raise ValueError(f"Unexpected args for optional_paren_ssa_use_list: {args}")
+            raise ValueError(
+                f"Unexpected args for optional_paren_ssa_use_list: {args}"
+            )
     ssa_id_and_type = tuple
     ssa_id_and_type_list = tuple
     ssa_use_and_type_list = list
