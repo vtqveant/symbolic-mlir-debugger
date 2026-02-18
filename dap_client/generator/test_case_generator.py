@@ -163,8 +163,8 @@ class TestCaseGenerator:
             {
                 "command": "initialize",
                 "arguments": {
-                    "adapterID": "mlir-debugger",
-                    "clientID": f"test-{test_name}",
+                    "adapter_id": "mlir-debugger",
+                    "client_id": f"test-{test_name}",
                 },
                 "expect": {"success": True},
             },
@@ -267,8 +267,8 @@ class TestCaseGenerator:
             {
                 "command": "initialize",
                 "arguments": {
-                    "adapterID": "mlir-debugger",
-                    "clientID": f"test-{test_name}",
+                    "adapter_id": "mlir-debugger",
+                    "client_id": f"test-{test_name}",
                 },
                 "expect": {"success": True},
             },

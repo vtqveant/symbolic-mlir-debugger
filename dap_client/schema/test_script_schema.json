@@ -14,6 +14,21 @@
       "description": "Path to the MLIR program to debug",
       "minLength": 1
     },
+    "description": {
+      "type": "string",
+      "description": "Description of the test script",
+      "minLength": 1
+    },
+    "path_info": {
+      "type": "object",
+      "description": "Information about the execution path this test script targets",
+      "additionalProperties": true
+    },
+    "path_count": {
+      "type": "integer",
+      "description": "Number of paths explored or targeted",
+      "minimum": 0
+    },
     "session": {
       "type": "array",
       "description": "List of session steps to execute",
@@ -90,6 +105,5 @@
     "name",
     "program",
     "session"
-  ],
-  "additionalProperties": false
+  ]
 }
