@@ -289,9 +289,7 @@ def test_scf_for_concrete_inputs(concolic_interpreter, parser, test_data_dir):
 
     for n, expected in test_cases:
         concrete_inputs = {"n": n}
-        states = concolic_interpreter.execute_function_with_concrete(
-            func, concrete_inputs
-        )
+        states = concolic_interpreter.execute_function_with_concrete(func, concrete_inputs)
         completed_states = [s for s in states if s.get_value("return") is not None]
         # Should have exactly one completed state
         assert len(completed_states) == 1
@@ -465,9 +463,7 @@ def test_concolic_max_concrete(concolic_interpreter, parser, test_data_dir):
 
     # Test case 2: a < b is False (a=5, b=2)
     concrete_inputs2 = {"a": 5, "b": 2}
-    states2 = concolic_interpreter.execute_function_with_concrete(
-        func, concrete_inputs2
-    )
+    states2 = concolic_interpreter.execute_function_with_concrete(func, concrete_inputs2)
     assert len(states2) == 1
     state2 = states2[0]
     ret_val2 = state2.get_value("return")
