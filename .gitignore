@@ -137,3 +137,6 @@ mock-debug.txt
 
 # 
 reference/
+debug_report.txt
+fix_summary.json
+test_report.json
