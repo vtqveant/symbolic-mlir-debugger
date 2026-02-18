@@ -289,7 +289,7 @@ class TreeToMlir(Transformer):
     ssa_use_list = list
     op_result_list = list
     successor_list = list
-    
+
     @v_args(inline=True)
     def optional_paren_ssa_use_list(self, *args):
         # Handle two cases:
