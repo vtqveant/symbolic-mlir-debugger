@@ -810,7 +810,7 @@ class DAPServer:
                         "supportsLoadedSourcesRequest": False,
                         "supportsLogPoints": False,
                         "supportsTerminateThreadsRequest": False,
-                        "supportsSetExpression": False,
+                        "supportsSetExpression": True,  # Updated for symbolic debugging
                         "supportsTerminateRequest": False,
                         "supportsDataBreakpoints": False,
                         "supportsReadMemoryRequest": False,
@@ -823,6 +823,14 @@ class DAPServer:
                         "supportsInstructionBreakpoints": False,
                         "supportsExceptionFilterOptions": False,
                         "supportsSingleThreadExecutionRequests": False,
+                        # Symbolic debugging capabilities
+                        "supportsSymbolicDebugging": True,
+                        "symbolicDebuggingCapabilities": {
+                            "supportsSetMode": True,
+                            "supportsEvaluate": True,
+                            "supportsExplorePaths": True,
+                            "supportsGetConstraints": True
+                        }
                     },
                 )
                 self.send_event("initialized")
