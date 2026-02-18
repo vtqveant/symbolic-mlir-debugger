@@ -289,6 +289,24 @@ class TreeToMlir(Transformer):
     ssa_use_list = list
     op_result_list = list
     successor_list = list
+    
+    @v_args(inline=True)
+    def optional_paren_ssa_use_list(self, *args):
+        # Handle two cases:
+        # 1. "(" optional_ssa_use_list ")" -> args = ['(', ssa_use_list, ')']
+        # 2. optional_ssa_use_list -> args = [ssa_use_list] or []
+        if len(args) == 3 and args[0] == '(' and args[2] == ')':
+            # Case 1: with parentheses
+            return args[1]  # Return the ssa_use_list
+        elif len(args) == 1:
+            # Case 2: without parentheses, with ssa_use_list
+            return args[0]
+        elif len(args) == 0:
+            # Case 2: without parentheses, empty ssa_use_list
+            return []
+        else:
+            # Unexpected case
+            raise ValueError(f"Unexpected args for optional_paren_ssa_use_list: {args}")
     ssa_id_and_type = tuple
     ssa_id_and_type_list = tuple
     ssa_use_and_type_list = list
