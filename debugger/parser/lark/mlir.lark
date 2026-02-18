@@ -193,7 +193,8 @@ trailing_location : ("loc" "(" location ")")
 
 // Undefined operations in all dialects
 generic_operation : string_literal "(" optional_ssa_use_list ")" optional_successor_list optional_region_list optional_attr_dict trailing_type
-custom_operation  : bare_id "." bare_id optional_ssa_use_list trailing_type
+custom_operation  : bare_id "." bare_id optional_paren_ssa_use_list trailing_type
+optional_paren_ssa_use_list : "(" optional_ssa_use_list ")" | optional_ssa_use_list
 
 // Final operation definition
 // NOTE: "pymlir_dialect_ops" is defined externally by pyMLIR
