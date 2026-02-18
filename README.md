@@ -15,6 +15,51 @@ The Symbolic MLIR Debugger enables advanced debugging and analysis of MLIR progr
 It transforms MLIR operations into SMT constraints using the Z3 solver, allowing for path exploration, 
 constraint solving, and automated test generation.
 
+## Rationale
+
+This project addresses several critical needs in modern AI-driven code generation and hardware-aware compilation:
+
+### 1. Agentic AI Code Generation with Automated Feedback Loops
+Code generation using Agentic AI requires automatically obtaining rich feedback and implementing feedback loops consisting of:
+- **Code mutation and analysis** for iterative improvement
+- **Compile-time diagnostics** for early error detection  
+- **Functional testing** with comprehensive coverage
+- **Profiling with realistic workloads** for performance optimization
+- **Closed-loop refinement** where analysis results inform subsequent code generation
+
+### 2. MLIR as Semantic Abstraction Layer
+MLIR provides a powerful abstraction layer for program semantics and enables:
+- **Hardware-aware compilation** through dialect mechanisms
+- **Precise knowledge incorporation** of hardware design and constraints
+- **Multi-level optimization** across different abstraction levels
+- **Extensible operation semantics** for domain-specific computations
+- **Portable performance** across diverse hardware targets
+
+### 3. Symbolic Execution for Comprehensive Correctness
+Symbolic execution enables setting comprehensive and verifiable correctness criteria:
+- **Formal verification** of program properties
+- **Path coverage guarantees** for test generation
+- **Constraint-based validation** of hardware-specific invariants
+- **Automated bug detection** through SMT solving
+- **Operational environments** for coding agents with provable correctness
+
+### 4. Custom Hardware Integration
+Custom hardware (GPU, TPU, NPU, SoC, wafer-scale compute, etc.) is crucial for AI development. This system enables:
+- **Hardware constraint incorporation** into symbolic debugging
+- **Automated creation** of hardware-specific kernels and optimizations
+- **Hybrid algorithm development** with hardware-aware transformations
+- **Computation-communication overlap** optimizations (à la DeepSeek)
+- **Software-hardware co-design** through formal constraints
+- **ILP-related optimizations** with precise hardware modeling
+
+### 5. DAP Extensions for Concolic Execution
+Extensions of DAP with support for concolic execution provide:
+- **Easy-to-use general method** for including concolic debugging in agentic workflows
+- **Standardized interface** for debugging automation
+- **Mixed concrete-symbolic execution** for practical verification
+- **Integration with existing toolchains** through DAP protocol
+- **Scalable debugging infrastructure** for large-scale code generation
+
 ### Key Features
 
 - **Symbolic & Concolic Execution**: Execute MLIR programs with symbolic inputs, exploring multiple execution paths simultaneously
