@@ -829,8 +829,8 @@ class DAPServer:
                             "supportsSetMode": True,
                             "supportsEvaluate": True,
                             "supportsExplorePaths": True,
-                            "supportsGetConstraints": True
-                        }
+                            "supportsGetConstraints": True,
+                        },
                     },
                 )
                 self.send_event("initialized")
