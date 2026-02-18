@@ -63,19 +63,11 @@ class TreeToMlir(Transformer):
     BF16 = lambda self, tok: astnodes.FloatTypeEnum("bf16")
     F32 = lambda self, tok: astnodes.FloatTypeEnum("f32")
     F64 = lambda self, tok: astnodes.FloatTypeEnum("f64")
-    float_type = lambda self, tok: astnodes.FloatType(
-        astnodes.FloatTypeEnum(tok[0].value)
-    )
+    float_type = lambda self, tok: astnodes.FloatType(astnodes.FloatTypeEnum(tok[0].value))
     index_type = astnodes.IndexType.from_lark
-    signed_integer_type = lambda self, tok: astnodes.SignedIntegerType(
-        int(tok[0].value[2:])
-    )
-    unsigned_integer_type = lambda self, tok: astnodes.UnsignedIntegerType(
-        int(tok[0].value[2:])
-    )
-    signless_integer_type = lambda self, tok: astnodes.SignlessIntegerType(
-        int(tok[0].value[1:])
-    )
+    signed_integer_type = lambda self, tok: astnodes.SignedIntegerType(int(tok[0].value[2:]))
+    unsigned_integer_type = lambda self, tok: astnodes.UnsignedIntegerType(int(tok[0].value[2:]))
+    signless_integer_type = lambda self, tok: astnodes.SignlessIntegerType(int(tok[0].value[1:]))
     complex_type = astnodes.ComplexType.from_lark
     tuple_type = astnodes.TupleType.from_lark
     vector_type = astnodes.VectorType.from_lark
@@ -393,11 +385,7 @@ class TreeToMlir(Transformer):
             fns = [astnodes.Operation([], fn) for fn in fns]
             return astnodes.MLIRFile(
                 defns,
-                [
-                    astnodes.Module(
-                        None, None, astnodes.Region([astnodes.Block(None, fns)])
-                    )
-                ],
+                [astnodes.Module(None, None, astnodes.Region([astnodes.Block(None, fns)]))],
             )
 
     def mlir_file_as_definition_and_module_list(self, defns_and_mods):
