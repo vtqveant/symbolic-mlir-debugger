@@ -810,7 +810,7 @@ class DAPServer:
                         "supportsLoadedSourcesRequest": False,
                         "supportsLogPoints": False,
                         "supportsTerminateThreadsRequest": False,
-                        "supportsSetExpression": True,  # Updated for symbolic debugging
+                        "supportsSetExpression": False,
                         "supportsTerminateRequest": False,
                         "supportsDataBreakpoints": False,
                         "supportsReadMemoryRequest": False,
