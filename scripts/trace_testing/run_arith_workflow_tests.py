@@ -6,12 +6,13 @@ This script executes generated DAP traces and validates the MLIR debugger's
 handling of arithmetic operations.
 """
 
+import argparse
 import json
 import logging
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 # Add the project root to the Python path
 project_root = Path(__file__).parent.parent
@@ -27,14 +28,53 @@ except ImportError as e:
     print("Creating a simple test runner for demonstration")
     TEST_RUNNER_AVAILABLE = False
 
+    # Define a mock TestRunner for demonstration
+    class TestRunner:
+        def __init__(self, debugger_path=None, timeout=30, read_timeout=10):
+            self.debugger_path = debugger_path
+            self.timeout = timeout
+            self.read_timeout = read_timeout
+            self.results = []
+
+        def connect(self):
+            return True
+
+        def disconnect(self):
+            pass
+
+        def run_test_file(self, test_script_path):
+            print(f"Mock: Would run test file {test_script_path}")
+            return {
+                "name": Path(test_script_path).name,
+                "success": True,
+                "duration": 0.1,
+                "error": None,
+            }
+
+        def __enter__(self):
+            self.connect()
+            return self
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.disconnect()
+
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def collect_arith_test_files() -> List[Path]:
-    """Collect all arithmetic test files from generated_tests directory."""
+def collect_arith_test_files(tests_dir: Optional[Path] = None) -> List[Path]:
+    """Collect all arithmetic test files from specified directory.
 
-    tests_dir = Path(__file__).parent.parent / "generated_tests"
+    Args:
+        tests_dir: Directory containing test JSON files. If None, uses
+                  default location (project_root/generated_tests).
+
+    Returns:
+        List of Path objects to arithmetic test files.
+    """
+    if tests_dir is None:
+        tests_dir = Path(__file__).parent.parent / "target" / "trace_testing" / "generated_tests"
 
     if not tests_dir.exists():
         logger.error(f"Tests directory not found: {tests_dir}")
@@ -42,11 +82,11 @@ def collect_arith_test_files() -> List[Path]:
 
     # Find all arithmetic test files
     arith_test_files = []
-    for test_file in tests_dir.glob("*.json"):
+    for test_file in tests_dir.rglob("*.json"):
         if test_file.name.startswith("arith_") or "arithmetic" in test_file.name:
             arith_test_files.append(test_file)
 
-    logger.info(f"Found {len(arith_test_files)} arithmetic test files")
+    logger.info(f"Found {len(arith_test_files)} arithmetic test files in {tests_dir}")
     return arith_test_files
 
 
@@ -65,16 +105,21 @@ def run_arith_tests(test_files: List[Path]) -> Dict[str, Any]:
                 all_results.append(result)
 
                 if result["success"]:
-                    logger.info(f"  ✓ PASSED: {test_file.name} ({result['duration']:.2f}s)")
+                    logger.info(f"  [PASS] {test_file.name} ({result['duration']:.2f}s)")
                 else:
                     logger.error(
-                        f"  ✗ FAILED: {test_file.name} - {result.get('error', 'Unknown error')}"
+                        f"  [FAIL] {test_file.name} - {result.get('error', 'Unknown error')}"
                     )
 
             except Exception as e:
-                logger.error(f"  ✗ ERROR executing {test_file.name}: {e}")
+                logger.error(f"  [ERROR] executing {test_file.name}: {e}")
                 all_results.append(
-                    {"name": test_file.name, "success": False, "error": str(e), "duration": 0}
+                    {
+                        "name": test_file.name,
+                        "success": False,
+                        "error": str(e),
+                        "duration": 0,
+                    }
                 )
 
     end_time = time.time()
@@ -161,11 +206,11 @@ def generate_test_report(summary: Dict[str, Any], output_path: Path) -> None:
 
     # Add detailed results
     for i, result in enumerate(summary["results"]):
-        status = "✓ PASS" if result.get("success", False) else "✗ FAIL"
+        status = "[PASS]" if result.get("success", False) else "[FAIL]"
         error = result.get("error", "")
         duration = result.get("duration", 0)
 
-        report_lines.append(f"### {i+1}. {result.get('name', 'Unknown Test')}")
+        report_lines.append(f"### {i + 1}. {result.get('name', 'Unknown Test')}")
         report_lines.append(f"- **Status:** {status}")
         report_lines.append(f"- **Duration:** {duration:.2f}s")
 
@@ -210,19 +255,21 @@ def generate_test_report(summary: Dict[str, Any], output_path: Path) -> None:
 
     # Add recommendations based on test results
     if summary["success_rate"] >= 0.9:
-        report_lines.append("- ✅ **Excellent coverage:** Arithmetic operations are well-supported")
         report_lines.append(
-            "- ✅ **Path exploration works correctly:** All execution paths can be explored"
+            "- [GOOD] **Excellent coverage:** Arithmetic operations are well-supported"
         )
         report_lines.append(
-            "- ✅ **Constraint solving effective:** Z3 solver generates valid inputs"
+            "- [GOOD] **Path exploration works correctly:** All execution paths can be explored"
+        )
+        report_lines.append(
+            "- [GOOD] **Constraint solving effective:** Z3 solver generates valid inputs"
         )
     elif summary["success_rate"] >= 0.7:
-        report_lines.append("- ⚠️ **Good coverage:** Most arithmetic operations work correctly")
+        report_lines.append("- [WARN] **Good coverage:** Most arithmetic operations work correctly")
         report_lines.append(
-            "- ⚠️ **Some issues detected:** Review failed tests for specific problems"
+            "- [WARN] **Some issues detected:** Review failed tests for specific problems"
         )
-        report_lines.append("- ⚠️ **Consider expanding test coverage:** Add more edge cases")
+        report_lines.append("- [WARN] **Consider expanding test coverage:** Add more edge cases")
     else:
         report_lines.append("- ❌ **Poor coverage:** Significant issues with arithmetic operations")
         report_lines.append("- ❌ **Investigate failures:** Check debugger implementation")
@@ -259,19 +306,30 @@ def save_json_results(summary: Dict[str, Any], output_path: Path) -> None:
 
 def main():
     """Main function to run arithmetic workflow tests."""
+    parser = argparse.ArgumentParser(
+        description="Run arithmetic workflow tests on generated DAP traces"
+    )
+    parser.add_argument(
+        "--traces-dir",
+        type=Path,
+        default=None,
+        help="Directory containing generated DAP trace JSON files. "
+        "Defaults to generated_tests/ in project root.",
+    )
+    args = parser.parse_args()
 
     logger.info("Starting arithmetic workflow tests...")
 
     # Create reports directory
-    reports_dir = Path(__file__).parent.parent / "reports"
+    reports_dir = Path(__file__).parent.parent / "target" / "trace_testing" / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
 
     # Collect test files
-    test_files = collect_arith_test_files()
+    test_files = collect_arith_test_files(args.traces_dir)
 
     if not test_files:
         logger.error("No arithmetic test files found. Generate tests first.")
-        logger.info("Run: python scripts/generate_arith_tests.py")
+        logger.info("Run: python scripts/dap_trace_generation/configurable_arith_generator.py")
         return 1
 
     # Run tests

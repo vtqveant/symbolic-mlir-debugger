@@ -181,13 +181,13 @@ def generate_test_report(validation_results: List[Dict], execution_results: List
             f"- **Valid Format:** {valid_tests}",
             f"- **Invalid Format:** {invalid_tests}",
             (
-                f"- **Format Success Rate:** {valid_tests/total_tests:.1%}"
+                f"- **Format Success Rate:** {valid_tests / total_tests:.1%}"
                 if total_tests > 0
                 else "- **Format Success Rate:** N/A"
             ),
             f"- **Successful Simulations:** {successful_simulations}",
             (
-                f"- **Simulation Success Rate:** {successful_simulations/total_tests:.1%}"
+                f"- **Simulation Success Rate:** {successful_simulations / total_tests:.1%}"
                 if total_tests > 0
                 else "- **Simulation Success Rate:** N/A"
             ),
@@ -214,7 +214,7 @@ def generate_test_report(validation_results: List[Dict], execution_results: List
 
     # Add detailed results
     for i, (val_result, exec_result) in enumerate(zip(validation_results, execution_results)):
-        report_lines.append(f"### {i+1}. {val_result['name']}")
+        report_lines.append(f"### {i + 1}. {val_result['name']}")
         report_lines.append(
             f"- **Format Valid:** {'✅ Yes' if val_result['valid_format'] else '❌ No'}"
         )
@@ -336,11 +336,11 @@ def main():
     print("Starting arithmetic workflow test validation...")
 
     # Create reports directory
-    reports_dir = Path(__file__).parent.parent / "reports"
+    reports_dir = Path(__file__).parent.parent / "target" / "trace_testing" / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
 
     # Collect test files
-    tests_dir = Path(__file__).parent.parent / "generated_tests"
+    tests_dir = Path(__file__).parent.parent / "target" / "trace_testing" / "generated_tests"
     if not tests_dir.exists():
         print(f"Error: Tests directory not found: {tests_dir}")
         return 1
