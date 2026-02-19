@@ -1,0 +1,510 @@
+{
+  "timestamp": "2026-02-19T08:40:05.904384",
+  "total_tests": 20,
+  "passed_tests": 20,
+  "failed_tests": 0,
+  "total_execution_time": 54.88844060897827,
+  "average_execution_time": 2.7444220304489138,
+  "test_results": [
+    {
+      "test_name": "basic_addi_case1",
+      "timestamp": "2026-02-19T08:39:11.006338",
+      "mlir_content": "// Arithmetic operations test: addi\nmodule {\n  func.func @test_addi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.addi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 10,
+        "b": 3
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.6039323806762695,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_addi_case2",
+      "timestamp": "2026-02-19T08:39:13.610726",
+      "mlir_content": "// Arithmetic operations test: addi\nmodule {\n  func.func @test_addi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.addi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 0,
+        "b": 5
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.6112964153289795,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_addi_case3",
+      "timestamp": "2026-02-19T08:39:16.222413",
+      "mlir_content": "// Arithmetic operations test: addi\nmodule {\n  func.func @test_addi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.addi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": -5,
+        "b": 2
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.458841323852539,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_addi_case4",
+      "timestamp": "2026-02-19T08:39:18.681640",
+      "mlir_content": "// Arithmetic operations test: addi\nmodule {\n  func.func @test_addi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.addi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 100,
+        "b": 25
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.690887928009033,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_subi_case1",
+      "timestamp": "2026-02-19T08:39:21.373207",
+      "mlir_content": "// Arithmetic operations test: subi\nmodule {\n  func.func @test_subi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.subi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 10,
+        "b": 3
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.6299350261688232,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_subi_case2",
+      "timestamp": "2026-02-19T08:39:24.003474",
+      "mlir_content": "// Arithmetic operations test: subi\nmodule {\n  func.func @test_subi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.subi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 0,
+        "b": 5
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.6437184810638428,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_subi_case3",
+      "timestamp": "2026-02-19T08:39:26.647479",
+      "mlir_content": "// Arithmetic operations test: subi\nmodule {\n  func.func @test_subi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.subi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": -5,
+        "b": 2
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.5923349857330322,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_subi_case4",
+      "timestamp": "2026-02-19T08:39:29.240359",
+      "mlir_content": "// Arithmetic operations test: subi\nmodule {\n  func.func @test_subi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.subi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 100,
+        "b": 25
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.6647911071777344,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_muli_case1",
+      "timestamp": "2026-02-19T08:39:31.905589",
+      "mlir_content": "// Arithmetic operations test: muli\nmodule {\n  func.func @test_muli(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.muli %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 10,
+        "b": 3
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.7784242630004883,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_muli_case2",
+      "timestamp": "2026-02-19T08:39:34.684748",
+      "mlir_content": "// Arithmetic operations test: muli\nmodule {\n  func.func @test_muli(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.muli %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 0,
+        "b": 5
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.4239003658294678,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_muli_case3",
+      "timestamp": "2026-02-19T08:39:37.109009",
+      "mlir_content": "// Arithmetic operations test: muli\nmodule {\n  func.func @test_muli(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.muli %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": -5,
+        "b": 2
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.612175226211548,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_muli_case4",
+      "timestamp": "2026-02-19T08:39:39.721485",
+      "mlir_content": "// Arithmetic operations test: muli\nmodule {\n  func.func @test_muli(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.muli %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 100,
+        "b": 25
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.6561386585235596,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_divsi_case1",
+      "timestamp": "2026-02-19T08:39:42.378057",
+      "mlir_content": "// Arithmetic operations test: divsi\nmodule {\n  func.func @test_divsi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.divsi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 10,
+        "b": 3
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.60512375831604,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_divsi_case2",
+      "timestamp": "2026-02-19T08:39:44.983469",
+      "mlir_content": "// Arithmetic operations test: divsi\nmodule {\n  func.func @test_divsi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.divsi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 0,
+        "b": 5
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.717165231704712,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_divsi_case3",
+      "timestamp": "2026-02-19T08:39:47.701447",
+      "mlir_content": "// Arithmetic operations test: divsi\nmodule {\n  func.func @test_divsi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.divsi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": -5,
+        "b": 2
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 3.139805316925049,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_divsi_case4",
+      "timestamp": "2026-02-19T08:39:50.841958",
+      "mlir_content": "// Arithmetic operations test: divsi\nmodule {\n  func.func @test_divsi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.divsi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 100,
+        "b": 25
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.9966607093811035,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_remsi_case1",
+      "timestamp": "2026-02-19T08:39:53.838971",
+      "mlir_content": "// Arithmetic operations test: remsi\nmodule {\n  func.func @test_remsi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.remsi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 10,
+        "b": 3
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.58577036857605,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_remsi_case2",
+      "timestamp": "2026-02-19T08:39:56.425145",
+      "mlir_content": "// Arithmetic operations test: remsi\nmodule {\n  func.func @test_remsi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.remsi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 0,
+        "b": 5
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 3.0206499099731445,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_remsi_case3",
+      "timestamp": "2026-02-19T08:39:59.446308",
+      "mlir_content": "// Arithmetic operations test: remsi\nmodule {\n  func.func @test_remsi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.remsi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": -5,
+        "b": 2
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 3.570932149887085,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    },
+    {
+      "test_name": "basic_remsi_case4",
+      "timestamp": "2026-02-19T08:40:03.018308",
+      "mlir_content": "// Arithmetic operations test: remsi\nmodule {\n  func.func @test_remsi(%a: i32, %b: i32) -> i32 {\n    %op0 = arith.remsi %a, %b : i32\n    return %op0 : i32\n  }\n}",
+      "concrete_inputs": {
+        "a": 100,
+        "b": 25
+      },
+      "symbolic": false,
+      "success": true,
+      "error": null,
+      "execution_time": 2.8859570026397705,
+      "paths_explored": 0,
+      "breakpoints_hit": 1,
+      "dap_events": [
+        {
+          "event": "breakpoint_hit",
+          "breakpoint": 1,
+          "result": {
+            "allThreadsContinued": true
+          }
+        }
+      ],
+      "breakpoints_set": 1
+    }
+  ]
+}

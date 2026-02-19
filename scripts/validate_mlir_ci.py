@@ -149,7 +149,7 @@ def main():
         with open("mlir_validation_report.json", "w") as f:
             json.dump(problems, f, indent=2)
 
-        print(f"\nDetailed report saved to: mlir_validation_report.json")
+        print("\nDetailed report saved to: mlir_validation_report.json")
         sys.exit(1)
     else:
         print("\n" + "=" * 80)
