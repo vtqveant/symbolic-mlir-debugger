@@ -1,0 +1,91 @@
+{
+  "coding_subagent_linting_config": {
+    "version": "1.0",
+    "enforcement_required": true,
+    "ci_configuration_match": true,
+    "last_updated": "2026-02-19",
+    
+    "black_configuration": {
+      "line_length": 100,
+      "target_versions": ["py39", "py310", "py311"],
+      "command": "black --line-length 100 --target-version py39 --target-version py310 --target-version py311",
+      "check_command": "black --check --line-length 100 --target-version py39 --target-version py310 --target-version py311",
+      "exclude_patterns": [
+        ".eggs",
+        ".git",
+        ".hg",
+        ".mypy_cache",
+        ".tox",
+        ".venv",
+        "_build",
+        "buck-out",
+        "build",
+        "dist",
+        "vscode/.*",
+        "node_modules/.*",
+        ".*/__pycache__/.*",
+        ".*/\\.pytest_cache/.*"
+      ]
+    },
+    
+    "flake8_configuration": {
+      "max_line_length": 100,
+      "extend_ignore": "E203,W503",
+      "command": "flake8 . --max-line-length=100 --extend-ignore=E203,W503",
+      "exclude": ".git,__pycache__,.pytest_cache,.venv,venv,build,dist,vscode,node_modules",
+      "additional_flags": "--count --select=E9,F63,F7,F82 --show-source --statistics"
+    },
+    
+    "ci_workflow_match": {
+      "source": ".github/workflows/ci.yml",
+      "linting_step": "Check formatting (our code only)",
+      "flake8_step": "Lint with flake8 (our code only)",
+      "exact_match_verified": true
+    },
+    
+    "enforcement_script": {
+      "script_path": "scripts/enforce_linting.py",
+      "usage": "python scripts/enforce_linting.py [files...]",
+      "pre_commit_required": true,
+      "failure_action": "exit_with_error"
+    },
+    
+    "coding_subagent_requirements": {
+      "mandatory_steps": [
+        "1. Run linting check before starting implementation",
+        "2. Run linting check after implementation",
+        "3. Run linting check before committing",
+        "4. Fix all linting issues before PR submission"
+      ],
+      "failure_tolerance": "zero",
+      "documentation_requirement": "Must document linting compliance in PR description"
+    },
+    
+    "common_issues_to_fix": {
+      "E501": "Line too long (> 100 characters)",
+      "F401": "Module imported but unused",
+      "F811": "Redefinition of unused name",
+      "black_formatting": "Inconsistent formatting (run black --line-length 100)",
+      "line_length": "Always use 100 characters (not 88, not 120)"
+    },
+    
+    "verification_commands": [
+      "# Check formatting",
+      "black --check --line-length 100 .",
+      "",
+      "# Apply formatting",
+      "black --line-length 100 .",
+      "",
+      "# Run flake8",
+      "flake8 . --max-line-length=100 --extend-ignore=E203,W503"
+    ],
+    
+    "notes": [
+      "This configuration MUST be used by all coding subagents",
+      "Matches EXACT CI configuration from .github/workflows/ci.yml",
+      "Line length is 100 characters (not 88 as in some other projects)",
+      "E203 and W503 are ignored (controversial PEP 8 violations)",
+      "Failure to comply will cause CI failures"
+    ]
+  }
+}
