@@ -199,9 +199,9 @@ class TestRunner:
             """Convert camelCase to snake_case."""
             # Handle ID abbreviation (adapterID -> adapter_id, adapterIDValue -> adapter_id_value)
             # Replace 'ID' with 'Id' so it gets converted to '_id' by the next step
-            name = re.sub(r'ID', 'Id', name)
+            name = re.sub(r"ID", "Id", name)
             # Insert underscore before uppercase letters (except first char)
-            name = re.sub(r'(?<!^)(?=[A-Z])', '_', name)
+            name = re.sub(r"(?<!^)(?=[A-Z])", "_", name)
             return name.lower()
 
         # Convert arguments from camelCase to snake_case
