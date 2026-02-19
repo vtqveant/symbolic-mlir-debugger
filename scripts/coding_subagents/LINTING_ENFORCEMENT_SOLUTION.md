@@ -8,7 +8,7 @@ Coding subagents were causing CI failures due to linting issues. The problem was
 
 ## Solution Implemented
 
-### 1. **Linting Enforcement Script** (`scripts/enforce_linting.py`)
+### 1. **Linting Enforcement Script** (`scripts/coding_subagents/enforce_linting.py`)
 - **Purpose**: Enforce exact CI linting configuration
 - **Features**:
   - Runs black formatting check with CI configuration (line-length=100)
@@ -16,7 +16,7 @@ Coding subagents were causing CI failures due to linting issues. The problem was
   - Provides clear error messages with fix instructions
   - Can be run on specific files or entire project
 
-### 2. **Coding Subagent Configuration** (`scripts/coding_subagent_linting_config.json`)
+### 2. **Coding Subagent Configuration** (`scripts/coding_subagents/coding_subagent_linting_config.json`)
 - **Purpose**: Document exact CI configuration for subagents
 - **Contents**:
   - Black configuration (line-length=100, target-versions)
@@ -34,7 +34,7 @@ Coding subagents were causing CI failures due to linting issues. The problem was
     - `refactor_workflow`: Added linting node after implementation
   - Zero tolerance policy for linting failures
 
-### 4. **Test Suite** (`scripts/test_linting_enforcement.py`)
+### 4. **Test Suite** (`scripts/coding_subagents/test_linting_enforcement.py`)
 - **Purpose**: Verify linting enforcement works correctly
 - **Tests**:
   - Black configuration matches CI
@@ -60,17 +60,17 @@ flake8 . --max-line-length=100 --extend-ignore=E203,W503 --exclude=.git,__pycach
 ### Mandatory Steps:
 1. **Before starting implementation**:
    ```bash
-   python3 scripts/enforce_linting.py
+   python3 scripts/coding_subagents/enforce_linting.py
    ```
 
 2. **After implementation**:
    ```bash
-   python3 scripts/enforce_linting.py
+   python3 scripts/coding_subagents/enforce_linting.py
    ```
 
 3. **Before committing**:
    ```bash
-   python3 scripts/enforce_linting.py
+   python3 scripts/coding_subagents/enforce_linting.py
    ```
 
 4. **If linting fails**:
@@ -79,7 +79,7 @@ flake8 . --max-line-length=100 --extend-ignore=E203,W503 --exclude=.git,__pycach
    black --line-length 100 .
    
    # Re-run enforcement
-   python3 scripts/enforce_linting.py
+   python3 scripts/coding_subagents/enforce_linting.py
    ```
 
 ### Integration with Attractor Workflows:
@@ -91,7 +91,7 @@ flake8 . --max-line-length=100 --extend-ignore=E203,W503 --exclude=.git,__pycach
 
 ### Current Status:
 ```bash
-$ python3 scripts/enforce_linting.py
+$ python3 scripts/coding_subagents/enforce_linting.py
 ✅ ALL LINTING CHECKS PASSED
 ✅ Linting enforcement complete. Code meets CI standards.
 ```
@@ -125,8 +125,8 @@ $ python3 scripts/enforce_linting.py
 ### Configuration Files:
 - **Project**: `pyproject.toml` (black config), `.flake8` (flake8 config)
 - **CI**: `.github/workflows/ci.yml` (workflow configuration)
-- **Enforcement**: `scripts/enforce_linting.py` (enforcement script)
-- **Documentation**: `scripts/coding_subagent_linting_config.json` (subagent config)
+- **Enforcement**: `scripts/coding_subagents/enforce_linting.py` (enforcement script)
+- **Documentation**: `scripts/coding_subagents/coding_subagent_linting_config.json` (subagent config)
 
 ### Common Issues Fixed:
 - **E501**: Line too long (> 100 characters) - now auto-fixed by black

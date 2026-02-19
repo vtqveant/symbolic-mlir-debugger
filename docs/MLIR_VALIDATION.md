@@ -29,7 +29,7 @@ The project now includes comprehensive MLIR syntax validation using the official
 
 ### 2. Pre-commit Hook (`validate_mlir_precommit.py`)
 
-**Location**: `scripts/validate_mlir_precommit.py`
+**Location**: `scripts/mlir_validation/validate_mlir_precommit.py`
 
 **Purpose**: Validates MLIR syntax before commits to catch errors early.
 
@@ -75,7 +75,7 @@ python3 mlir_monitoring.py /path/to/repository
 
 ### 4. CI Validation Script (`validate_mlir_ci.py`)
 
-**Location**: `scripts/validate_mlir_ci.py`
+**Location**: `scripts/mlir_validation/validate_mlir_ci.py`
 
 **Purpose**: Core validation logic used by CI and pre-commit.
 
@@ -87,7 +87,7 @@ python3 mlir_monitoring.py /path/to/repository
 
 **Standalone Usage**:
 ```bash
-python3 scripts/validate_mlir_ci.py
+python3 scripts/mlir_validation/validate_mlir_ci.py
 ```
 
 ## LSP Server
@@ -131,7 +131,7 @@ All validation tools use the MLIR LSP wrapper API:
 
 1. **Pre-commit**: Automatic validation before each commit
 2. **CI**: Automatic validation on PRs and pushes
-3. **Manual**: Run `python3 scripts/validate_mlir_ci.py` anytime
+3. **Manual**: Run `python3 scripts/mlir_validation/validate_mlir_ci.py` anytime
 
 ### For CI/CD:
 
@@ -168,12 +168,12 @@ All validation tools use the MLIR LSP wrapper API:
 
 1. **Run validation manually**:
    ```bash
-   python3 scripts/validate_mlir_ci.py
+   python3 scripts/mlir_validation/validate_mlir_ci.py
    ```
 
 2. **Check specific files**:
    ```bash
-   python3 scripts/validate_mlir_precommit.py -- path/to/file.mlir
+   python3 scripts/mlir_validation/validate_mlir_precommit.py -- path/to/file.mlir
    ```
 
 3. **View detailed report**:
