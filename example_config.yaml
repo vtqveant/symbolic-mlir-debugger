@@ -1,0 +1,129 @@
+dialects:
+- dialect_type: arith
+  enabled: true
+  generation_settings:
+    mlir_template: "module {{\n  func.func @test_{op_name}() {{\n    %0 = arith.constant\
+      \ {value_a} : i{bitwidth}\n    %1 = arith.constant {value_b} : i{bitwidth}\n\
+      \    %2 = arith.{op_name} %0, %1 : i{bitwidth}\n    return\n  }}\n}}"
+  name: arith
+  operations:
+  - bitwidths:
+    - 32
+    - 64
+    category: arithmetic
+    constraints:
+    - a + b
+    dialect: arith
+    enabled: true
+    name: addi
+    parameters:
+      commutative: true
+    test_cases: []
+  - bitwidths:
+    - 32
+    - 64
+    category: arithmetic
+    constraints:
+    - a - b
+    dialect: arith
+    enabled: true
+    name: subi
+    parameters: {}
+    test_cases: []
+  - bitwidths:
+    - 32
+    - 64
+    category: arithmetic
+    constraints:
+    - a * b
+    dialect: arith
+    enabled: true
+    name: muli
+    parameters:
+      commutative: true
+    test_cases: []
+  - bitwidths:
+    - 32
+    - 64
+    category: arithmetic
+    constraints:
+    - b != 0
+    dialect: arith
+    enabled: true
+    name: divi
+    parameters: {}
+    test_cases: []
+  - bitwidths:
+    - 32
+    - 64
+    category: comparison
+    constraints:
+    - a > b
+    - a < b
+    - a == b
+    dialect: arith
+    enabled: true
+    name: cmpi
+    parameters:
+      predicate:
+      - eq
+      - ne
+      - slt
+      - sle
+      - sgt
+      - sge
+    test_cases: []
+  - bitwidths:
+    - 32
+    - 64
+    category: logical
+    constraints:
+    - a & b
+    dialect: arith
+    enabled: true
+    name: andi
+    parameters: {}
+    test_cases: []
+  - bitwidths:
+    - 32
+    - 64
+    category: logical
+    constraints:
+    - a | b
+    dialect: arith
+    enabled: true
+    name: ori
+    parameters: {}
+    test_cases: []
+  - bitwidths:
+    - 32
+    - 64
+    category: logical
+    constraints:
+    - a ^ b
+    dialect: arith
+    enabled: true
+    name: xori
+    parameters: {}
+    test_cases: []
+  validation_settings: {}
+generation_settings:
+  generate_mlir: true
+  generate_traces: true
+  max_solutions_per_constraint: 3
+  timeout_seconds: 30
+  use_z3: true
+  validate_mlir: true
+  validate_traces: true
+output_settings:
+  base_dir: target/trace_testing
+  dap_traces_dir: dap_traces
+  manifest_dir: manifests
+  mlir_artifacts_dir: mlir_artifacts
+  reports_dir: reports
+validation_settings:
+  strict_mode: false
+  validate_paths: true
+  validate_semantics: true
+  validate_syntax: true
+version: '1.0'
