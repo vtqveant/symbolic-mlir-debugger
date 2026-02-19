@@ -94,54 +94,47 @@ module {
     def test_simple_addition_workflow(self, simple_add_mlir):
         """Test simple addition workflow via DAP client."""
         logger.info("Testing simple addition workflow...")
-        
+
         try:
             # Connect to DAP server
             with DAPClient() as client:
                 logger.info("Connected to DAP server")
-                
+
                 # Initialize session
                 result = client.initialize(
-                    adapter_id="mlir-debugger",
-                    client_id="arith-test-client"
+                    adapter_id="mlir-debugger", client_id="arith-test-client"
                 )
                 logger.info(f"Session initialized: {result}")
-                
+
                 # Launch program
-                result = client.launch(
-                    program=simple_add_mlir,
-                    no_debug=False
-                )
+                result = client.launch(program=simple_add_mlir, no_debug=False)
                 logger.info(f"Program launched: {result}")
-                
+
                 # Set breakpoints (if needed)
                 source = {"path": simple_add_mlir}
                 breakpoints = [{"line": 4}]  # Line with arith.addi
-                result = client.set_breakpoints(
-                    source=source,
-                    breakpoints=breakpoints
-                )
+                result = client.set_breakpoints(source=source, breakpoints=breakpoints)
                 logger.info(f"Breakpoints set: {result}")
-                
+
                 # Configuration done
                 result = client.configuration_done()
                 logger.info(f"Configuration done: {result}")
-                
+
                 # Continue execution
                 result = client.continue_execution(thread_id=1)
                 logger.info(f"Execution continued: {result}")
-                
+
                 # Get threads
                 result = client.get_threads()
                 logger.info(f"Threads: {result}")
-                
+
                 # Disconnect
                 result = client.disconnect()
                 logger.info(f"Disconnected: {result}")
-                
+
                 # Test passed
                 assert True
-                
+
         except Exception as e:
             logger.error(f"Test failed: {e}")
             pytest.fail(f"Simple addition workflow test failed: {e}")
@@ -149,25 +142,21 @@ module {
     def test_multiple_arithmetic_operations(self, arithmetic_ops_mlir):
         """Test workflow with multiple arithmetic operations."""
         logger.info("Testing multiple arithmetic operations workflow...")
-        
+
         try:
             with DAPClient() as client:
                 logger.info("Connected to DAP server")
-                
+
                 # Initialize session
                 result = client.initialize(
-                    adapter_id="mlir-debugger",
-                    client_id="arith-multi-test-client"
+                    adapter_id="mlir-debugger", client_id="arith-multi-test-client"
                 )
                 logger.info(f"Session initialized: {result}")
-                
+
                 # Launch program
-                result = client.launch(
-                    program=arithmetic_ops_mlir,
-                    no_debug=False
-                )
+                result = client.launch(program=arithmetic_ops_mlir, no_debug=False)
                 logger.info(f"Program launched: {result}")
-                
+
                 # Set breakpoints at each arithmetic operation
                 source = {"path": arithmetic_ops_mlir}
                 breakpoints = [
@@ -178,32 +167,29 @@ module {
                     {"line": 8},  # arith.addi
                     {"line": 9},  # arith.subi
                 ]
-                result = client.set_breakpoints(
-                    source=source,
-                    breakpoints=breakpoints
-                )
+                result = client.set_breakpoints(source=source, breakpoints=breakpoints)
                 logger.info(f"Breakpoints set: {result}")
-                
+
                 # Configuration done
                 result = client.configuration_done()
                 logger.info(f"Configuration done: {result}")
-                
+
                 # Continue execution through all breakpoints
                 for i in range(len(breakpoints)):
                     result = client.continue_execution(thread_id=1)
                     logger.info(f"Execution continued (step {i+1}): {result}")
-                    
+
                     # Get stack trace to see current position
                     result = client.get_stacktrace(thread_id=1)
                     logger.info(f"Stack trace: {result}")
-                
+
                 # Disconnect
                 result = client.disconnect()
                 logger.info(f"Disconnected: {result}")
-                
+
                 # Test passed
                 assert True
-                
+
         except Exception as e:
             logger.error(f"Test failed: {e}")
             pytest.fail(f"Multiple arithmetic operations test failed: {e}")
@@ -211,53 +197,46 @@ module {
     def test_edge_cases_workflow(self, edge_cases_mlir):
         """Test arithmetic operations with edge cases."""
         logger.info("Testing edge cases workflow...")
-        
+
         try:
             with DAPClient() as client:
                 logger.info("Connected to DAP server")
-                
+
                 # Initialize session
                 result = client.initialize(
-                    adapter_id="mlir-debugger",
-                    client_id="arith-edge-test-client"
+                    adapter_id="mlir-debugger", client_id="arith-edge-test-client"
                 )
                 logger.info(f"Session initialized: {result}")
-                
+
                 # Launch program
-                result = client.launch(
-                    program=edge_cases_mlir,
-                    no_debug=False
-                )
+                result = client.launch(program=edge_cases_mlir, no_debug=False)
                 logger.info(f"Program launched: {result}")
-                
+
                 # Set breakpoints
                 source = {"path": edge_cases_mlir}
                 breakpoints = [
                     {"line": 5},  # arith.addi with zero
                     {"line": 8},  # arith.muli with negative
-                    {"line": 11}, # final arith.addi
+                    {"line": 11},  # final arith.addi
                 ]
-                result = client.set_breakpoints(
-                    source=source,
-                    breakpoints=breakpoints
-                )
+                result = client.set_breakpoints(source=source, breakpoints=breakpoints)
                 logger.info(f"Breakpoints set: {result}")
-                
+
                 # Configuration done
                 result = client.configuration_done()
                 logger.info(f"Configuration done: {result}")
-                
+
                 # Continue execution
                 result = client.continue_execution(thread_id=1)
                 logger.info(f"Execution continued: {result}")
-                
+
                 # Disconnect
                 result = client.disconnect()
                 logger.info(f"Disconnected: {result}")
-                
+
                 # Test passed
                 assert True
-                
+
         except Exception as e:
             logger.error(f"Test failed: {e}")
             pytest.fail(f"Edge cases workflow test failed: {e}")
@@ -265,72 +244,62 @@ module {
     def test_symbolic_arithmetic_workflow(self, arithmetic_ops_mlir):
         """Test symbolic execution of arithmetic operations via DAP."""
         logger.info("Testing symbolic arithmetic workflow...")
-        
+
         try:
             with DAPClient() as client:
                 logger.info("Connected to DAP server")
-                
+
                 # Initialize session
                 result = client.initialize(
-                    adapter_id="mlir-debugger",
-                    client_id="arith-symbolic-test-client"
+                    adapter_id="mlir-debugger", client_id="arith-symbolic-test-client"
                 )
                 logger.info(f"Session initialized: {result}")
-                
+
                 # Launch program
-                result = client.launch(
-                    program=arithmetic_ops_mlir,
-                    no_debug=False
-                )
+                result = client.launch(program=arithmetic_ops_mlir, no_debug=False)
                 logger.info(f"Program launched: {result}")
-                
+
                 # Set breakpoint
                 source = {"path": arithmetic_ops_mlir}
                 breakpoints = [{"line": 4}]  # First arithmetic operation
-                result = client.set_breakpoints(
-                    source=source,
-                    breakpoints=breakpoints
-                )
+                result = client.set_breakpoints(source=source, breakpoints=breakpoints)
                 logger.info(f"Breakpoints set: {result}")
-                
+
                 # Configuration done
                 result = client.configuration_done()
                 logger.info(f"Configuration done: {result}")
-                
+
                 # Continue to breakpoint
                 result = client.continue_execution(thread_id=1)
                 logger.info(f"Execution continued to breakpoint: {result}")
-                
+
                 # Enable symbolic mode
                 result = client.symbolic_set_mode(enabled=True)
                 logger.info(f"Symbolic mode enabled: {result}")
-                
+
                 # Evaluate symbolic expression
-                result = client.symbolic_evaluate(
-                    expression="%a + %b",
-                    frame_id=0
-                )
+                result = client.symbolic_evaluate(expression="%a + %b", frame_id=0)
                 logger.info(f"Symbolic evaluation result: {result}")
-                
+
                 # Explore execution paths
                 result = client.symbolic_explore_paths(max_paths=5)
                 logger.info(f"Path exploration result: {result}")
-                
+
                 # Get constraints
                 result = client.symbolic_get_constraints()
                 logger.info(f"Constraints: {result}")
-                
+
                 # Disable symbolic mode
                 result = client.symbolic_set_mode(enabled=False)
                 logger.info(f"Symbolic mode disabled: {result}")
-                
+
                 # Disconnect
                 result = client.disconnect()
                 logger.info(f"Disconnected: {result}")
-                
+
                 # Test passed
                 assert True
-                
+
         except Exception as e:
             logger.error(f"Test failed: {e}")
             pytest.fail(f"Symbolic arithmetic workflow test failed: {e}")
@@ -339,10 +308,10 @@ module {
 if __name__ == "__main__":
     # Run tests directly for debugging
     test = TestArithmeticWorkflow()
-    
+
     # Create temporary MLIR files
     import tempfile
-    
+
     # Test 1: Simple addition
     simple_add = """// Simple addition test
 module {
@@ -355,7 +324,7 @@ module {
     with tempfile.NamedTemporaryFile(mode="w", suffix=".mlir", delete=False) as f:
         f.write(simple_add)
         simple_add_path = f.name
-    
+
     try:
         print("Test 1: Simple addition workflow")
         test.test_simple_addition_workflow(simple_add_path)
@@ -364,5 +333,5 @@ module {
         print(f"Test 1 failed: {e}")
     finally:
         os.unlink(simple_add_path)
-    
+
     print("\nAll tests completed!")
