@@ -1,218 +1,71 @@
-# Arithmetic Dialect Test Coverage
+# Arithmetic Dialect Test Coverage Report
 
 ## Overview
-This document provides an overview of test coverage for arithmetic dialect operations in the symbolic-mlir-debugger project.
+- **Generated**: 2026-02-19T20:59:28.440227Z
+- **Configuration**: arith_ops_config.yaml
+- **Total Operations**: 30
+- **Enabled Operations**: 30
+- **Disabled Operations**: 0
+- **Coverage Percentage**: 100.0%
 
-## Test Suite Structure
-The test suite is organized as follows:
+## Statistics
+- MLIR Files Generated: 282
+- DAP Traces Generated: 6
+- Validation Passed: 6
+- Validation Failed: 0
 
-### Configuration
-- **Configuration File**: `config/arith_ops_config.yaml`
-- **Documentation**: `config/arith_ops_documentation.md`
+## Enabled Operations
+- **addi**: 0 test(s)
+- **subi**: 0 test(s)
+- **muli**: 1 test(s)
+- **divsi**: 0 test(s)
+- **divui**: 0 test(s)
+- **remsi**: 0 test(s)
+- **remui**: 0 test(s)
+- **addf**: 0 test(s)
+- **subf**: 0 test(s)
+- **mulf**: 0 test(s)
+- **divf**: 0 test(s)
+- **cmpi**: 0 test(s)
+- **cmpf**: 0 test(s)
+- **constant**: 0 test(s)
+- **extsi**: 0 test(s)
+- **extui**: 0 test(s)
+- **trunci**: 0 test(s)
+- **sitofp**: 0 test(s)
+- **uitofp**: 0 test(s)
+- **fptosi**: 0 test(s)
+- **fptoui**: 0 test(s)
+- **andi**: 0 test(s)
+- **ori**: 0 test(s)
+- **xori**: 5 test(s)
+- **shli**: 0 test(s)
+- **shrsi**: 0 test(s)
+- **shrui**: 0 test(s)
+- **select**: 0 test(s)
+- **index_cast**: 0 test(s)
+- **bitcast**: 0 test(s)
 
-### Test Artifacts
-- **MLIR Files**: `test_artifacts/mlir/arith/` - Individual MLIR test files
-- **DAP Traces**: `generated_tests/arith_comprehensive/` - Generated DAP trace files
-- **Manifest**: `manifest/arith_test_manifest.json` - Test suite manifest
+## Disabled Operations
 
-### Scripts
-- **Generator**: `scripts/dap_trace_generation/configurable_arith_generator.py`
-- **Validation**: `scripts/validate_mlir_precommit.py` (existing)
-- **Test Runner**: `scripts/run_arith_workflow_tests.py` (existing)
+## Test Artifacts
+- **MLIR Artifacts Directory**: test_artifacts/mlir/arith
+- **DAP Traces Directory**: generated_tests/arith_comprehensive
+- **Manifest File**: manifest/arith_test_manifest.json
 
-## Operation Coverage
+## Validation Results
+- **Total Validated**: 6
+- **Pass Rate**: 100.0%
 
-### Integer Arithmetic Operations
-- [x] `arith.addi` - Integer addition
-- [x] `arith.subi` - Integer subtraction  
-- [x] `arith.muli` - Integer multiplication
-- [x] `arith.divsi` - Signed integer division
-- [x] `arith.divui` - Unsigned integer division
-- [x] `arith.remsi` - Signed integer remainder
-- [x] `arith.remui` - Unsigned integer remainder
-
-### Floating-Point Arithmetic Operations
-- [x] `arith.addf` - Floating-point addition
-- [x] `arith.subf` - Floating-point subtraction
-- [x] `arith.mulf` - Floating-point multiplication
-- [x] `arith.divf` - Floating-point division
-
-### Comparison Operations
-- [x] `arith.cmpi` - Integer comparison (all predicates)
-- [x] `arith.cmpf` - Floating-point comparison (all predicates)
-
-### Constant Operations
-- [x] `arith.constant` - Constant values (all types)
-
-### Conversion Operations
-- [x] `arith.extsi` - Sign extension
-- [x] `arith.extui` - Zero extension
-- [x] `arith.trunci` - Integer truncation
-- [x] `arith.sitofp` - Signed integer to floating-point
-- [x] `arith.uitofp` - Unsigned integer to floating-point
-- [x] `arith.fptosi` - Floating-point to signed integer
-- [x] `arith.fptoui` - Floating-point to unsigned integer
-
-### Bitwise Operations
-- [x] `arith.andi` - Bitwise AND
-- [x] `arith.ori` - Bitwise OR
-- [x] `arith.xori` - Bitwise XOR
-- [x] `arith.shli` - Shift left
-- [x] `arith.shrsi` - Arithmetic shift right
-- [x] `arith.shrui` - Logical shift right
-
-### Special Operations
-- [x] `arith.select` - Select operation
-- [x] `arith.index_cast` - Index type casting
-- [x] `arith.bitcast` - Bitwise cast
-
-## Bitwidth Coverage
-
-### Integer Bitwidths
-- [x] 1-bit (i1)
-- [x] 8-bit (i8)
-- [x] 16-bit (i16)
-- [x] 32-bit (i32)
-- [x] 64-bit (i64)
-
-### Floating-Point Bitwidths
-- [x] 16-bit (f16)
-- [x] 32-bit (f32)
-- [x] 64-bit (f64)
-
-## Test Categories
-
-### Basic Operations
-- Simple arithmetic operations
-- Basic type conversions
-- Standard comparisons
-
-### Edge Cases
-- Overflow/underflow conditions
-- Division by zero
-- NaN/Infinity handling
-- Type boundary values
-- Maximum/minimum values
-
-### Complex Scenarios
-- Mixed bitwidth operations
-- Nested operations
-- Multiple operations in sequence
-- Conditional operations
-
-## Validation Methods
-
-### MLIR Validation
-- Syntax validation using MLIR LSP server
-- Dialect registration validation
-- Type checking
-
-### DAP Trace Validation
-- Actual execution with DAP client
-- Result verification
-- Error handling validation
-
-### Integration Testing
-- End-to-end workflow testing
-- CI/CD pipeline integration
-- Backward compatibility testing
-
-## Generation Process
-
-### Configuration-Driven
-1. Read operation configuration from YAML
-2. Generate MLIR files based on configuration
-3. Create DAP traces using existing generators
-4. Validate generated artifacts
-5. Create manifest and documentation
-
-### Solver-Based Variation Generation
-- Number of test variations determined by solver
-- Based on feasible paths through MLIR code
-- Uses Z3 constraint solving for concrete values
-- No manual configuration of variation counts
-
-## Usage
-
-### Generating Tests
-```bash
-# Full generation
-python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml
-
-# MLIR only
-python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml --mlir-only
-
-# Traces only
-python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml --traces-only
+## Configuration Details
+```yaml
+dialect: arith
+enabled_operations_count: 30
+generation_settings: {'output_dir': 'generated_tests/arith_comprehensive', 'mlir_artifacts_dir': 'test_artifacts/mlir/arith', 'manifest_dir': 'manifest', 'include_edge_cases': True, 'use_z3_constraints': True, 'validation_level': 'strict', 'mlir_artifacts': True, 'max_traces_per_op': 10, 'solver_timeout_ms': 5000, 'max_paths_per_op': 20, 'validate_mlir': True, 'validate_traces': True, 'validation_timeout_ms': 10000, 'trace_format': 'json', 'manifest_format': 'json', 'documentation_format': 'markdown'}
 ```
 
-### Running Tests
-```bash
-# Run all tests
-python scripts/run_arith_workflow_tests.py --traces-dir generated_tests/arith_comprehensive
-
-# Run specific operation tests
-python scripts/run_arith_workflow_tests.py --operation arith.addi
-```
-
-## Extensibility
-
-### Adding New Operations
-1. Add operation definition to configuration
-2. Implement MLIR generation method
-3. Update documentation
-4. Regenerate tests
-
-### Adding New Test Categories
-1. Define new constraints in configuration
-2. Implement constraint handling in generator
-3. Update validation methods
-4. Regenerate tests
-
-### Supporting New Dialects
-1. Create dialect documentation
-2. Define configuration format
-3. Implement generator script
-4. Follow same pattern as arithmetic dialect
-
-## Quality Metrics
-
-### Coverage Metrics
-- Operation coverage: 100% of arith dialect
-- Bitwidth coverage: All standard bitwidths
-- Edge case coverage: Comprehensive
-- Validation coverage: Full validation pipeline
-
-### Performance Metrics
-- Generation time: Configurable via settings
-- Validation time: Parallel execution support
-- Resource usage: Optimized for CI environments
-
-### Maintainability Metrics
-- Configuration-driven: Easy to modify
-- Modular design: Easy to extend
-- Documentation: Comprehensive
-- Backward compatibility: Maintained
-
-## Future Improvements
-
-### Enhanced Coverage
-- Add more edge cases
-- Support for vector operations
-- Complex control flow testing
-- Memory operation testing
-
-### Performance Optimizations
-- Parallel test generation
-- Incremental generation
-- Caching of generated artifacts
-- Optimized validation pipeline
-
-### Integration Enhancements
-- Better CI/CD integration
-- Automated regression testing
-- Performance benchmarking
-- Coverage reporting
-
-## Conclusion
-The arithmetic dialect test suite provides comprehensive coverage of all operations with configurable generation, individual MLIR artifacts, and full validation pipeline. The system is extensible to other dialects and maintains backward compatibility with existing test infrastructure.
+## Next Steps
+1. Review generated test artifacts
+2. Run comprehensive test suite with DAP client
+3. Extend coverage to other dialects
+4. Update configuration as needed
