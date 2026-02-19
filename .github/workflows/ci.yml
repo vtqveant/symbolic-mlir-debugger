@@ -45,9 +45,7 @@ jobs:
     - name: Check formatting (our code only)
       run: |
         echo "Running black check..."
-        black --check --verbose . \
-          --exclude="vscode|node_modules|\.venv|venv|__pycache__|\.pytest_cache|generated_tests" || echo "Black check failed with exit code: $?"
-        echo "Black check completed"
+        black --check --verbose .
     - name: Lint with flake8 (our code only)
       run: |
         python -m flake8 . \
