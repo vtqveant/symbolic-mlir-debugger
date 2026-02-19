@@ -3,7 +3,7 @@ repos:
     hooks:
       - id: mlir-syntax-validation
         name: MLIR Syntax Validation
-        entry: scripts/validate_mlir_precommit.py
+        entry: scripts/mlir_validation/validate_mlir_precommit.py
         language: system
         types: [file]
         files: \.(mlir|py)$
