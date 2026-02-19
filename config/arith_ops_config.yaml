@@ -1,0 +1,392 @@
+# Arithmetic Dialect Operations Configuration
+# For DAP Trace Generation System
+
+dialect: arith
+version: "1.0"
+description: "Configuration for generating DAP test traces for arithmetic dialect operations"
+
+# Operations Configuration
+# Each operation can be enabled/disabled and configured with specific parameters
+# Number of variations is determined by solver based on feasible paths
+
+operations:
+  # Integer Arithmetic Operations
+  - name: addi
+    enabled: true
+    description: "Integer addition operation"
+    bitwidths: [1, 8, 16, 32, 64]
+    constraints:
+      - "no_overflow"
+      - "with_overflow"
+    test_cases: 3  # Suggested number, actual determined by solver
+    
+  - name: subi
+    enabled: true
+    description: "Integer subtraction operation"
+    bitwidths: [1, 8, 16, 32, 64]
+    constraints:
+      - "no_underflow"
+      - "with_underflow"
+    test_cases: 3
+    
+  - name: muli
+    enabled: true
+    description: "Integer multiplication operation"
+    bitwidths: [1, 8, 16, 32, 64]
+    constraints:
+      - "no_overflow"
+      - "with_overflow"
+    test_cases: 3
+    
+  - name: divsi
+    enabled: true
+    description: "Signed integer division"
+    bitwidths: [8, 16, 32, 64]
+    constraints:
+      - "divisor_nonzero"
+      - "division_by_zero"  # Edge case for testing
+    test_cases: 3
+    
+  - name: divui
+    enabled: true
+    description: "Unsigned integer division"
+    bitwidths: [8, 16, 32, 64]
+    constraints:
+      - "divisor_nonzero"
+      - "division_by_zero"  # Edge case for testing
+    test_cases: 3
+    
+  - name: remsi
+    enabled: true
+    description: "Signed integer remainder"
+    bitwidths: [8, 16, 32, 64]
+    constraints:
+      - "divisor_nonzero"
+      - "division_by_zero"  # Edge case for testing
+    test_cases: 3
+    
+  - name: remui
+    enabled: true
+    description: "Unsigned integer remainder"
+    bitwidths: [8, 16, 32, 64]
+    constraints:
+      - "divisor_nonzero"
+      - "division_by_zero"  # Edge case for testing
+    test_cases: 3
+  
+  # Floating-Point Arithmetic Operations
+  - name: addf
+    enabled: true
+    description: "Floating-point addition"
+    bitwidths: [16, 32, 64]  # f16, f32, f64
+    constraints:
+      - "normal"
+      - "denormal"
+      - "infinity"
+      - "nan"
+    test_cases: 3
+    
+  - name: subf
+    enabled: true
+    description: "Floating-point subtraction"
+    bitwidths: [16, 32, 64]
+    constraints:
+      - "normal"
+      - "denormal"
+      - "infinity"
+      - "nan"
+    test_cases: 3
+    
+  - name: mulf
+    enabled: true
+    description: "Floating-point multiplication"
+    bitwidths: [16, 32, 64]
+    constraints:
+      - "normal"
+      - "denormal"
+      - "infinity"
+      - "nan"
+    test_cases: 3
+    
+  - name: divf
+    enabled: true
+    description: "Floating-point division"
+    bitwidths: [16, 32, 64]
+    constraints:
+      - "normal"
+      - "denormal"
+      - "infinity"
+      - "nan"
+      - "division_by_zero"
+    test_cases: 3
+  
+  # Comparison Operations
+  - name: cmpi
+    enabled: true
+    description: "Integer comparison"
+    bitwidths: [8, 16, 32, 64]
+    predicates: ["eq", "ne", "slt", "sle", "sgt", "sge", "ult", "ule", "ugt", "uge"]
+    constraints:
+      - "equal_values"
+      - "unequal_values"
+      - "signed_comparison"
+      - "unsigned_comparison"
+    test_cases: 2  # Per predicate
+    
+  - name: cmpf
+    enabled: true
+    description: "Floating-point comparison"
+    bitwidths: [16, 32, 64]
+    predicates: ["false", "oeq", "ogt", "oge", "olt", "ole", "one", "ord", "ueq", "ugt", "uge", "ult", "ule", "une", "uno", "true"]
+    constraints:
+      - "normal"
+      - "denormal"
+      - "infinity"
+      - "nan"
+      - "equal_values"
+      - "unequal_values"
+    test_cases: 2  # Per predicate
+  
+  # Constant Operations
+  - name: constant
+    enabled: true
+    description: "Constant value operation"
+    value_ranges:
+      i1: [0, 1]
+      i8: [-128, 127]
+      i16: [-32768, 32767]
+      i32: [-2147483648, 2147483647]
+      i64: [-9223372036854775808, 9223372036854775807]
+      f16: [-65504, 65504]  # Approximate range for f16
+      f32: [-3.4028235e38, 3.4028235e38]
+      f64: [-1.7976931348623157e308, 1.7976931348623157e308]
+    special_values:
+      - "zero"
+      - "one"
+      - "min_value"
+      - "max_value"
+      - "negative_one"
+    test_cases: 5  # Per type
+  
+  # Conversion Operations
+  - name: extsi
+    enabled: true
+    description: "Sign extension"
+    source_bitwidths: [1, 8, 16, 32]
+    target_bitwidths: [8, 16, 32, 64]
+    constraints:
+      - "positive_value"
+      - "negative_value"
+      - "zero"
+    test_cases: 2  # Per source-target pair
+    
+  - name: extui
+    enabled: true
+    description: "Zero extension"
+    source_bitwidths: [1, 8, 16, 32]
+    target_bitwidths: [8, 16, 32, 64]
+    constraints:
+      - "positive_value"
+      - "zero"
+    test_cases: 2  # Per source-target pair
+    
+  - name: trunci
+    enabled: true
+    description: "Integer truncation"
+    source_bitwidths: [8, 16, 32, 64]
+    target_bitwidths: [1, 8, 16, 32]
+    constraints:
+      - "fits_in_target"
+      - "overflow_truncation"
+    test_cases: 2  # Per source-target pair
+    
+  - name: sitofp
+    enabled: true
+    description: "Signed integer to floating-point"
+    source_bitwidths: [8, 16, 32, 64]
+    target_bitwidths: [16, 32, 64]
+    constraints:
+      - "exact_conversion"
+      - "rounding_conversion"
+      - "overflow_conversion"
+    test_cases: 2  # Per source-target pair
+    
+  - name: uitofp
+    enabled: true
+    description: "Unsigned integer to floating-point"
+    source_bitwidths: [8, 16, 32, 64]
+    target_bitwidths: [16, 32, 64]
+    constraints:
+      - "exact_conversion"
+      - "rounding_conversion"
+      - "overflow_conversion"
+    test_cases: 2  # Per source-target pair
+    
+  - name: fptosi
+    enabled: true
+    description: "Floating-point to signed integer"
+    source_bitwidths: [16, 32, 64]
+    target_bitwidths: [8, 16, 32, 64]
+    constraints:
+      - "exact_conversion"
+      - "rounding_conversion"
+      - "overflow_conversion"
+      - "nan_conversion"
+    test_cases: 2  # Per source-target pair
+    
+  - name: fptoui
+    enabled: true
+    description: "Floating-point to unsigned integer"
+    source_bitwidths: [16, 32, 64]
+    target_bitwidths: [8, 16, 32, 64]
+    constraints:
+      - "exact_conversion"
+      - "rounding_conversion"
+      - "overflow_conversion"
+      - "nan_conversion"
+    test_cases: 2  # Per source-target pair
+  
+  # Bitwise Operations
+  - name: andi
+    enabled: true
+    description: "Bitwise AND"
+    bitwidths: [1, 8, 16, 32, 64]
+    constraints:
+      - "all_ones"
+      - "all_zeros"
+      - "mixed_bits"
+    test_cases: 3
+    
+  - name: ori
+    enabled: true
+    description: "Bitwise OR"
+    bitwidths: [1, 8, 16, 32, 64]
+    constraints:
+      - "all_ones"
+      - "all_zeros"
+      - "mixed_bits"
+    test_cases: 3
+    
+  - name: xori
+    enabled: true
+    description: "Bitwise XOR"
+    bitwidths: [1, 8, 16, 32, 64]
+    constraints:
+      - "all_ones"
+      - "all_zeros"
+      - "mixed_bits"
+    test_cases: 3
+    
+  - name: shli
+    enabled: true
+    description: "Shift left"
+    bitwidths: [8, 16, 32, 64]
+    shift_range: [0, 7]  # Maximum shift < bitwidth
+    constraints:
+      - "no_overflow"
+      - "with_overflow"
+      - "zero_shift"
+      - "max_shift"
+    test_cases: 3
+    
+  - name: shrsi
+    enabled: true
+    description: "Arithmetic shift right"
+    bitwidths: [8, 16, 32, 64]
+    shift_range: [0, 7]  # Maximum shift < bitwidth
+    constraints:
+      - "positive_value"
+      - "negative_value"
+      - "zero_shift"
+      - "max_shift"
+    test_cases: 3
+    
+  - name: shrui
+    enabled: true
+    description: "Logical shift right"
+    bitwidths: [8, 16, 32, 64]
+    shift_range: [0, 7]  # Maximum shift < bitwidth
+    constraints:
+      - "positive_value"
+      - "zero_shift"
+      - "max_shift"
+    test_cases: 3
+  
+  # Special Operations
+  - name: select
+    enabled: true
+    description: "Select operation"
+    bitwidths: [1, 8, 16, 32, 64]
+    constraints:
+      - "condition_true"
+      - "condition_false"
+    test_cases: 3
+    
+  - name: index_cast
+    enabled: true
+    description: "Index type casting"
+    directions: ["index_to_int", "int_to_index"]
+    int_bitwidths: [32, 64]
+    constraints:
+      - "valid_conversion"
+      - "platform_limits"
+    test_cases: 2  # Per direction
+    
+  - name: bitcast
+    enabled: true
+    description: "Bitwise cast"
+    bitwidths: [32, 64]  # Common bitwidths for bitcasting
+    type_pairs:
+      - ["i32", "f32"]
+      - ["i64", "f64"]
+    constraints:
+      - "normal_value"
+      - "special_value"  # NaN, infinity, etc.
+    test_cases: 2  # Per type pair
+
+# Generation Settings
+generation_settings:
+  output_dir: generated_tests/arith_comprehensive
+  mlir_artifacts_dir: test_artifacts/mlir/arith
+  manifest_dir: manifest
+  include_edge_cases: true
+  use_z3_constraints: true
+  validation_level: strict
+  mlir_artifacts: true
+  max_traces_per_op: 10  # Maximum traces per operation (solver may find fewer)
+  
+  # Solver settings
+  solver_timeout_ms: 5000
+  max_paths_per_op: 20
+  
+  # Validation settings
+  validate_mlir: true  # Validate MLIR files with LSP server
+  validate_traces: true  # Validate traces by running with DAP client
+  validation_timeout_ms: 10000
+  
+  # Output format
+  trace_format: "json"
+  manifest_format: "json"
+  documentation_format: "markdown"
+
+# Backward Compatibility
+backward_compatibility:
+  preserve_existing_traces: true
+  existing_traces_dir: generated_tests
+  migration_script: scripts/migrate_existing_traces.py
+  
+# Documentation
+documentation:
+  generate_coverage_report: true
+  coverage_report_path: docs/arith_test_coverage.md
+  generate_artifact_guide: true
+  artifact_guide_path: docs/test_artifact_guide.md
+  include_examples: true
+  examples_dir: docs/examples/arith
+
+# Notes
+# - Number of variations is determined by solver based on feasible paths
+# - test_cases field is a suggestion, actual count depends on solver findings
+# - All generated MLIR files will be validated with MLIR LSP server
+# - All DAP traces will be validated by actually running with DAP client
+# - Backward compatibility with existing scripts is maintained
