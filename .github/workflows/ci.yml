@@ -40,7 +40,8 @@ jobs:
       run: pip install black flake8
     - name: Check formatting (our code only)
       run: |
-        python -m black --check --verbose .
+        python -m black --check --verbose . \
+          --exclude="vscode|node_modules|\.venv|venv|__pycache__|\.pytest_cache|generated_tests"
     - name: Lint with flake8 (our code only)
       run: |
         python -m flake8 . \
