@@ -324,6 +324,46 @@ cd dap_client
 python -m pytest tests/ -v
 ```
 
+### Arithmetic Workflow Testing
+
+The DAP client includes comprehensive testing for arithmetic operations through the DAP protocol:
+
+#### Test Files:
+- `tests/test_arith_workflow.py` - DAP-based workflow tests for arithmetic operations
+- `examples/arith_workflow.py` - Example usage of arithmetic testing via DAP
+- `run_arith_workflow_tests.py` - Automated test runner with reporting
+
+#### Running Arithmetic Tests:
+
+```bash
+# Run all arithmetic workflow tests
+cd dap_client
+python run_arith_workflow_tests.py
+
+# Run specific test categories
+python run_arith_workflow_tests.py --basic      # Basic arithmetic operations
+python run_arith_workflow_tests.py --complex    # Complex expressions
+python run_arith_workflow_tests.py --edge       # Edge cases
+python run_arith_workflow_tests.py --symbolic   # Symbolic execution
+python run_arith_workflow_tests.py --concolic   # Concolic testing
+
+# Run example workflow
+python examples/arith_workflow.py --all
+```
+
+#### Test Coverage:
+- **Basic Operations**: addi, subi, muli, divsi, remsi, cmpi, etc.
+- **Complex Expressions**: Chained arithmetic operations
+- **Edge Cases**: Zero, negative numbers, overflow conditions
+- **Symbolic Execution**: Path exploration and constraint solving
+- **Concolic Testing**: Parameter variation and execution path tracking
+
+#### Generated Reports:
+Tests generate detailed reports in the `test_reports/` directory:
+- JSON reports with full test results
+- Markdown summaries with statistics
+- Execution path tracking data
+
 ## API Documentation
 
 See the inline docstrings in each module for detailed API documentation.
