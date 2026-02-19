@@ -45,5 +45,5 @@ jobs:
     - name: Validate MLIR syntax with LSP server
       run: |
         echo "Validating MLIR syntax using LSP server..."
-        python scripts/validate_mlir_ci.py
+        python scripts/mlir_validation/validate_mlir_ci.py
         echo "MLIR validation completed"

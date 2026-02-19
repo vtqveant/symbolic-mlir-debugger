@@ -217,7 +217,7 @@ def main():
     if not success:
         print("\n❌ LINTING FAILED")
         print("\nRequired fixes:")
-        print("1. Run: python scripts/enforce_linting.py")
+        print("1. Run: python scripts/coding_subagents/enforce_linting.py")
         print("2. Or manually fix with:")
         print("   black --line-length 100 .")
         print("   flake8 . --max-line-length=100 --extend-ignore=E203,W503")
