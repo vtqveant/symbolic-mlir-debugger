@@ -9,6 +9,7 @@ via stdin/stdout using the DAP protocol (Content-Length headers).
 import json
 import logging
 import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -106,7 +107,7 @@ def dap_server_process():
         pytest.skip("DAP server not found")
 
     process = subprocess.Popen(
-        ["python", str(debugger_path)],
+        [sys.executable, str(debugger_path)],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
