@@ -17,16 +17,16 @@ This directory contains scripts for generating DAP (Debug Adapter Protocol) test
 ### Configurable Arithmetic Generator
 ```bash
 # Full generation
-python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml
+python scripts/dap_trace_generation/configurable_arith_generator.py --config target/trace_testing/arith_ops_config.yaml
 
 # MLIR artifacts only
-python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml --mlir-only
+python scripts/dap_trace_generation/configurable_arith_generator.py --config target/trace_testing/arith_ops_config.yaml --mlir-only
 
 # DAP traces only
-python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml --traces-only
+python scripts/dap_trace_generation/configurable_arith_generator.py --config target/trace_testing/arith_ops_config.yaml --traces-only
 
 # Custom directories
-python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml --mlir-dir test_artifacts/mlir/arith --trace-dir generated_tests/arith_comprehensive
+python scripts/dap_trace_generation/configurable_arith_generator.py --config target/trace_testing/arith_ops_config.yaml --mlir-dir target/trace_testing/test_artifacts/mlir/arith --trace-dir target/trace_testing/generated_tests/arith_comprehensive
 ```
 
 ### Legacy Generators
@@ -44,7 +44,7 @@ python z3_concrete_generator.py
 ## Configuration
 
 ### Arithmetic Dialect Configuration
-The configurable generator uses `config/arith_ops_config.yaml` which defines:
+The configurable generator uses `target/trace_testing/arith_ops_config.yaml` which defines:
 - Enabled operations
 - Bitwidths for each operation
 - Constraints and edge cases
@@ -61,7 +61,7 @@ The new configurable generator maintains backward compatibility with:
 
 ### Generated Files
 ```
-test_artifacts/mlir/arith/
+target/trace_testing/test_artifacts/mlir/arith/
   addi/
     addi_basic_i32.mlir
     addi_const_i32.mlir
@@ -71,7 +71,7 @@ test_artifacts/mlir/arith/
     ...
   ...
 
-generated_tests/arith_comprehensive/
+target/trace_testing/generated_tests/arith_comprehensive/
   addi/
     addi_basic_i32.json
     ...
@@ -80,12 +80,12 @@ generated_tests/arith_comprehensive/
     ...
   ...
 
-manifest/
+target/trace_testing/manifest/
   arith_test_manifest.json
 ```
 
 ### Manifest File
-The manifest file (`arith_test_manifest.json`) contains:
+The manifest file (`target/trace_testing/manifest/arith_test_manifest.json`) contains:
 - List of all generated tests
 - Mapping between MLIR files and DAP traces
 - Validation status
@@ -96,10 +96,10 @@ The manifest file (`arith_test_manifest.json`) contains:
 ### MLIR Validation
 ```bash
 # Validate individual MLIR file
-python scripts/mlir_validation/validate_mlir_precommit.py test_artifacts/mlir/arith/addi/addi_basic_i32.mlir
+python scripts/mlir_validation/validate_mlir_precommit.py target/trace_testing/test_artifacts/mlir/arith/addi/addi_basic_i32.mlir
 
 # Validate all MLIR files
-find test_artifacts/mlir/arith -name "*.mlir" -exec python scripts/mlir_validation/validate_mlir_precommit.py {} \;
+find target/trace_testing/test_artifacts/mlir/arith -name "*.mlir" -exec python scripts/mlir_validation/validate_mlir_precommit.py {} \;
 ```
 
 ### DAP Trace Validation

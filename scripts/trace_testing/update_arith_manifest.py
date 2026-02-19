@@ -117,23 +117,19 @@ def update_manifest(
             manifest["tests"].append(
                 {
                     "id": trace_file.stem,
-                    "mlir_file": str(mlir_file.relative_to(Path.cwd()))
-                    if mlir_file
-                    else "",
+                    "mlir_file": str(mlir_file.relative_to(Path.cwd())) if mlir_file else "",
                     "dap_trace": str(trace_file.relative_to(Path.cwd())),
                     "operation": operation,
                     "description": f"Test for {operation}",
                     "validated": validated,
-                    "validation_timestamp": datetime.utcnow().isoformat() + "Z"
-                    if validated
-                    else None,
+                    "validation_timestamp": (
+                        datetime.utcnow().isoformat() + "Z" if validated else None
+                    ),
                 }
             )
 
     # Update statistics
-    enabled_ops = [
-        op["name"] for op in config["operations"] if op.get("enabled", False)
-    ]
+    enabled_ops = [op["name"] for op in config["operations"] if op.get("enabled", False)]
     total_ops = len(config["operations"])
 
     manifest["statistics"] = {
@@ -163,17 +159,13 @@ def update_manifest(
 
 
 def generate_coverage_report(
-    config_path: Path, manifest: Dict[str, Any], output_path: Path
+    config_path: Path, manifest: Dict[str, Any], output_path: Path, manifest_path: Path
 ) -> None:
     """Generate test coverage report from manifest."""
     config = load_config(config_path)
 
-    enabled_ops = [
-        op["name"] for op in config["operations"] if op.get("enabled", False)
-    ]
-    disabled_ops = [
-        op["name"] for op in config["operations"] if not op.get("enabled", False)
-    ]
+    enabled_ops = [op["name"] for op in config["operations"] if op.get("enabled", False)]
+    disabled_ops = [op["name"] for op in config["operations"] if not op.get("enabled", False)]
 
     # Count tests per operation
     op_test_counts = {}
@@ -186,9 +178,7 @@ def generate_coverage_report(
         op_test_counts[op] = op_test_counts.get(op, 0) + 1
 
     coverage_percentage = (
-        (len(enabled_ops) / len(config["operations"]) * 100)
-        if config["operations"]
-        else 0
+        (len(enabled_ops) / len(config["operations"]) * 100) if config["operations"] else 0
     )
 
     report = f"""# Arithmetic Dialect Test Coverage Report
@@ -222,7 +212,7 @@ def generate_coverage_report(
 ## Test Artifacts
 - **MLIR Artifacts Directory**: {manifest["mlir_artifacts_dir"]}
 - **DAP Traces Directory**: {manifest["dap_traces_dir"]}
-- **Manifest File**: {manifest_path.relative_to(Path.cwd()) if "manifest_path" in locals() else "manifest/arith_test_manifest.json"}
+- **Manifest File**: {manifest_path.relative_to(Path.cwd())}
 
 ## Validation Results
 - **Total Validated**: {manifest["statistics"]["validation_passed"] + manifest["statistics"]["validation_failed"]}
@@ -252,11 +242,15 @@ generation_settings: {config["generation_settings"]}
 def main():
     """Main entry point."""
     project_root = Path.cwd()
-    config_path = project_root / "config" / "arith_ops_config.yaml"
-    mlir_dir = project_root / "test_artifacts" / "mlir" / "arith"
-    trace_dir = project_root / "generated_tests" / "arith_comprehensive"
-    manifest_path = project_root / "manifest" / "arith_test_manifest.json"
-    coverage_path = project_root / "docs" / "arith_test_coverage.md"
+    config_path = project_root / "target" / "trace_testing" / "arith_ops_config.yaml"
+    mlir_dir = project_root / "target" / "trace_testing" / "test_artifacts" / "mlir" / "arith"
+    trace_dir = (
+        project_root / "target" / "trace_testing" / "generated_tests" / "arith_comprehensive"
+    )
+    manifest_path = (
+        project_root / "target" / "trace_testing" / "manifest" / "arith_test_manifest.json"
+    )
+    coverage_path = project_root / "target" / "trace_testing" / "docs" / "arith_test_coverage.md"
 
     if not config_path.exists():
         print(f"Error: Configuration file not found: {config_path}")
@@ -266,7 +260,7 @@ def main():
     manifest = update_manifest(config_path, mlir_dir, trace_dir, manifest_path)
 
     # Generate coverage report
-    generate_coverage_report(config_path, manifest, coverage_path)
+    generate_coverage_report(config_path, manifest, coverage_path, manifest_path)
 
     print("\nUpdate completed successfully.")
 

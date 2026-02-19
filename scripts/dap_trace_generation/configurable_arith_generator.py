@@ -7,9 +7,9 @@ based on a configuration file. It creates individual MLIR files as test
 artifacts and generates corresponding DAP traces.
 
 Usage:
-    python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml
-    python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml --mlir-only
-    python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml --traces-only
+    python scripts/dap_trace_generation/configurable_arith_generator.py --config target/trace_testing/arith_ops_config.yaml
+    python scripts/dap_trace_generation/configurable_arith_generator.py --config target/trace_testing/arith_ops_config.yaml --mlir-only
+    python scripts/dap_trace_generation/configurable_arith_generator.py --config target/trace_testing/arith_ops_config.yaml --traces-only
 """
 
 import argparse
@@ -651,21 +651,21 @@ This guide explains how to use the generated MLIR artifacts and DAP traces for t
 
 ## File Structure
 The generated test suite follows this structure:
-- config/arith_ops_config.yaml - Configuration file
-- test_artifacts/mlir/arith/ - Individual MLIR files organized by operation
-- generated_tests/arith_comprehensive/ - DAP trace files
-- manifest/arith_test_manifest.json - Test suite manifest
-- docs/ - Documentation files
+- target/trace_testing/arith_ops_config.yaml - Configuration file
+- target/trace_testing/test_artifacts/mlir/arith/ - Individual MLIR files organized by operation
+- target/trace_testing/generated_tests/arith_comprehensive/ - DAP trace files
+- target/trace_testing/manifest/arith_test_manifest.json - Test suite manifest
+- target/trace_testing/docs/ - Documentation files
 
 ## Using MLIR Artifacts
 
 ### Individual Validation
 ```bash
 # Validate a single MLIR file
-python scripts/mlir_validation/validate_mlir_precommit.py test_artifacts/mlir/arith/addi/addi_basic_i32.mlir
+python scripts/mlir_validation/validate_mlir_precommit.py target/trace_testing/test_artifacts/mlir/arith/addi/addi_basic_i32.mlir
 
 # Validate all MLIR files
-find test_artifacts/mlir/arith -name "*.mlir" -exec python scripts/mlir_validation/validate_mlir_precommit.py {} \\;
+find target/trace_testing/test_artifacts/mlir/arith -name "*.mlir" -exec python scripts/mlir_validation/validate_mlir_precommit.py {} \\;
 ```
 
 ### Manual Testing
@@ -674,7 +674,7 @@ from mlir.ir import Context, Module
 import mlir.dialects.arith as arith
 
 # Load and parse MLIR file
-with open("test_artifacts/mlir/arith/addi/addi_basic_i32.mlir", "r") as f:
+with open("target/trace_testing/test_artifacts/mlir/arith/addi/addi_basic_i32.mlir", "r") as f:
     mlir_code = f.read()
 
 with Context() as ctx:
@@ -695,12 +695,12 @@ from dap_client.runner.test_runner import TestRunner
 import json
 
 # Load trace
-with open("generated_tests/arith_comprehensive/addi/addi_basic_i32.json", "r") as f:
+with open("target/trace_testing/generated_tests/arith_comprehensive/addi/addi_basic_i32.json", "r") as f:
     trace_data = json.load(f)
 
 # Create runner and execute
 runner = TestRunner()
-results = runner.run_tests(trace_data['test_cases'], "test_artifacts/mlir/arith/addi/addi_basic_i32.mlir")
+results = runner.run_tests(trace_data['test_cases'], "target/trace_testing/test_artifacts/mlir/arith/addi/addi_basic_i32.mlir")
 
 # Check results
 for i, result in enumerate(results):
@@ -711,7 +711,7 @@ for i, result in enumerate(results):
 ### Batch Execution
 ```bash
 # Run all traces (using existing script if available)
-python scripts/run_arith_workflow_tests.py --traces-dir generated_tests/arith_comprehensive
+python scripts/run_arith_workflow_tests.py --traces-dir target/trace_testing/generated_tests/arith_comprehensive
 ```
 
 ## Using the Manifest
@@ -721,7 +721,7 @@ python scripts/run_arith_workflow_tests.py --traces-dir generated_tests/arith_co
 import json
 
 # Load manifest
-with open("manifest/arith_test_manifest.json", "r") as f:
+with open("target/trace_testing/manifest/arith_test_manifest.json", "r") as f:
     manifest_data = json.load(f)
 
 # Get all tests for a specific operation
@@ -745,23 +745,23 @@ print(f"Operations covered: {len(operations)}")
 
 ### Full Regeneration
 ```bash
-python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml
+python scripts/dap_trace_generation/configurable_arith_generator.py --config target/trace_testing/arith_ops_config.yaml
 ```
 
 ### MLIR Only
 ```bash
-python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml --mlir-only
+python scripts/dap_trace_generation/configurable_arith_generator.py --config target/trace_testing/arith_ops_config.yaml --mlir-only
 ```
 
 ### Traces Only
 ```bash
-python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml --traces-only
+python scripts/dap_trace_generation/configurable_arith_generator.py --config target/trace_testing/arith_ops_config.yaml --traces-only
 ```
 
 ## Custom Configuration
 
 ### Modifying Configuration
-Edit `config/arith_ops_config.yaml` to:
+Edit `target/trace_testing/arith_ops_config.yaml` to:
 1. Enable/disable operations
 2. Adjust bitwidths
 3. Modify constraints
@@ -782,10 +782,10 @@ Edit `config/arith_ops_config.yaml` to:
 ### Debugging
 ```bash
 # Verbose output
-python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml --verbose
+python scripts/dap_trace_generation/configurable_arith_generator.py --config target/trace_testing/arith_ops_config.yaml --verbose
 
 # Dry run (no file generation)
-python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml --dry-run
+python scripts/dap_trace_generation/configurable_arith_generator.py --config target/trace_testing/arith_ops_config.yaml --dry-run
 ```
 
 ## Integration with CI
@@ -793,8 +793,8 @@ Add to your CI pipeline:
 ```yaml
 - name: Generate and Test Arithmetic Operations
   run: |
-    python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml
-    python scripts/validate_test_suite.py --manifest manifest/arith_test_manifest.json
+    python scripts/dap_trace_generation/configurable_arith_generator.py --config target/trace_testing/arith_ops_config.yaml
+    python scripts/validate_test_suite.py --manifest target/trace_testing/manifest/arith_test_manifest.json
 ```
 
 ## Extending to Other Dialects

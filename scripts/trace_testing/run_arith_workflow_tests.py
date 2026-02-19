@@ -74,7 +74,7 @@ def collect_arith_test_files(tests_dir: Optional[Path] = None) -> List[Path]:
         List of Path objects to arithmetic test files.
     """
     if tests_dir is None:
-        tests_dir = Path(__file__).parent.parent / "generated_tests"
+        tests_dir = Path(__file__).parent.parent / "target" / "trace_testing" / "generated_tests"
 
     if not tests_dir.exists():
         logger.error(f"Tests directory not found: {tests_dir}")
@@ -105,9 +105,7 @@ def run_arith_tests(test_files: List[Path]) -> Dict[str, Any]:
                 all_results.append(result)
 
                 if result["success"]:
-                    logger.info(
-                        f"  [PASS] {test_file.name} ({result['duration']:.2f}s)"
-                    )
+                    logger.info(f"  [PASS] {test_file.name} ({result['duration']:.2f}s)")
                 else:
                     logger.error(
                         f"  [FAIL] {test_file.name} - {result.get('error', 'Unknown error')}"
@@ -267,25 +265,15 @@ def generate_test_report(summary: Dict[str, Any], output_path: Path) -> None:
             "- [GOOD] **Constraint solving effective:** Z3 solver generates valid inputs"
         )
     elif summary["success_rate"] >= 0.7:
-        report_lines.append(
-            "- [WARN] **Good coverage:** Most arithmetic operations work correctly"
-        )
+        report_lines.append("- [WARN] **Good coverage:** Most arithmetic operations work correctly")
         report_lines.append(
             "- [WARN] **Some issues detected:** Review failed tests for specific problems"
         )
-        report_lines.append(
-            "- [WARN] **Consider expanding test coverage:** Add more edge cases"
-        )
+        report_lines.append("- [WARN] **Consider expanding test coverage:** Add more edge cases")
     else:
-        report_lines.append(
-            "- ❌ **Poor coverage:** Significant issues with arithmetic operations"
-        )
-        report_lines.append(
-            "- ❌ **Investigate failures:** Check debugger implementation"
-        )
-        report_lines.append(
-            "- ❌ **Expand debugging:** Add more logging for failed cases"
-        )
+        report_lines.append("- ❌ **Poor coverage:** Significant issues with arithmetic operations")
+        report_lines.append("- ❌ **Investigate failures:** Check debugger implementation")
+        report_lines.append("- ❌ **Expand debugging:** Add more logging for failed cases")
 
     report_lines.extend(
         [
@@ -333,7 +321,7 @@ def main():
     logger.info("Starting arithmetic workflow tests...")
 
     # Create reports directory
-    reports_dir = Path(__file__).parent.parent / "reports"
+    reports_dir = Path(__file__).parent.parent / "target" / "trace_testing" / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
 
     # Collect test files
@@ -341,9 +329,7 @@ def main():
 
     if not test_files:
         logger.error("No arithmetic test files found. Generate tests first.")
-        logger.info(
-            "Run: python scripts/dap_trace_generation/configurable_arith_generator.py"
-        )
+        logger.info("Run: python scripts/dap_trace_generation/configurable_arith_generator.py")
         return 1
 
     # Run tests

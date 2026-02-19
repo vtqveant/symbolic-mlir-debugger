@@ -136,6 +136,7 @@ mock-debug.txt
 .DS_Store
 
 # 
+target/
 reference/
 debug_report.txt
 fix_summary.json
