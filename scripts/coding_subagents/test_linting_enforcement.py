@@ -254,7 +254,7 @@ def main():
     print("\n" + "=" * 70)
     if all_passed:
         print("✅ ALL TESTS PASSED - Linting enforcement is working")
-        print("Coding subagents MUST use scripts/enforce_linting.py")
+        print("Coding subagents MUST use scripts/coding_subagents/enforce_linting.py")
     else:
         print("❌ SOME TESTS FAILED - Linting enforcement needs fixes")
 
