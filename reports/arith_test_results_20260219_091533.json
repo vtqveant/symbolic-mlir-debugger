@@ -1,0 +1,1061 @@
+{
+  "validation_results": [
+    {
+      "name": "arith_edge_cases.json",
+      "valid_format": true,
+      "errors": [],
+      "warnings": [],
+      "test_structure": {
+        "type": "edge_cases",
+        "session_steps": 7,
+        "has_path_info": false,
+        "has_z3_constraints": false
+      }
+    },
+    {
+      "name": "arithmetic_ops_existing.json",
+      "valid_format": true,
+      "errors": [],
+      "warnings": [],
+      "test_structure": {
+        "type": "other",
+        "session_steps": 7,
+        "has_path_info": false,
+        "has_z3_constraints": false
+      }
+    },
+    {
+      "name": "arith_mixed_bitwidth.json",
+      "valid_format": true,
+      "errors": [],
+      "warnings": [],
+      "test_structure": {
+        "type": "mixed_bitwidth",
+        "session_steps": 8,
+        "has_path_info": false,
+        "has_z3_constraints": false
+      }
+    },
+    {
+      "name": "arith_conditional.json",
+      "valid_format": true,
+      "errors": [],
+      "warnings": [],
+      "test_structure": {
+        "type": "conditional_branches",
+        "session_steps": 7,
+        "has_path_info": false,
+        "has_z3_constraints": false
+      }
+    },
+    {
+      "name": "arith_basic_variation_1.json",
+      "valid_format": true,
+      "errors": [],
+      "warnings": [],
+      "test_structure": {
+        "type": "basic_operations",
+        "session_steps": 7,
+        "has_path_info": false,
+        "has_z3_constraints": false
+      }
+    },
+    {
+      "name": "arith_basic_ops.json",
+      "valid_format": true,
+      "errors": [],
+      "warnings": [],
+      "test_structure": {
+        "type": "basic_operations",
+        "session_steps": 7,
+        "has_path_info": false,
+        "has_z3_constraints": false
+      }
+    },
+    {
+      "name": "arith_basic_variation_3.json",
+      "valid_format": true,
+      "errors": [],
+      "warnings": [],
+      "test_structure": {
+        "type": "basic_operations",
+        "session_steps": 7,
+        "has_path_info": false,
+        "has_z3_constraints": false
+      }
+    },
+    {
+      "name": "arith_tests_manifest.json",
+      "valid_format": false,
+      "errors": [
+        "Missing required field: name",
+        "Missing required field: program",
+        "Missing required field: description",
+        "Missing required field: session"
+      ],
+      "warnings": [],
+      "test_structure": {}
+    },
+    {
+      "name": "arith_conditional_variation_2.json",
+      "valid_format": true,
+      "errors": [],
+      "warnings": [],
+      "test_structure": {
+        "type": "conditional_branches",
+        "session_steps": 7,
+        "has_path_info": false,
+        "has_z3_constraints": false
+      }
+    },
+    {
+      "name": "arith_conditional_variation_0.json",
+      "valid_format": true,
+      "errors": [],
+      "warnings": [],
+      "test_structure": {
+        "type": "conditional_branches",
+        "session_steps": 7,
+        "has_path_info": false,
+        "has_z3_constraints": false
+      }
+    },
+    {
+      "name": "arith_conditional_variation_1.json",
+      "valid_format": true,
+      "errors": [],
+      "warnings": [],
+      "test_structure": {
+        "type": "conditional_branches",
+        "session_steps": 7,
+        "has_path_info": false,
+        "has_z3_constraints": false
+      }
+    },
+    {
+      "name": "arith_basic_variation_2.json",
+      "valid_format": true,
+      "errors": [],
+      "warnings": [],
+      "test_structure": {
+        "type": "basic_operations",
+        "session_steps": 7,
+        "has_path_info": false,
+        "has_z3_constraints": false
+      }
+    },
+    {
+      "name": "arith_basic_variation_0.json",
+      "valid_format": true,
+      "errors": [],
+      "warnings": [],
+      "test_structure": {
+        "type": "basic_operations",
+        "session_steps": 7,
+        "has_path_info": false,
+        "has_z3_constraints": false
+      }
+    },
+    {
+      "name": "arith_conditional_variation_3.json",
+      "valid_format": true,
+      "errors": [],
+      "warnings": [],
+      "test_structure": {
+        "type": "conditional_branches",
+        "session_steps": 7,
+        "has_path_info": false,
+        "has_z3_constraints": false
+      }
+    },
+    {
+      "name": "arith_z3_constraint.json",
+      "valid_format": true,
+      "errors": [],
+      "warnings": [],
+      "test_structure": {
+        "type": "z3_constraints",
+        "session_steps": 5,
+        "has_path_info": true,
+        "has_z3_constraints": true
+      }
+    }
+  ],
+  "execution_results": [
+    {
+      "name": "arith_edge_cases.json",
+      "simulation_success": true,
+      "execution_steps": [
+        {
+          "step": 0,
+          "command": "initialize",
+          "simulated": true,
+          "success": true,
+          "details": "Session initialized with adapter"
+        },
+        {
+          "step": 1,
+          "command": "symbolic/setMode",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolic mode enabled"
+        },
+        {
+          "step": 2,
+          "command": "launch",
+          "simulated": true,
+          "success": true,
+          "details": "Program launched: /root/.openclaw/workspace/symbolic-mlir-debugger/debugger/fixtures/arith_edge_cases.mlir"
+        },
+        {
+          "step": 3,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: a"
+        },
+        {
+          "step": 4,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: b"
+        },
+        {
+          "step": 5,
+          "command": "symbolic/explorePaths",
+          "simulated": true,
+          "success": true,
+          "details": "Exploring up to 2 paths"
+        },
+        {
+          "step": 6,
+          "command": "disconnect",
+          "simulated": true,
+          "success": true,
+          "details": "Session disconnected"
+        }
+      ],
+      "errors": [],
+      "path_exploration": {
+        "simulated_paths": 3,
+        "constraints_generated": true,
+        "z3_solver_used": false
+      }
+    },
+    {
+      "name": "arithmetic_ops_existing.json",
+      "simulation_success": true,
+      "execution_steps": [
+        {
+          "step": 0,
+          "command": "initialize",
+          "simulated": true,
+          "success": true,
+          "details": "Session initialized with adapter"
+        },
+        {
+          "step": 1,
+          "command": "symbolic/setMode",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolic mode enabled"
+        },
+        {
+          "step": 2,
+          "command": "launch",
+          "simulated": true,
+          "success": true,
+          "details": "Program launched: /root/.openclaw/workspace/symbolic-mlir-debugger/debugger/fixtures/arithmetic_ops.mlir"
+        },
+        {
+          "step": 3,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: a"
+        },
+        {
+          "step": 4,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: b"
+        },
+        {
+          "step": 5,
+          "command": "symbolic/explorePaths",
+          "simulated": true,
+          "success": true,
+          "details": "Exploring up to 1 paths"
+        },
+        {
+          "step": 6,
+          "command": "disconnect",
+          "simulated": true,
+          "success": true,
+          "details": "Session disconnected"
+        }
+      ],
+      "errors": [],
+      "path_exploration": {
+        "simulated_paths": 3,
+        "constraints_generated": true,
+        "z3_solver_used": false
+      }
+    },
+    {
+      "name": "arith_mixed_bitwidth.json",
+      "simulation_success": true,
+      "execution_steps": [
+        {
+          "step": 0,
+          "command": "initialize",
+          "simulated": true,
+          "success": true,
+          "details": "Session initialized with adapter"
+        },
+        {
+          "step": 1,
+          "command": "symbolic/setMode",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolic mode enabled"
+        },
+        {
+          "step": 2,
+          "command": "launch",
+          "simulated": true,
+          "success": true,
+          "details": "Program launched: /root/.openclaw/workspace/symbolic-mlir-debugger/debugger/fixtures/arith_mixed_bitwidth.mlir"
+        },
+        {
+          "step": 3,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: a"
+        },
+        {
+          "step": 4,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: b"
+        },
+        {
+          "step": 5,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: c"
+        },
+        {
+          "step": 6,
+          "command": "symbolic/explorePaths",
+          "simulated": true,
+          "success": true,
+          "details": "Exploring up to 1 paths"
+        },
+        {
+          "step": 7,
+          "command": "disconnect",
+          "simulated": true,
+          "success": true,
+          "details": "Session disconnected"
+        }
+      ],
+      "errors": [],
+      "path_exploration": {
+        "simulated_paths": 3,
+        "constraints_generated": true,
+        "z3_solver_used": false
+      }
+    },
+    {
+      "name": "arith_conditional.json",
+      "simulation_success": true,
+      "execution_steps": [
+        {
+          "step": 0,
+          "command": "initialize",
+          "simulated": true,
+          "success": true,
+          "details": "Session initialized with adapter"
+        },
+        {
+          "step": 1,
+          "command": "symbolic/setMode",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolic mode enabled"
+        },
+        {
+          "step": 2,
+          "command": "launch",
+          "simulated": true,
+          "success": true,
+          "details": "Program launched: /root/.openclaw/workspace/symbolic-mlir-debugger/debugger/fixtures/arith_conditional.mlir"
+        },
+        {
+          "step": 3,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: a"
+        },
+        {
+          "step": 4,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: b"
+        },
+        {
+          "step": 5,
+          "command": "symbolic/explorePaths",
+          "simulated": true,
+          "success": true,
+          "details": "Exploring up to 3 paths"
+        },
+        {
+          "step": 6,
+          "command": "disconnect",
+          "simulated": true,
+          "success": true,
+          "details": "Session disconnected"
+        }
+      ],
+      "errors": [],
+      "path_exploration": {
+        "simulated_paths": 3,
+        "constraints_generated": true,
+        "z3_solver_used": false
+      }
+    },
+    {
+      "name": "arith_basic_variation_1.json",
+      "simulation_success": true,
+      "execution_steps": [
+        {
+          "step": 0,
+          "command": "initialize",
+          "simulated": true,
+          "success": true,
+          "details": "Session initialized with adapter"
+        },
+        {
+          "step": 1,
+          "command": "symbolic/setMode",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolic mode enabled"
+        },
+        {
+          "step": 2,
+          "command": "launch",
+          "simulated": true,
+          "success": true,
+          "details": "Program launched: /root/.openclaw/workspace/symbolic-mlir-debugger/debugger/fixtures/arith_basic_ops.mlir"
+        },
+        {
+          "step": 3,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: a"
+        },
+        {
+          "step": 4,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: b"
+        },
+        {
+          "step": 5,
+          "command": "symbolic/explorePaths",
+          "simulated": true,
+          "success": true,
+          "details": "Exploring up to 1 paths"
+        },
+        {
+          "step": 6,
+          "command": "disconnect",
+          "simulated": true,
+          "success": true,
+          "details": "Session disconnected"
+        }
+      ],
+      "errors": [],
+      "path_exploration": {
+        "simulated_paths": 3,
+        "constraints_generated": true,
+        "z3_solver_used": false
+      }
+    },
+    {
+      "name": "arith_basic_ops.json",
+      "simulation_success": true,
+      "execution_steps": [
+        {
+          "step": 0,
+          "command": "initialize",
+          "simulated": true,
+          "success": true,
+          "details": "Session initialized with adapter"
+        },
+        {
+          "step": 1,
+          "command": "symbolic/setMode",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolic mode enabled"
+        },
+        {
+          "step": 2,
+          "command": "launch",
+          "simulated": true,
+          "success": true,
+          "details": "Program launched: /root/.openclaw/workspace/symbolic-mlir-debugger/debugger/fixtures/arith_basic_ops.mlir"
+        },
+        {
+          "step": 3,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: a"
+        },
+        {
+          "step": 4,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: b"
+        },
+        {
+          "step": 5,
+          "command": "symbolic/explorePaths",
+          "simulated": true,
+          "success": true,
+          "details": "Exploring up to 1 paths"
+        },
+        {
+          "step": 6,
+          "command": "disconnect",
+          "simulated": true,
+          "success": true,
+          "details": "Session disconnected"
+        }
+      ],
+      "errors": [],
+      "path_exploration": {
+        "simulated_paths": 3,
+        "constraints_generated": true,
+        "z3_solver_used": false
+      }
+    },
+    {
+      "name": "arith_basic_variation_3.json",
+      "simulation_success": true,
+      "execution_steps": [
+        {
+          "step": 0,
+          "command": "initialize",
+          "simulated": true,
+          "success": true,
+          "details": "Session initialized with adapter"
+        },
+        {
+          "step": 1,
+          "command": "symbolic/setMode",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolic mode enabled"
+        },
+        {
+          "step": 2,
+          "command": "launch",
+          "simulated": true,
+          "success": true,
+          "details": "Program launched: /root/.openclaw/workspace/symbolic-mlir-debugger/debugger/fixtures/arith_basic_ops.mlir"
+        },
+        {
+          "step": 3,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: a"
+        },
+        {
+          "step": 4,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: b"
+        },
+        {
+          "step": 5,
+          "command": "symbolic/explorePaths",
+          "simulated": true,
+          "success": true,
+          "details": "Exploring up to 1 paths"
+        },
+        {
+          "step": 6,
+          "command": "disconnect",
+          "simulated": true,
+          "success": true,
+          "details": "Session disconnected"
+        }
+      ],
+      "errors": [],
+      "path_exploration": {
+        "simulated_paths": 3,
+        "constraints_generated": true,
+        "z3_solver_used": false
+      }
+    },
+    {
+      "name": "arith_tests_manifest.json",
+      "simulation_success": true,
+      "execution_steps": [],
+      "errors": []
+    },
+    {
+      "name": "arith_conditional_variation_2.json",
+      "simulation_success": true,
+      "execution_steps": [
+        {
+          "step": 0,
+          "command": "initialize",
+          "simulated": true,
+          "success": true,
+          "details": "Session initialized with adapter"
+        },
+        {
+          "step": 1,
+          "command": "symbolic/setMode",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolic mode enabled"
+        },
+        {
+          "step": 2,
+          "command": "launch",
+          "simulated": true,
+          "success": true,
+          "details": "Program launched: /root/.openclaw/workspace/symbolic-mlir-debugger/debugger/fixtures/arith_conditional.mlir"
+        },
+        {
+          "step": 3,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: a"
+        },
+        {
+          "step": 4,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: b"
+        },
+        {
+          "step": 5,
+          "command": "symbolic/explorePaths",
+          "simulated": true,
+          "success": true,
+          "details": "Exploring up to 3 paths"
+        },
+        {
+          "step": 6,
+          "command": "disconnect",
+          "simulated": true,
+          "success": true,
+          "details": "Session disconnected"
+        }
+      ],
+      "errors": [],
+      "path_exploration": {
+        "simulated_paths": 3,
+        "constraints_generated": true,
+        "z3_solver_used": false
+      }
+    },
+    {
+      "name": "arith_conditional_variation_0.json",
+      "simulation_success": true,
+      "execution_steps": [
+        {
+          "step": 0,
+          "command": "initialize",
+          "simulated": true,
+          "success": true,
+          "details": "Session initialized with adapter"
+        },
+        {
+          "step": 1,
+          "command": "symbolic/setMode",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolic mode enabled"
+        },
+        {
+          "step": 2,
+          "command": "launch",
+          "simulated": true,
+          "success": true,
+          "details": "Program launched: /root/.openclaw/workspace/symbolic-mlir-debugger/debugger/fixtures/arith_conditional.mlir"
+        },
+        {
+          "step": 3,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: a"
+        },
+        {
+          "step": 4,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: b"
+        },
+        {
+          "step": 5,
+          "command": "symbolic/explorePaths",
+          "simulated": true,
+          "success": true,
+          "details": "Exploring up to 3 paths"
+        },
+        {
+          "step": 6,
+          "command": "disconnect",
+          "simulated": true,
+          "success": true,
+          "details": "Session disconnected"
+        }
+      ],
+      "errors": [],
+      "path_exploration": {
+        "simulated_paths": 3,
+        "constraints_generated": true,
+        "z3_solver_used": false
+      }
+    },
+    {
+      "name": "arith_conditional_variation_1.json",
+      "simulation_success": true,
+      "execution_steps": [
+        {
+          "step": 0,
+          "command": "initialize",
+          "simulated": true,
+          "success": true,
+          "details": "Session initialized with adapter"
+        },
+        {
+          "step": 1,
+          "command": "symbolic/setMode",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolic mode enabled"
+        },
+        {
+          "step": 2,
+          "command": "launch",
+          "simulated": true,
+          "success": true,
+          "details": "Program launched: /root/.openclaw/workspace/symbolic-mlir-debugger/debugger/fixtures/arith_conditional.mlir"
+        },
+        {
+          "step": 3,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: a"
+        },
+        {
+          "step": 4,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: b"
+        },
+        {
+          "step": 5,
+          "command": "symbolic/explorePaths",
+          "simulated": true,
+          "success": true,
+          "details": "Exploring up to 3 paths"
+        },
+        {
+          "step": 6,
+          "command": "disconnect",
+          "simulated": true,
+          "success": true,
+          "details": "Session disconnected"
+        }
+      ],
+      "errors": [],
+      "path_exploration": {
+        "simulated_paths": 3,
+        "constraints_generated": true,
+        "z3_solver_used": false
+      }
+    },
+    {
+      "name": "arith_basic_variation_2.json",
+      "simulation_success": true,
+      "execution_steps": [
+        {
+          "step": 0,
+          "command": "initialize",
+          "simulated": true,
+          "success": true,
+          "details": "Session initialized with adapter"
+        },
+        {
+          "step": 1,
+          "command": "symbolic/setMode",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolic mode enabled"
+        },
+        {
+          "step": 2,
+          "command": "launch",
+          "simulated": true,
+          "success": true,
+          "details": "Program launched: /root/.openclaw/workspace/symbolic-mlir-debugger/debugger/fixtures/arith_basic_ops.mlir"
+        },
+        {
+          "step": 3,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: a"
+        },
+        {
+          "step": 4,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: b"
+        },
+        {
+          "step": 5,
+          "command": "symbolic/explorePaths",
+          "simulated": true,
+          "success": true,
+          "details": "Exploring up to 1 paths"
+        },
+        {
+          "step": 6,
+          "command": "disconnect",
+          "simulated": true,
+          "success": true,
+          "details": "Session disconnected"
+        }
+      ],
+      "errors": [],
+      "path_exploration": {
+        "simulated_paths": 3,
+        "constraints_generated": true,
+        "z3_solver_used": false
+      }
+    },
+    {
+      "name": "arith_basic_variation_0.json",
+      "simulation_success": true,
+      "execution_steps": [
+        {
+          "step": 0,
+          "command": "initialize",
+          "simulated": true,
+          "success": true,
+          "details": "Session initialized with adapter"
+        },
+        {
+          "step": 1,
+          "command": "symbolic/setMode",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolic mode enabled"
+        },
+        {
+          "step": 2,
+          "command": "launch",
+          "simulated": true,
+          "success": true,
+          "details": "Program launched: /root/.openclaw/workspace/symbolic-mlir-debugger/debugger/fixtures/arith_basic_ops.mlir"
+        },
+        {
+          "step": 3,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: a"
+        },
+        {
+          "step": 4,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: b"
+        },
+        {
+          "step": 5,
+          "command": "symbolic/explorePaths",
+          "simulated": true,
+          "success": true,
+          "details": "Exploring up to 1 paths"
+        },
+        {
+          "step": 6,
+          "command": "disconnect",
+          "simulated": true,
+          "success": true,
+          "details": "Session disconnected"
+        }
+      ],
+      "errors": [],
+      "path_exploration": {
+        "simulated_paths": 3,
+        "constraints_generated": true,
+        "z3_solver_used": false
+      }
+    },
+    {
+      "name": "arith_conditional_variation_3.json",
+      "simulation_success": true,
+      "execution_steps": [
+        {
+          "step": 0,
+          "command": "initialize",
+          "simulated": true,
+          "success": true,
+          "details": "Session initialized with adapter"
+        },
+        {
+          "step": 1,
+          "command": "symbolic/setMode",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolic mode enabled"
+        },
+        {
+          "step": 2,
+          "command": "launch",
+          "simulated": true,
+          "success": true,
+          "details": "Program launched: /root/.openclaw/workspace/symbolic-mlir-debugger/debugger/fixtures/arith_conditional.mlir"
+        },
+        {
+          "step": 3,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: a"
+        },
+        {
+          "step": 4,
+          "command": "symbolic/evaluate",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolically evaluated: b"
+        },
+        {
+          "step": 5,
+          "command": "symbolic/explorePaths",
+          "simulated": true,
+          "success": true,
+          "details": "Exploring up to 3 paths"
+        },
+        {
+          "step": 6,
+          "command": "disconnect",
+          "simulated": true,
+          "success": true,
+          "details": "Session disconnected"
+        }
+      ],
+      "errors": [],
+      "path_exploration": {
+        "simulated_paths": 3,
+        "constraints_generated": true,
+        "z3_solver_used": false
+      }
+    },
+    {
+      "name": "arith_z3_constraint.json",
+      "simulation_success": true,
+      "execution_steps": [
+        {
+          "step": 0,
+          "command": "initialize",
+          "simulated": true,
+          "success": true,
+          "details": "Session initialized with adapter"
+        },
+        {
+          "step": 1,
+          "command": "symbolic/setMode",
+          "simulated": true,
+          "success": true,
+          "details": "Symbolic mode enabled"
+        },
+        {
+          "step": 2,
+          "command": "launch",
+          "simulated": true,
+          "success": true,
+          "details": "Program launched: /root/.openclaw/workspace/symbolic-mlir-debugger/debugger/fixtures/arith_conditional.mlir"
+        },
+        {
+          "step": 3,
+          "command": "symbolic/explorePaths",
+          "simulated": true,
+          "success": true,
+          "details": "Exploring up to 3 paths"
+        },
+        {
+          "step": 4,
+          "command": "disconnect",
+          "simulated": true,
+          "success": true,
+          "details": "Session disconnected"
+        }
+      ],
+      "errors": [],
+      "path_exploration": {
+        "simulated_paths": 3,
+        "constraints_generated": true,
+        "z3_solver_used": true
+      }
+    }
+  ],
+  "summary": {
+    "total_tests": 15,
+    "valid_format": 14,
+    "successful_simulations": 15,
+    "test_files": [
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arith_edge_cases.json",
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arithmetic_ops_existing.json",
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arith_mixed_bitwidth.json",
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arith_conditional.json",
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arith_basic_variation_1.json",
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arith_basic_ops.json",
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arith_basic_variation_3.json",
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arith_tests_manifest.json",
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arith_conditional_variation_2.json",
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arith_conditional_variation_0.json",
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arith_conditional_variation_1.json",
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arith_basic_variation_2.json",
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arith_basic_variation_0.json",
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arith_conditional_variation_3.json",
+      "/root/.openclaw/workspace/symbolic-mlir-debugger/generated_tests/arith_z3_constraint.json"
+    ]
+  }
+}
