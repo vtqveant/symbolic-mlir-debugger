@@ -17,16 +17,16 @@ This directory contains scripts for generating DAP (Debug Adapter Protocol) test
 ### Configurable Arithmetic Generator
 ```bash
 # Full generation
-python configurable_arith_generator.py --config ../config/arith_ops_config.yaml
+python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml
 
 # MLIR artifacts only
-python configurable_arith_generator.py --config ../config/arith_ops_config.yaml --mlir-only
+python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml --mlir-only
 
 # DAP traces only
-python configurable_arith_generator.py --config ../config/arith_ops_config.yaml --traces-only
+python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml --traces-only
 
 # Custom directories
-python configurable_arith_generator.py --config ../config/arith_ops_config.yaml --mlir-dir ../../test_artifacts/mlir/arith --trace-dir ../../generated_tests/arith_comprehensive
+python scripts/dap_trace_generation/configurable_arith_generator.py --config config/arith_ops_config.yaml --mlir-dir test_artifacts/mlir/arith --trace-dir generated_tests/arith_comprehensive
 ```
 
 ### Legacy Generators
@@ -44,7 +44,7 @@ python z3_concrete_generator.py
 ## Configuration
 
 ### Arithmetic Dialect Configuration
-The configurable generator uses `../config/arith_ops_config.yaml` which defines:
+The configurable generator uses `config/arith_ops_config.yaml` which defines:
 - Enabled operations
 - Bitwidths for each operation
 - Constraints and edge cases
@@ -96,10 +96,10 @@ The manifest file (`arith_test_manifest.json`) contains:
 ### MLIR Validation
 ```bash
 # Validate individual MLIR file
-python ../validate_mlir_precommit.py test_artifacts/mlir/arith/addi/addi_basic_i32.mlir
+python scripts/mlir_validation/validate_mlir_precommit.py test_artifacts/mlir/arith/addi/addi_basic_i32.mlir
 
 # Validate all MLIR files
-find test_artifacts/mlir/arith -name "*.mlir" -exec python ../validate_mlir_precommit.py {} \;
+find test_artifacts/mlir/arith -name "*.mlir" -exec python scripts/mlir_validation/validate_mlir_precommit.py {} \;
 ```
 
 ### DAP Trace Validation

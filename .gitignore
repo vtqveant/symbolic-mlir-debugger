@@ -141,3 +141,6 @@ debug_report.txt
 fix_summary.json
 test_report.json
 generated_tests/
+test_artifacts/
+manifest/
+docs/arith_test_coverage.md

@@ -16,10 +16,10 @@ The generated test suite follows this structure:
 ### Individual Validation
 ```bash
 # Validate a single MLIR file
-python scripts/validate_mlir_precommit.py test_artifacts/mlir/arith/addi/addi_basic_i32.mlir
+python scripts/mlir_validation/validate_mlir_precommit.py test_artifacts/mlir/arith/addi/addi_basic_i32.mlir
 
 # Validate all MLIR files
-find test_artifacts/mlir/arith -name "*.mlir" -exec python scripts/validate_mlir_precommit.py {} \;
+find test_artifacts/mlir/arith -name "*.mlir" -exec python scripts/mlir_validation/validate_mlir_precommit.py {} \;
 ```
 
 ### Manual Testing
