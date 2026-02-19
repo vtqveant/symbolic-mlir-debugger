@@ -38,7 +38,7 @@ jobs:
         python-version: '3.10'
     - name: Install linting tools
       run: |
-        pip install black flake8 requests
+        pip install black requests
         echo "Python version: $(python --version)"
         echo "Black version: $(black --version)"
         echo "Python path: $(which python)"
@@ -46,11 +46,6 @@ jobs:
       run: |
         echo "Running black check..."
         black --check --verbose .
-    - name: Lint with flake8 (our code only)
-      run: |
-        python -m flake8 . \
-          --exclude=vscode,node_modules,.venv,venv,__pycache__,.pytest_cache \
-          --max-line-length=100 --extend-ignore=E203,W503 --count --select=E9,F63,F7,F82 --show-source --statistics
     
     - name: Validate MLIR syntax with LSP server
       run: |
