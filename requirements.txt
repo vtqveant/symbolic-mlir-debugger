@@ -12,6 +12,9 @@ parse>=1.14.0
 # DAP client dependencies
 jsonschema>=4.0.0
 
+# MLIR LSP validation dependencies
+requests>=2.28.0
+
 # Development dependencies
 pytest>=7.0.0
 pytest-cov>=4.0.0
