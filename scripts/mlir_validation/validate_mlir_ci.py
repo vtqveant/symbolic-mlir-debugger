@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
 """
 MLIR validation script for CI pipeline.
-Validates all MLIR files and embedded MLIR code in the repository.
+Validates all MLIR files and embedded MLIR code in the repository using MCP server.
 """
 
 import os
 import sys
 import json
-import requests
 import glob
 import re
 
-LSP_SERVER_URL = "https://api.niche-robotics.tech/api/v1/diagnostics"
+# Import MCP client
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mcp_client import MCPClient
+
+# Initialize MCP client
+MCP_CLIENT = MCPClient(base_url="https://api.niche-robotics.tech")
 
 
 def validate_mlir(mlir_code: str, uri: str = "file:///test.mlir") -> dict:
-    """Validate MLIR code using the LSP server."""
-    headers = {"Content-Type": "application/json"}
-    data = {"mlir_code": mlir_code, "uri": uri}
-
+    """Validate MLIR code using the MCP server."""
     try:
-        response = requests.post(LSP_SERVER_URL, json=data, headers=headers, timeout=30)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
+        result = MCP_CLIENT.validate_mlir(mlir_code, uri)
+        return result
+    except Exception as e:
         return {"error": str(e)}
 
 

@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
 """
 Pre-commit hook for MLIR syntax validation.
-Validates only staged/changed MLIR files to save time.
+Validates only staged/changed MLIR files to save time using MCP server.
 """
 
 import os
 import sys
-import requests
 import re
 import subprocess
 from pathlib import Path
 
-LSP_SERVER_URL = "https://api.niche-robotics.tech/api/v1/diagnostics"
+# Import MCP client
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mcp_client import MCPClient
+
+# Initialize MCP client
+MCP_CLIENT = MCPClient(base_url="https://api.niche-robotics.tech")
 
 
 def validate_mlir(mlir_code: str, uri: str = "file:///test.mlir") -> dict:
-    """Validate MLIR code using the LSP server."""
-    headers = {"Content-Type": "application/json"}
-    data = {"mlir_code": mlir_code, "uri": uri}
-
+    """Validate MLIR code using the MCP server."""
     try:
-        response = requests.post(LSP_SERVER_URL, json=data, headers=headers, timeout=10)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
+        result = MCP_CLIENT.validate_mlir(mlir_code, uri)
+        return result
+    except Exception as e:
         return {"error": str(e)}
 
 
