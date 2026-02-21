@@ -4,7 +4,7 @@ This document describes the MLIR syntax validation tools integrated into the sym
 
 ## Overview
 
-The project now includes comprehensive MLIR syntax validation using the official MLIR Language Server Protocol (LSP) via a REST API wrapper. This ensures that all MLIR code in the repository follows correct syntax before it's used in tests or production.
+The project now includes comprehensive MLIR syntax validation using the official MLIR Language Server Protocol (LSP) via a Model Context Protocol (MCP) server. This ensures that all MLIR code in the repository follows correct syntax before it's used in tests or production.
 
 ## Validation Tools
 
@@ -90,13 +90,19 @@ python3 mlir_monitoring.py /path/to/repository
 python3 scripts/mlir_validation/validate_mlir_ci.py
 ```
 
-## LSP Server
+## MCP Server
 
-All validation tools use the MLIR LSP wrapper API:
+All validation tools use the MLIR MCP (Model Context Protocol) server:
 
-**Endpoint**: `https://api.niche-robotics.tech/api/v1/diagnostics`
+**Endpoint**: `https://api.niche-robotics.tech/sse` (MCP Server-Sent Events)
 
-**Source**: `agentic-playground` repository (`.opencode/skills/mlir-lsp-server/`)
+**Source**: `agentic-playground/mlir-mcp-server` repository
+
+**Protocol**: Model Context Protocol (MCP) over HTTP/SSE
+
+**Available Tools**:
+- `validate_mlir`: Full MLIR validation with diagnostics
+- `check_mlir_syntax`: Syntax checking
 
 **Capabilities**:
 - Official MLIR language server diagnostics
