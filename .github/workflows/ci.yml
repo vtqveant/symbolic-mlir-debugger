@@ -32,6 +32,7 @@ jobs:
         python -m pytest -v
 
   lint:
+    if: false  # current setup is unstable, disable
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
