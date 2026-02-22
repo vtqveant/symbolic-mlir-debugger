@@ -14,7 +14,9 @@ def test_black_configuration():
     print("Testing black configuration...")
 
     # Get black version and config
-    result = subprocess.run(["python3", "-m", "black", "--version"], capture_output=True, text=True)
+    result = subprocess.run(
+        ["python3", "-m", "black", "--version"], capture_output=True, text=True
+    )
     print(f"Black version: {result.stdout.strip()}")
 
     # Test black check with CI config
@@ -66,7 +68,7 @@ def test_flake8_configuration():
         "--extend-ignore",
         "E203,W503",
         "--exclude",
-        ".git,__pycache__,.pytest_cache,.venv,venv,build,dist,vscode,node_modules",
+        ".git,__pycache__,.pytest_cache,.venv,venv,build,dist,node_modules",
         "--count",
         "--select",
         "E9,F63,F7,F82",
@@ -97,7 +99,9 @@ def test_enforcement_script():
         return False
 
     # Test script execution
-    result = subprocess.run(["python3", str(script_path)], capture_output=True, text=True)
+    result = subprocess.run(
+        ["python3", str(script_path)], capture_output=True, text=True
+    )
 
     if result.returncode == 0:
         print("✅ Enforcement script works")
@@ -114,7 +118,10 @@ def test_ci_configuration_match():
     print("\nVerifying CI configuration match...")
 
     ci_config = {
-        "black": {"line_length": 100, "check_command": "black --check --line-length 100"},
+        "black": {
+            "line_length": 100,
+            "check_command": "black --check --line-length 100",
+        },
         "flake8": {
             "max_line_length": 100,
             "extend_ignore": "E203,W503",
@@ -229,9 +236,9 @@ def main():
 
     results = []
     for test_name, test_func in tests:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Test: {test_name}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         try:
             success = test_func()
             results.append((test_name, success))

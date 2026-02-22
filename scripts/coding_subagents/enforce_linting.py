@@ -33,7 +33,7 @@ class LintingEnforcer:
   | buck-out
   | build
   | dist
-  | vscode/.*     # EXCLUDE vscode directory
+
   | node_modules/.*  # EXCLUDE node_modules
   | .*/__pycache__/.*
   | .*/\.pytest_cache/.*
@@ -44,7 +44,7 @@ class LintingEnforcer:
         self.flake8_config = {
             "max-line-length": 100,
             "extend-ignore": "E203,W503",
-            "exclude": ".git,__pycache__,.pytest_cache,.venv,venv,build,dist,vscode,node_modules",
+            "exclude": ".git,__pycache__,.pytest_cache,.venv,venv,build,dist,node_modules",
         }
 
     def run_black_check(self, files=None):
@@ -73,7 +73,9 @@ class LintingEnforcer:
         cmd.extend(["--extend-exclude", self.black_config["exclude"].strip()])
 
         print(f"Running black check: {' '.join(cmd)}")
-        result = subprocess.run(cmd, cwd=self.project_root, capture_output=True, text=True)
+        result = subprocess.run(
+            cmd, cwd=self.project_root, capture_output=True, text=True
+        )
 
         if result.returncode != 0:
             print("❌ Black formatting issues found:")
@@ -109,7 +111,9 @@ class LintingEnforcer:
         cmd.extend(["--extend-exclude", self.black_config["exclude"].strip()])
 
         print(f"Applying black formatting: {' '.join(cmd)}")
-        result = subprocess.run(cmd, cwd=self.project_root, capture_output=True, text=True)
+        result = subprocess.run(
+            cmd, cwd=self.project_root, capture_output=True, text=True
+        )
 
         if result.returncode != 0:
             print("❌ Black formatting failed:")
@@ -145,7 +149,9 @@ class LintingEnforcer:
             cmd.append(".")
 
         print(f"Running flake8 check: {' '.join(cmd)}")
-        result = subprocess.run(cmd, cwd=self.project_root, capture_output=True, text=True)
+        result = subprocess.run(
+            cmd, cwd=self.project_root, capture_output=True, text=True
+        )
 
         if result.returncode != 0:
             print("❌ Flake8 linting issues found:")
@@ -189,7 +195,6 @@ class LintingEnforcer:
                 "venv",
                 "build",
                 "dist",
-                "vscode",
                 "node_modules",
             ]
             dirs[:] = [d for d in dirs if d not in skip_dirs]

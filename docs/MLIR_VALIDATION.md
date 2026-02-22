@@ -8,13 +8,13 @@ The project now includes comprehensive MLIR syntax validation using the official
 
 ## Validation Tools
 
-### 1. CI Pipeline Integration (`mlir-validation.yml`)
+### 1. CI Pipeline Integration (`ci.yml`)
 
-**Location**: `.github/workflows/mlir-validation.yml`
+**Location**: `.github/workflows/ci.yml` (mlir-validation job)
 
 **Purpose**: Automatically validates MLIR syntax on:
-- Push to `main` or `develop` branches
-- Pull requests
+- Push to `main` branch
+- Pull requests to `main`
 - Daily schedule (00:00 UTC)
 - Manual trigger
 
@@ -25,7 +25,7 @@ The project now includes comprehensive MLIR syntax validation using the official
 - Comments on PRs with validation failures
 - Uploads validation reports as artifacts
 
-**Usage**: Automatically runs as part of GitHub Actions.
+**Usage**: Automatically runs as part of GitHub Actions CI.
 
 ### 2. Pre-commit Hook (`validate_mlir_precommit.py`)
 
