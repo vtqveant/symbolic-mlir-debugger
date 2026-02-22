@@ -96,10 +96,7 @@ def validate_python_file(file_path: str) -> list:
     results = []
 
     for i, block in enumerate(mlir_blocks):
-        uri = (
-            f"file://{os.path.abspath(file_path)}"
-            f"#block_{i + 1}_line_{block['line_start']}"
-        )
+        uri = f"file://{os.path.abspath(file_path)}" f"#block_{i + 1}_line_{block['line_start']}"
         result = validate_mlir(block["code"], uri)
 
         if result.get("error") or result.get("diagnostics"):
@@ -142,9 +139,7 @@ def main():
         # Add all .mlir files
         mlir_files = list(Path(".").rglob("*.mlir"))
         mlir_files = [
-            str(f)
-            for f in mlir_files
-            if ".venv" not in str(f) and "__pycache__" not in str(f)
+            str(f) for f in mlir_files if ".venv" not in str(f) and "__pycache__" not in str(f)
         ]
         files_to_validate.extend(mlir_files)
         # Add Python test files
@@ -160,9 +155,7 @@ def main():
         files_to_validate.extend([f for f in python_files if os.path.exists(f)])
 
     # Filter to only MLIR and Python files
-    files_to_validate = [
-        f for f in files_to_validate if f.endswith(".mlir") or f.endswith(".py")
-    ]
+    files_to_validate = [f for f in files_to_validate if f.endswith(".mlir") or f.endswith(".py")]
 
     if not files_to_validate:
         print("No MLIR or Python files to validate.")
@@ -202,10 +195,7 @@ def main():
         print("\n" + "=" * 80)
         print("MLIR SYNTAX VALIDATION FAILED")
         print("=" * 80)
-        print(
-            f"\nSummary: Validated {mlir_count} .mlir files "
-            f"and {python_count} Python files"
-        )
+        print(f"\nSummary: Validated {mlir_count} .mlir files " f"and {python_count} Python files")
         print(f"Found {len(problems)} files with issues:\n")
 
         for problem in problems:
@@ -216,14 +206,8 @@ def main():
                 print(f"  Error: {problem['error']}")
             if problem.get("diagnostics"):
                 for diag in problem["diagnostics"]:
-                    line = (
-                        diag["range"]["start"]["line"] + 1 if diag.get("range") else "?"
-                    )
-                    char = (
-                        diag["range"]["start"]["character"] + 1
-                        if diag.get("range")
-                        else "?"
-                    )
+                    line = diag["range"]["start"]["line"] + 1 if diag.get("range") else "?"
+                    char = diag["range"]["start"]["character"] + 1 if diag.get("range") else "?"
                     print(f"  - Line {line}, Char {char}: {diag.get('message')}")
             print()
 

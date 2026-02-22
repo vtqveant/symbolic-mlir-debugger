@@ -59,28 +59,7 @@ python -m flake8 .
 
 **Note:** The project uses black (line-length=100) for formatting and flake8 for linting. Always run black before committing to ensure consistent formatting.
 
-### VS Code Extension
 
-All commands should be run from the `vscode/` directory.
-
-**Install dependencies:**
-```bash
-cd vscode
-npm install
-```
-
-**Development commands:**
-```bash
-npm run compile          # Compile TypeScript (tsc)
-npm run lint             # ESLint on src directory
-npm run typecheck        # TypeScript type checking (no emit)
-npm run test             # Currently runs typecheck
-npm run build            # Bundle with esbuild (extension + web)
-npm run watch            # Watch mode for extension
-npm run watch-web        # Watch mode for web extension
-npm run package          # Package extension with vsce
-npm run publish          # Publish extension to marketplace
-```
 
 ## Code Style Guidelines
 

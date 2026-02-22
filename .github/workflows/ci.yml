@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  schedule:
+    # Run daily at 00:00 UTC
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 jobs:
@@ -36,14 +39,99 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
-    - name: Install MLIR validation dependencies
+    - name: Install linting dependencies
       run: |
-        pip install requests
+        pip install black flake8
         echo "Python version: $(python --version)"
         echo "Python path: $(which python)"
     
-    - name: Validate MLIR syntax with LSP server
+    - name: Check code formatting with black
       run: |
-        echo "Validating MLIR syntax using LSP server..."
+        python -m black --check .
+    
+    - name: Run flake8 linting
+      run: |
+        python -m flake8 .
+
+  mlir-validation:
+    runs-on: ubuntu-latest
+    name: Validate MLIR Syntax
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests pytest
+    
+    - name: Run MLIR validation
+      id: validation
+      run: |
+        # Run the validation script
         python scripts/mlir_validation/validate_mlir_ci.py
-        echo "MLIR validation completed"
+    
+    - name: Upload validation report
+      if: failure() && steps.validation.outcome == 'failure'
+      uses: actions/upload-artifact@v4
+      with:
+        name: mlir-validation-report
+        path: mlir_validation_report.json
+    
+    - name: Comment on PR with validation results
+      if: github.event_name == 'pull_request' && failure() && steps.validation.outcome == 'failure'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          let report = 'MLIR validation failed. See workflow logs for details.';
+          
+          try {
+            const data = fs.readFileSync('mlir_validation_report.json', 'utf8');
+            const problems = JSON.parse(data);
+            
+            report = '## ❌ MLIR Syntax Validation Failed\n\n';
+            report += 'The following MLIR syntax issues were found:\n\n';
+            
+            problems.forEach((problem, idx) => {
+              report += `### ${problem.file}`;
+              if (problem.line) {
+                report += ` (line ${problem.line})`;
+              }
+              report += '\n\n';
+              
+              if (problem.error) {
+                report += `**LSP Error:** ${problem.error}\n\n`;
+              }
+              
+              if (problem.diagnostics && problem.diagnostics.length > 0) {
+                report += '**Diagnostics:**\n';
+                problem.diagnostics.forEach(diag => {
+                  const line = diag.range ? diag.range.start.line + 1 : '?';
+                  const char = diag.range ? diag.range.start.character + 1 : '?';
+                  report += `- Line ${line}, Char ${char}: ${diag.message}\n`;
+                });
+                report += '\n';
+              }
+            });
+            
+            report += '---\n*This check ensures MLIR code follows correct syntax before running tests.*';
+          } catch (error) {
+            report += `\n\nCould not read validation report: ${error.message}`;
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: report
+          })

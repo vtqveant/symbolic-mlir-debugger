@@ -71,10 +71,7 @@ def validate_python_file(file_path: str) -> list:
     results = []
 
     for i, block in enumerate(mlir_blocks):
-        uri = (
-            f"file://{os.path.abspath(file_path)}"
-            f"#block_{i + 1}_line_{block['line_start']}"
-        )
+        uri = f"file://{os.path.abspath(file_path)}" f"#block_{i + 1}_line_{block['line_start']}"
         result = validate_mlir(block["code"], uri)
 
         if result.get("error") or result.get("diagnostics"):
@@ -144,14 +141,8 @@ def main():
                 print(f"  Error: {problem['error']}")
             if problem.get("diagnostics"):
                 for diag in problem["diagnostics"]:
-                    line = (
-                        diag["range"]["start"]["line"] + 1 if diag.get("range") else "?"
-                    )
-                    char = (
-                        diag["range"]["start"]["character"] + 1
-                        if diag.get("range")
-                        else "?"
-                    )
+                    line = diag["range"]["start"]["line"] + 1 if diag.get("range") else "?"
+                    char = diag["range"]["start"]["character"] + 1 if diag.get("range") else "?"
                     print(f"  - Line {line}, Char {char}: {diag.get('message')}")
 
         # Save detailed report
