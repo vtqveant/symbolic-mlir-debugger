@@ -47,7 +47,7 @@ jobs:
       id: validation
       run: |
         # Run the validation script
-        python scripts/validate_mlir_ci.py
+        python scripts/mlir_validation/validate_mlir_ci.py
     
     - name: Upload validation report
       if: failure() && steps.validation.outcome == 'failure'
