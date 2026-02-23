@@ -9,5 +9,5 @@ exclude =
     venv,
     build,
     dist,
-    vscode,
+
     node_modules

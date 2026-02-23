@@ -12,7 +12,7 @@ from pathlib import Path
 
 # Import MCP client
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from mcp_client import MCPClient
+from mcp_client import MCPClient  # noqa: E402
 
 # Initialize MCP client
 MCP_CLIENT = MCPClient(base_url="https://mcp.eventflow.ru")
@@ -96,7 +96,7 @@ def validate_python_file(file_path: str) -> list:
     results = []
 
     for i, block in enumerate(mlir_blocks):
-        uri = f"file://{os.path.abspath(file_path)}" f"#block_{i+1}_line_{block['line_start']}"
+        uri = f"file://{os.path.abspath(file_path)}" f"#block_{i + 1}_line_{block['line_start']}"
         result = validate_mlir(block["code"], uri)
 
         if result.get("error") or result.get("diagnostics"):
@@ -208,7 +208,7 @@ def main():
                 for diag in problem["diagnostics"]:
                     line = diag["range"]["start"]["line"] + 1 if diag.get("range") else "?"
                     char = diag["range"]["start"]["character"] + 1 if diag.get("range") else "?"
-                    print(f"  - Line {line}, Char {char}: " f"{diag.get('message')}")
+                    print(f"  - Line {line}, Char {char}: {diag.get('message')}")
             print()
 
         print("=" * 80)
@@ -217,9 +217,9 @@ def main():
         sys.exit(1)
     else:
         print("\n" + "=" * 80)
-        print(f"MLIR SYNTAX VALIDATION PASSED")
+        print("MLIR SYNTAX VALIDATION PASSED")
         print("=" * 80)
-        print(f"Validated {mlir_count} .mlir files " f"and {python_count} Python files")
+        print(f"Validated {mlir_count} .mlir files and {python_count} Python files")
         print("All MLIR files and code blocks are syntactically valid!")
         print("=" * 80)
         sys.exit(0)

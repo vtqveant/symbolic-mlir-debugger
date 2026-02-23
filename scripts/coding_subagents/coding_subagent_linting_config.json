@@ -21,7 +21,7 @@
         "buck-out",
         "build",
         "dist",
-        "vscode/.*",
+
         "node_modules/.*",
         ".*/__pycache__/.*",
         ".*/\\.pytest_cache/.*"
@@ -32,7 +32,7 @@
       "max_line_length": 100,
       "extend_ignore": "E203,W503",
       "command": "flake8 . --max-line-length=100 --extend-ignore=E203,W503",
-      "exclude": ".git,__pycache__,.pytest_cache,.venv,venv,build,dist,vscode,node_modules",
+      "exclude": ".git,__pycache__,.pytest_cache,.venv,venv,build,dist,node_modules",
       "additional_flags": "--count --select=E9,F63,F7,F82 --show-source --statistics"
     },
     

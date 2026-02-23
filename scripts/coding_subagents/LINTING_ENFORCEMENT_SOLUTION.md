@@ -52,7 +52,7 @@ black --check --line-length 100 --target-version py39 --target-version py310 --t
 
 ### Flake8 Configuration (matches `.github/workflows/ci.yml`):
 ```bash
-flake8 . --max-line-length=100 --extend-ignore=E203,W503 --exclude=.git,__pycache__,.pytest_cache,.venv,venv,build,dist,vscode,node_modules
+flake8 . --max-line-length=100 --extend-ignore=E203,W503 --exclude=.git,__pycache__,.pytest_cache,.venv,venv,build,dist,node_modules
 ```
 
 ## Usage Instructions for Coding Subagents
