@@ -94,9 +94,9 @@ python3 scripts/mlir_validation/validate_mlir_ci.py
 
 All validation tools use the MLIR MCP (Model Context Protocol) server:
 
-**Endpoint**: `https://api.niche-robotics.tech/sse` (MCP Server-Sent Events)
+**Endpoint**: `https://mcp.eventflow.ru/sse` (MCP Server-Sent Events)
 
-**Source**: `agentic-playground/mlir-mcp-server` repository
+**Source**: `vtqveant/mlir-mcp-server` repository
 
 **Protocol**: Model Context Protocol (MCP) over HTTP/SSE
 

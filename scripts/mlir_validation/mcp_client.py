@@ -13,7 +13,7 @@ from typing import Dict, Any, Optional
 class MCPClient:
     """Client for MCP server communication via SSE."""
     
-    def __init__(self, base_url: str = "https://api.niche-robotics.tech"):
+    def __init__(self, base_url: str = "https://mcp.eventflow.ru"):
         self.base_url = base_url.rstrip('/')
         self.sse_url = f"{self.base_url}/sse"
         
