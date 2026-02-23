@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mcp_client import MCPClient  # noqa: E402
 
 # Initialize MCP client
-MCP_CLIENT = MCPClient(base_url="https://api.niche-robotics.tech")
+MCP_CLIENT = MCPClient(base_url="https://mcp.eventflow.ru")
 
 
 def validate_mlir(mlir_code: str, uri: str = "file:///test.mlir") -> dict:

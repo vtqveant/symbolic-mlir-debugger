@@ -97,7 +97,7 @@ class MCPClient:
 
     def __init__(
         self,
-        base_url: str = "https://api.niche-robotics.tech",
+        base_url: str = "https://mcp.eventflow.ru",
         verify: bool = True,
         max_retries: int = 3,
     ):
