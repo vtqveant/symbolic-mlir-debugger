@@ -10,33 +10,26 @@ from .report_generator import (
     ReportFormat,
     ExecutionMetrics,
     ValidationMetrics,
-    GenerationMetrics
+    GenerationMetrics,
 )
 
 from .visualization import VisualizationGenerator
-from .coverage_analyzer import (
-    CoverageAnalyzer,
-    CoverageType,
-    CoverageMetric,
-    OperationCoverage
-)
+from .coverage_analyzer import CoverageAnalyzer, CoverageType, CoverageMetric, OperationCoverage
 
 __all__ = [
     # Report generator
-    'ReportGenerator',
-    'ReportFormat',
-    'ExecutionMetrics',
-    'ValidationMetrics',
-    'GenerationMetrics',
-    
+    "ReportGenerator",
+    "ReportFormat",
+    "ExecutionMetrics",
+    "ValidationMetrics",
+    "GenerationMetrics",
     # Visualization
-    'VisualizationGenerator',
-    
+    "VisualizationGenerator",
     # Coverage analysis
-    'CoverageAnalyzer',
-    'CoverageType',
-    'CoverageMetric',
-    'OperationCoverage'
+    "CoverageAnalyzer",
+    "CoverageType",
+    "CoverageMetric",
+    "OperationCoverage",
 ]
 
-__version__ = '1.0.0'
+__version__ = "1.0.0"
