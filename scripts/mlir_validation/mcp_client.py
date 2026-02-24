@@ -7,7 +7,6 @@ Communicates with MCP server via SSE (MCP protocol 2024-11-05).
 import json
 import requests
 import time
-import re
 import threading
 import queue
 from typing import Dict, Any, Optional, Tuple
@@ -97,7 +96,7 @@ class MCPClient:
 
     def __init__(
         self,
-        base_url: str = "https://mcp.eventflow.ru",
+        base_url: str = "https://mcp.eventflow.ru/mcp",
         verify: bool = True,
         max_retries: int = 3,
     ):
@@ -110,62 +109,54 @@ class MCPClient:
         self.verify = verify
         self.max_retries = max_retries
         self.initialized = False
-        self.protocol_version = "2024-11-05"
+        self.protocol_version = "2025-11-25"
+
+    def _read_sse_response(self, response, expected_id):
+        """Read SSE stream from response and find JSON-RPC response with matching ID."""
+        buffer = ""
+        for line in response.iter_lines(decode_unicode=True):
+            if line:
+                buffer += line + "\n"
+            else:
+                if buffer:
+                    # Parse SSE event
+                    lines = buffer.strip().split("\n")
+                    event_type = "message"
+                    data = ""
+                    for line_str in lines:
+                        if line_str.startswith("event: "):
+                            event_type = line_str[7:]
+                        elif line_str.startswith("data: "):
+                            data = line_str[6:]
+                    if data and event_type == "message":
+                        try:
+                            message = json.loads(data)
+                            if "id" in message and message["id"] == expected_id:
+                                return message
+                        except json.JSONDecodeError:
+                            pass
+                    buffer = ""
+        # If we get here, no matching response found
+        raise RuntimeError(f"No response found for request ID {expected_id}")
 
     def _connect(self):
-        """Connect to MCP server and establish session."""
-        if self.sse_client is not None and self.initialized:
+        """Ensure connected to MCP server using Streamable HTTP transport."""
+        if self.initialized:
             return
 
-        # Create SSE client
-        self.sse_client = SSEClient(
-            self.sse_url, headers={"Accept": "text/event-stream"}, verify=self.verify
-        )
-        self.sse_client.start()
-
-        # Wait for endpoint event
-        endpoint_event = None
-        start_time = time.time()
-        while time.time() - start_time < 30.0:
-            event = self.sse_client.get_event(timeout=5.0)
-            if event is None:
-                continue
-
-            event_type, data = event
-            if event_type == "endpoint":
-                endpoint_event = data
-                break
-            elif event_type == "error":
-                raise RuntimeError(f"SSE error: {data}")
-
-        if not endpoint_event:
-            raise RuntimeError("No endpoint event received")
-
-        # Parse endpoint URL
-        # Endpoint format: /messages/?session_id=...
-        self.post_url = f"{self.base_url}{endpoint_event}"
-
-        # Extract session ID
-        match = re.search(r"session_id=([a-f0-9]+)", endpoint_event)
-        if match:
-            self.session_id = match.group(1)
-
-        # Start listening for message events in background
-        threading.Thread(target=self._listen_for_messages, daemon=True).start()
+        # For new transport, POST endpoint is the base URL
+        self.post_url = self.base_url
 
         # Initialize MCP session
         self._initialize_session()
 
     def _initialize_session(self):
-        """Initialize MCP session with server."""
+        """Initialize MCP session with server using Streamable HTTP transport."""
         if self.initialized:
             return
 
-        # Send initialize request
+        # Prepare initialize request
         initialize_id = int(time.time() * 1000)
-        response_queue = queue.Queue()
-        self.pending_requests[initialize_id] = response_queue
-
         initialize_request = {
             "jsonrpc": "2.0",
             "method": "initialize",
@@ -173,11 +164,17 @@ class MCPClient:
                 "protocolVersion": self.protocol_version,
                 "capabilities": {"tools": {}},
                 "clientInfo": {"name": "mlir-validation-client", "version": "1.0.0"},
+                "rootUri": None,
+                "initializationOptions": None,
             },
             "id": initialize_id,
         }
 
-        headers = {"Content-Type": "application/json"}
+        headers = {
+            "Accept": "application/json, text/event-stream",
+            "Content-Type": "application/json",
+            "MCP-Protocol-Version": self.protocol_version,
+        }
 
         try:
             # Send initialize request
@@ -190,47 +187,54 @@ class MCPClient:
                 headers=headers,
                 timeout=30.0,
                 verify=self.verify,
+                stream=True,
             )
 
-            if response.status_code not in [200, 202]:
-                raise RuntimeError(f"Initialize request failed: HTTP {response.status_code}")
-
-            # Wait for initialize response
-            try:
-                result = response_queue.get(timeout=30.0)
-                if "error" in result:
-                    raise RuntimeError(f"Initialize error: {result['error']}")
-
-                # Send initialized notification
-                initialized_notification = {
-                    "jsonrpc": "2.0",
-                    "method": "initialized",
-                    "params": {},
-                }
-
-                notification_response = requests.post(
-                    post_url,
-                    json=initialized_notification,
-                    headers=headers,
-                    timeout=30.0,
-                    verify=self.verify,
+            if response.status_code != 200:
+                raise RuntimeError(
+                    f"Initialize request failed: HTTP {response.status_code}: {response.text}"
                 )
 
-                if notification_response.status_code not in [200, 202]:
-                    print(
-                        f"Warning: Initialized notification failed: "
-                        f"HTTP {notification_response.status_code}"
-                    )
+            # Extract session ID from headers
+            session_id = response.headers.get("Mcp-Session-Id")
+            if not session_id:
+                raise RuntimeError("No Mcp-Session-Id header in response")
+            self.session_id = session_id
 
-                self.initialized = True
-                print(f"MCP session initialized with protocol version {self.protocol_version}")
+            # Read SSE stream for initialize response
+            result = self._read_sse_response(response, initialize_id)
+            if "error" in result:
+                raise RuntimeError(f"Initialize error: {result['error']}")
 
-            except queue.Empty:
-                raise RuntimeError("Timeout waiting for initialize response")
+            # Send initialized notification
+            initialized_notification = {
+                "jsonrpc": "2.0",
+                "method": "initialized",
+                "params": {},
+            }
+            notification_headers = headers.copy()
+            notification_headers["MCP-Session-Id"] = session_id
+            # Remove Accept header for notification (server expects 202)
+            notification_headers["Accept"] = "application/json"
+
+            notification_response = requests.post(
+                post_url,
+                json=initialized_notification,
+                headers=notification_headers,
+                timeout=30.0,
+                verify=self.verify,
+            )
+
+            if notification_response.status_code != 202:
+                print(
+                    f"Warning: Initialized notification failed: "
+                    f"HTTP {notification_response.status_code}"
+                )
+
+            self.initialized = True
+            print(f"MCP session initialized with protocol version {self.protocol_version}")
 
         except Exception as e:
-            # Clean up pending request
-            self.pending_requests.pop(initialize_id, None)
             raise RuntimeError(f"Failed to initialize MCP session: {e}")
 
     def _listen_for_messages(self):
@@ -260,7 +264,7 @@ class MCPClient:
                 break
 
     def _make_request(self, method: str, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Make a JSON-RPC request to MCP server with retry logic."""
+        """Make a JSON-RPC request to MCP server using Streamable HTTP transport."""
         # Ensure connected
         self._connect()
 
@@ -268,10 +272,6 @@ class MCPClient:
         for attempt in range(self.max_retries):
             # Generate request ID
             request_id = int(time.time() * 1000) + attempt  # ensure uniqueness
-
-            # Create response queue
-            response_queue = queue.Queue()
-            self.pending_requests[request_id] = response_queue
 
             # Prepare JSON-RPC request
             payload = {
@@ -281,7 +281,13 @@ class MCPClient:
                 "id": request_id,
             }
 
-            headers = {"Content-Type": "application/json"}
+            headers = {
+                "Accept": "application/json, text/event-stream",
+                "Content-Type": "application/json",
+                "MCP-Protocol-Version": self.protocol_version,
+            }
+            if self.session_id:
+                headers["MCP-Session-Id"] = self.session_id
 
             try:
                 # Send request
@@ -294,26 +300,22 @@ class MCPClient:
                     headers=headers,
                     timeout=30.0,
                     verify=self.verify,
+                    stream=True,
                 )
 
-                if response.status_code != 202:
-                    # 202 Accepted is expected for notifications/requests
-                    # But for simplicity, we'll accept 200 as well
-                    if response.status_code != 200:
-                        # HTTP error, don't retry
-                        return {"error": f"HTTP {response.status_code}: {response.text}"}
+                if response.status_code != 200:
+                    # HTTP error, don't retry
+                    return {"error": f"HTTP {response.status_code}: {response.text}"}
 
-                # Wait for response via SSE
+                # Read SSE response
                 try:
-                    result = response_queue.get(timeout=30.0)
+                    result = self._read_sse_response(response, request_id)
                     if "error" in result:
-                        # Server returned error, don't retry
+                        # Server returned JSON-RPC error
                         return {"error": result["error"]}
                     return result.get("result", {})
-                except queue.Empty:
-                    last_error = "Timeout waiting for response"
-                    # Clean up pending request before retry
-                    self.pending_requests.pop(request_id, None)
+                except RuntimeError as e:
+                    last_error = str(e)
                     continue  # retry
 
             except (
@@ -321,15 +323,12 @@ class MCPClient:
                 requests.exceptions.Timeout,
             ) as e:
                 last_error = str(e)
-                # Clean up pending request before retry
-                self.pending_requests.pop(request_id, None)
                 # Exponential backoff
                 if attempt < self.max_retries - 1:
                     time.sleep(2**attempt)  # 1, 2, 4 seconds
                 continue
             except Exception as e:
                 # Other errors, don't retry
-                self.pending_requests.pop(request_id, None)
                 return {"error": str(e)}
 
         # All retries exhausted
@@ -360,18 +359,33 @@ class MCPClient:
         )
 
     def test_connection(self) -> bool:
-        """Test connection to MCP server."""
+        """Test connection to MCP server using Streamable HTTP transport."""
         try:
-            # Simple test - try to get SSE endpoint with stream=True to avoid waiting for body
-            response = requests.get(
-                self.sse_url,
-                headers={"Accept": "text/event-stream"},
+            # Try POST to MCP endpoint with minimal request
+            headers = {
+                "Accept": "application/json, text/event-stream",
+                "Content-Type": "application/json",
+                "MCP-Protocol-Version": self.protocol_version,
+            }
+            # Send simple initialize request (may fail but shows server reachable)
+            dummy_request = {
+                "jsonrpc": "2.0",
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": self.protocol_version,
+                    "capabilities": {},
+                },
+                "id": 1,
+            }
+            response = requests.post(
+                self.base_url,
+                json=dummy_request,
+                headers=headers,
                 timeout=5.0,
-                stream=True,
                 verify=self.verify,
             )
-            # Close connection immediately after reading status
-            status_ok = response.status_code == 200
+            # Any response other than 404/network error indicates server is reachable
+            status_ok = response.status_code != 404
             response.close()
             return status_ok
         except Exception:
