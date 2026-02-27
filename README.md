@@ -240,3 +240,47 @@ Full attribution details in [NOTICE.txt](NOTICE.txt).
 ## Contributing
 
 Contributions are welcome! Please see the [AGENTS.md](AGENTS.md) file for development guidelines and code style conventions.
+
+
+## 📊 Repository Status (Last Updated: 2026-02-27)
+
+### 📈 Current Metrics
+- **Total Files**: 207
+- **MLIR Files**: 21
+- **Python Files**: 152
+- **Build System**: has requirements.txt, pyproject.toml
+- **CI/CD**: has 2 workflow(s)
+
+### 🔑 Key Features
+- Dynamic symbolic (concolic) debugger
+- MLIR syntax validation
+- MCP server integration
+- Web interface available
+
+### 📝 Recent Activity
+- `5a23b9bc` Merge pull request #127 from vtqveant/mcp-migration-2025-version (Tue Feb 24)
+- `98787473` migrate to mcp ver. 2025 (Tue Feb 24)
+- `a369f647` Merge pull request #125 from vtqveant/issue-123-migrate-to-mcp-eventflow (Mon Feb 23)
+- `228d59be` Merge branch 'main' into issue-123-migrate-to-mcp-eventflow (Mon Feb 23)
+- `054b12ab` Address issue #123: Migrate MLIR validation to MCP server at mcp.eventflow.ru (Mon Feb 23)
+
+### 🚀 Quick Start
+```bash
+# Clone the repository
+git clone https://github.com/vtqveant/symbolic-mlir-debugger.git
+cd symbolic-mlir-debugger
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run tests
+python -m pytest
+
+# Validate MLIR files
+python scripts/mlir_validation/validate_mlir_ci.py
+```
+
+---
+
+*This status section is automatically updated every 12 hours by the README maintenance bot.*
+*Last bot run: 2026-02-27 22:05:10 UTC*
