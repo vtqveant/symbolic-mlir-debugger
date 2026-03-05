@@ -28,10 +28,10 @@ with tempfile.TemporaryDirectory() as tmpdir:
     config_path = Path(tmpdir) / "test_config.yaml"
     config.save_yaml(config_path)
     print(f"   ✅ Saved config to {config_path}")
-    
+
     loaded_config = GeneratorConfig.load_yaml(config_path)
     print(f"   ✅ Loaded config from file")
-    
+
     # Test to_dict
     config_dict = loaded_config.to_dict()
     print(f"   ✅ Converted to dict: version={config_dict.get('version')}")
@@ -47,7 +47,9 @@ else:
 # Test 4: Config utilities
 print("\n4. Testing config utilities...")
 summary = ConfigUtils.generate_config_summary(config_dict)
-print(f"   ✅ Config summary: {summary['enabled_dialects']} enabled dialects, {summary['enabled_operations']} enabled operations")
+print(
+    f"   ✅ Config summary: {summary['enabled_dialects']} enabled dialects, {summary['enabled_operations']} enabled operations"
+)
 
 print("\n=== Quick Test Complete ===")
 print("Basic configuration functionality is working!")

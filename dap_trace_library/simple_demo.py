@@ -41,36 +41,38 @@ print("\n3. Generating DAP traces...")
 try:
     result = generator.generate_all()
     stats = result["statistics"]
-    
+
     print(f"   ✅ Generation complete!")
     print(f"   MLIR files: {stats['mlir_files_generated']}")
     print(f"   DAP traces: {stats['traces_generated']}")
     print(f"   Duration: {stats['duration_seconds']:.2f}s")
-    
+
     # Check files
-    mlir_dir = Path(config.output_settings["base_dir"]) / config.output_settings["mlir_artifacts_dir"]
+    mlir_dir = (
+        Path(config.output_settings["base_dir"]) / config.output_settings["mlir_artifacts_dir"]
+    )
     trace_dir = Path(config.output_settings["base_dir"]) / config.output_settings["dap_traces_dir"]
-    
+
     mlir_files = list(mlir_dir.glob("*.mlir"))
     trace_files = list(trace_dir.glob("*.json"))
-    
+
     print(f"\n4. Generated files:")
     print(f"   MLIR files: {len(mlir_files)}")
     for f in mlir_files[:3]:  # Show first 3
         print(f"     - {f.name}")
-    
+
     print(f"   DAP trace files: {len(trace_files)}")
     for f in trace_files[:3]:  # Show first 3
         print(f"     - {f.name}")
-    
+
     # Show sample MLIR content
     if mlir_files:
         print(f"\n5. Sample MLIR content:")
-        sample_content = FileUtils.read_file(mlir_files[0])
+        sample_content = mlir_files[0].read_text()
         print(f"   First 5 lines of {mlir_files[0].name}:")
-        for line in sample_content.split('\n')[:5]:
+        for line in sample_content.split("\n")[:5]:
             print(f"     {line}")
-    
+
     # Show sample DAP trace structure
     if trace_files:
         print(f"\n6. Sample DAP trace structure:")
@@ -80,10 +82,11 @@ try:
         print(f"     Dialect: {sample_trace.get('dialect')}")
         print(f"     Operation: {sample_trace.get('operation')}")
         print(f"     Session commands: {len(sample_trace.get('session', []))}")
-        
+
 except Exception as e:
     print(f"   ❌ Generation failed: {e}")
     import traceback
+
     traceback.print_exc()
 
 print("\n=== Demo Complete ===")
