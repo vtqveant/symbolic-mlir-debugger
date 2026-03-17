@@ -132,3 +132,7 @@ generated_tests/
 test_artifacts/
 manifest/
 docs/arith_test_coverage.md
+
+# Git worktrees
+.worktrees/
+worktrees/
