@@ -13,9 +13,17 @@ import traceback
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-# Add project root to path for imports
-sys.path.insert(0, os.path.dirname(__file__))
-from interpreter.stepper import ExecutionStepper  # noqa: E402
+# Support both `python -m debugger dap` and direct script execution by adding
+# the repository/site-packages root, then importing the package consistently.
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from debugger.interpreter.stepper import ExecutionStepper  # noqa: E402
+from debugger.interpreter.safe_eval import safe_eval  # noqa: E402
+from debugger.interpreter.symbolic_evaluator import SymbolicExpressionEvaluator  # noqa: E402
+from debugger.interpreter.path_explorer import PathExplorer  # noqa: E402
+from debugger.interpreter.variable_tracking import SymbolicVariableTracker  # noqa: E402
 
 # Set up logging to stderr
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -114,10 +122,6 @@ class MLIRDebugSession:
             # Initialize symbolic debugging components if symbolic mode is enabled
             if self.symbolic_mode:
                 logger.info("Symbolic debugging mode enabled")
-                from interpreter.symbolic_evaluator import SymbolicExpressionEvaluator
-                from interpreter.path_explorer import PathExplorer
-                from interpreter.variable_tracking import SymbolicVariableTracker
-
                 self.symbolic_evaluator = SymbolicExpressionEvaluator(self.stepper)
                 self.variable_tracker = SymbolicVariableTracker(self.stepper)
                 self.path_explorer = PathExplorer(self.stepper)
@@ -551,32 +555,17 @@ class MLIRDebugSession:
         # Merge memory values from expression with all memory values
         memory_values = {**memory_values_all, **memory_values_expr}
 
-        # Simple expression evaluation
+        # Evaluate with a constrained AST evaluator, never eval().
         try:
-            # Security: Only allow safe operations
-            # Build a safe environment
-            safe_dict = {
-                "abs": abs,
-                "min": min,
-                "max": max,
-                "sum": sum,
-            }
-            # Add regular variable values
-            safe_dict.update(var_values)
-            # Add memory cell values (as placeholders)
-            safe_dict.update(memory_values)
-
-            # Evaluate transformed expression
-            # Note: Using eval is generally unsafe, but we control the environment
-            # For production, use a proper expression parser
-            result = eval(transformed_expr, {"__builtins__": {}}, safe_dict)
-
+            env = dict(memory_values)
+            env.update(var_values)
+            result = safe_eval(transformed_expr, env)
             return {
                 "result": str(result),
                 "type": type(result).__name__,
                 "variablesReference": 0,
             }
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - surface as DAP error
             return {
                 "result": f"Error: {e}",
                 "type": "error",
@@ -600,10 +589,6 @@ class MLIRDebugSession:
             or self.path_explorer is None
         ):
             # Import and create components
-            from interpreter.symbolic_evaluator import SymbolicExpressionEvaluator
-            from interpreter.path_explorer import PathExplorer
-            from interpreter.variable_tracking import SymbolicVariableTracker
-
             self.symbolic_evaluator = SymbolicExpressionEvaluator(self.stepper)
             self.variable_tracker = SymbolicVariableTracker(self.stepper)
             self.path_explorer = PathExplorer(self.stepper)

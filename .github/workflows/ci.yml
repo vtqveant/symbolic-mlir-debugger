@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    # Run daily at 00:00 UTC
     - cron: '0 0 * * *'
   workflow_dispatch:
 
@@ -16,123 +15,58 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.10', '3.11']
-    
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-        pip install pytest pytest-cov
-    - name: Run tests
-      run: |
-        python -m pytest -v
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e . --no-deps
+      - name: Run tests with coverage
+        run: |
+          python -m pytest -q \
+            --cov=debugger.agent --cov=debugger.compiler \
+            --cov=debugger.interpreter.safe_eval \
+            --cov-report=term-missing --cov-fail-under=60
 
   lint:
-    if: false  # current setup is unstable, disable
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    - name: Install linting dependencies
-      run: |
-        pip install black flake8
-        echo "Python version: $(python --version)"
-        echo "Python path: $(which python)"
-    
-    - name: Check code formatting with black
-      run: |
-        python -m black --check .
-    
-    - name: Run flake8 linting
-      run: |
-        python -m flake8 .
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install lint tools
+        run: pip install black flake8
+      - name: Black check (agent/CLI and new adapters)
+        run: |
+          black --check \
+            debugger/__init__.py debugger/__main__.py debugger/agent.py debugger/compiler.py \
+            debugger/interpreter/safe_eval.py \
+            debugger/tests/test_agent_api.py debugger/tests/test_compiler.py debugger/tests/test_safe_eval.py \
+            dap_client/tests/test_session_inspection.py \
+            dap_trace_library/execution/trace_executor.py dap_trace_library/tests
+      - name: Flake8 (syntax/error checks)
+        run: |
+          flake8 \
+            debugger/__init__.py debugger/__main__.py debugger/agent.py debugger/compiler.py \
+            debugger/interpreter/safe_eval.py \
+            debugger/tests/test_agent_api.py debugger/tests/test_compiler.py debugger/tests/test_safe_eval.py \
+            dap_client/tests/test_session_inspection.py \
+            dap_trace_library/execution/trace_executor.py dap_trace_library/tests \
+            --max-line-length=100 --extend-ignore=E203,W503 --select=E9,F63,F7,F82
 
   mlir-validation:
     runs-on: ubuntu-latest
-    name: Validate MLIR Syntax
-    
+    name: MLIR validation (local, hermetic)
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-        cache: 'pip'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install requests pytest
-    
-    - name: Run MLIR validation
-      id: validation
-      run: |
-        # Run the validation script
-        python scripts/mlir_validation/validate_mlir_ci.py
-    
-    - name: Upload validation report
-      if: failure() && steps.validation.outcome == 'failure'
-      uses: actions/upload-artifact@v4
-      with:
-        name: mlir-validation-report
-        path: mlir_validation_report.json
-    
-    - name: Comment on PR with validation results
-      if: github.event_name == 'pull_request' && failure() && steps.validation.outcome == 'failure'
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          let report = 'MLIR validation failed. See workflow logs for details.';
-          
-          try {
-            const data = fs.readFileSync('mlir_validation_report.json', 'utf8');
-            const problems = JSON.parse(data);
-            
-            report = '## ❌ MLIR Syntax Validation Failed\n\n';
-            report += 'The following MLIR syntax issues were found:\n\n';
-            
-            problems.forEach((problem, idx) => {
-              report += `### ${problem.file}`;
-              if (problem.line) {
-                report += ` (line ${problem.line})`;
-              }
-              report += '\n\n';
-              
-              if (problem.error) {
-                report += `**LSP Error:** ${problem.error}\n\n`;
-              }
-              
-              if (problem.diagnostics && problem.diagnostics.length > 0) {
-                report += '**Diagnostics:**\n';
-                problem.diagnostics.forEach(diag => {
-                  const line = diag.range ? diag.range.start.line + 1 : '?';
-                  const char = diag.range ? diag.range.start.character + 1 : '?';
-                  report += `- Line ${line}, Char ${char}: ${diag.message}\n`;
-                });
-                report += '\n';
-              }
-            });
-            
-            report += '---\n*This check ensures MLIR code follows correct syntax before running tests.*';
-          } catch (error) {
-            report += `\n\nCould not read validation report: ${error.message}`;
-          }
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: report
-          })
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate MLIR with local tooling when available
+        run: python scripts/mlir_validation/validate_mlir_ci.py

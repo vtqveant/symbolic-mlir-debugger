@@ -4,6 +4,7 @@ import logging
 from typing import Optional, Dict, Any
 
 from ..protocol import (
+    DAPRequest,
     InitializeRequest,
     LaunchRequest,
     SetBreakpointsRequest,
@@ -137,49 +138,44 @@ class DAPSession:
         return result or {}
 
     def get_threads(self) -> Dict[str, Any]:
-        """Get available threads"""
+        """Get available threads."""
         if not self.connection:
             raise RuntimeError("Not connected to debug server")
-
-        # This would be a real DAP request implementation
-        # For now, return stub
-        return {"threads": []}
+        result = self.connection.request(DAPRequest("threads", {}))
+        return result or {}
 
     def get_stacktrace(self, thread_id: int) -> Dict[str, Any]:
-        """Get stack trace for a thread"""
+        """Get stack trace for a thread."""
         if not self.connection:
             raise RuntimeError("Not connected to debug server")
-
-        # This would be a real DAP request implementation
-        # For now, return stub
-        return {"stackTrace": []}
+        result = self.connection.request(DAPRequest("stackTrace", {"threadId": thread_id}))
+        return result or {}
 
     def get_scopes(self, frame_id: int) -> Dict[str, Any]:
-        """Get scopes for a stack frame"""
+        """Get scopes for a stack frame."""
         if not self.connection:
             raise RuntimeError("Not connected to debug server")
-
-        # This would be a real DAP request implementation
-        # For now, return stub
-        return {"scopes": []}
+        result = self.connection.request(DAPRequest("scopes", {"frameId": frame_id}))
+        return result or {}
 
     def get_variables(self, variable_reference: int) -> Dict[str, Any]:
-        """Get variables"""
+        """Get variables for a DAP variable reference."""
         if not self.connection:
             raise RuntimeError("Not connected to debug server")
-
-        # This would be a real DAP request implementation
-        # For now, return stub
-        return {"variables": []}
+        result = self.connection.request(
+            DAPRequest("variables", {"variablesReference": variable_reference})
+        )
+        return result or {}
 
     def evaluate(self, expression: str, frame_id: Optional[int] = None) -> Dict[str, Any]:
-        """Evaluate expression"""
+        """Evaluate an expression in the debugger."""
         if not self.connection:
             raise RuntimeError("Not connected to debug server")
-
-        # This would be a real DAP request implementation
-        # For now, return stub
-        return {"result": None}
+        arguments: Dict[str, Any] = {"expression": expression, "context": "repl"}
+        if frame_id is not None:
+            arguments["frameId"] = frame_id
+        result = self.connection.request(DAPRequest("evaluate", arguments))
+        return result or {}
 
     def symbolic_set_mode(self, enabled: bool = True) -> Dict[str, Any]:
         """Enable or disable symbolic debugging mode"""

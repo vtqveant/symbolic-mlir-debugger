@@ -2,7 +2,7 @@
 
 import lark
 import pytest
-from interpreter.operations import LoopOperation
+from debugger.interpreter.operations import LoopOperation
 
 
 @pytest.mark.parser
@@ -288,8 +288,8 @@ module {
 @pytest.mark.parser
 def test_scf_for_parsing_operations():
     """Test parsing of scf.for operation with use_operations=True."""
-    from interpreter.parser import MLIRParser
-    from interpreter.operations import LoopOperation, ReturnOperation
+    from debugger.interpreter.parser import MLIRParser
+    from debugger.interpreter.operations import LoopOperation, ReturnOperation
 
     parser = MLIRParser()
     mlir_code = """
@@ -326,8 +326,8 @@ module {
 @pytest.mark.parser
 def test_func_call_parsing_operations():
     """Test parsing of func.call operation with use_operations=True."""
-    from interpreter.parser import MLIRParser
-    from interpreter.operations import CallOperation, ReturnOperation
+    from debugger.interpreter.parser import MLIRParser
+    from debugger.interpreter.operations import CallOperation, ReturnOperation
 
     parser = MLIRParser()
     mlir_code = """

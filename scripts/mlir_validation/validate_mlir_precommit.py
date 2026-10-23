@@ -1,34 +1,24 @@
 #!/usr/bin/env python3
-"""
-Pre-commit hook for MLIR syntax validation.
-Validates only staged/changed MLIR files to save time using MCP server.
-"""
+"""Pre-commit MLIR validation using local tools, never a network service."""
 
-import os
-import sys
+from __future__ import annotations
+
+import argparse
 import re
 import subprocess
+import sys
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-# Import MCP client
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from mcp_client import MCPClient  # noqa: E402
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT))
 
-# Initialize MCP client
-MCP_CLIENT = MCPClient(base_url="https://mcp.eventflow.ru/mcp")
+from debugger.compiler import find_local_mlir_opt, validate_mlir_file, validate_mlir_text  # noqa: E402
 
-
-def validate_mlir(mlir_code: str, uri: str = "file:///test.mlir") -> dict:
-    """Validate MLIR code using the MCP server."""
-    try:
-        result = MCP_CLIENT.validate_mlir(mlir_code, uri)
-        return result
-    except Exception as e:
-        return {"error": str(e)}
+_MLIR_BLOCK_RE = re.compile(r"(\"\"\"|''')(.*?)\1", re.DOTALL)
 
 
-def get_staged_files():
-    """Get list of staged files from git."""
+def get_staged_files() -> List[str]:
     try:
         result = subprocess.run(
             ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
@@ -36,194 +26,118 @@ def get_staged_files():
             text=True,
             check=True,
         )
-        return [f.strip() for f in result.stdout.split("\n") if f.strip()]
-    except subprocess.CalledProcessError as e:
-        print(f"Error getting staged files: {e}")
+        return [f.strip() for f in result.stdout.splitlines() if f.strip()]
+    except subprocess.CalledProcessError as exc:
+        print(f"Error getting staged files: {exc}")
         return []
 
 
-def validate_mlir_file(file_path: str) -> dict:
-    """Validate a single .mlir file."""
-    try:
-        with open(file_path, "r") as f:
-            mlir_code = f.read()
-    except Exception as e:
-        return {
-            "file": file_path,
-            "error": f"Could not read file: {e}",
-        }
-
-    uri = f"file://{os.path.abspath(file_path)}"
-    result = validate_mlir(mlir_code, uri)
-
-    return {
-        "file": file_path,
-        "diagnostics": result.get("diagnostics", []),
-        "error": result.get("error"),
-    }
-
-
-def extract_mlir_from_python(file_path: str) -> list:
-    """Extract MLIR code blocks from Python files."""
-    try:
-        with open(file_path, "r") as f:
-            content = f.read()
-    except Exception as e:
-        print(f"Warning: Could not read {file_path}: {e}")
-        return []
-
-    mlir_blocks = []
-    patterns = [r'"""([\s\S]*?)"""', r"'''([\s\S]*?)'''"]
-
-    for pattern in patterns:
-        for match in re.finditer(pattern, content):
-            mlir_code = match.group(1)
-            if "module {" in mlir_code or "func.func" in mlir_code:
-                line_start = content[: match.start()].count("\n") + 1
-                mlir_blocks.append(
-                    {
-                        "code": mlir_code,
-                        "line_start": line_start,
-                    }
-                )
-
-    return mlir_blocks
-
-
-def validate_python_file(file_path: str) -> list:
-    """Validate MLIR code blocks in a Python file."""
-    mlir_blocks = extract_mlir_from_python(file_path)
-    results = []
-
-    for i, block in enumerate(mlir_blocks):
-        uri = f"file://{os.path.abspath(file_path)}" f"#block_{i + 1}_line_{block['line_start']}"
-        result = validate_mlir(block["code"], uri)
-
-        if result.get("error") or result.get("diagnostics"):
-            results.append(
+def _extract_python_blocks(path: Path) -> List[Dict[str, Any]]:
+    content = path.read_text(encoding="utf-8")
+    blocks = []
+    for match in _MLIR_BLOCK_RE.finditer(content):
+        code = match.group(2)
+        if "module {" in code or "func.func" in code:
+            blocks.append(
                 {
-                    "file": file_path,
-                    "line": block["line_start"],
-                    "diagnostics": result.get("diagnostics", []),
-                    "error": result.get("error"),
+                    "code": code,
+                    "line": content[: match.start()].count("\n") + 1,
                 }
             )
+    return blocks
 
-    return results
 
-
-def main():
-    """Main pre-commit validation function."""
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Validate MLIR syntax in staged files")
+def main(argv: Optional[List[str]] = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--staged", action="store_true", help="validate staged files")
     parser.add_argument(
-        "--staged",
+        "--strict",
         action="store_true",
-        help="Validate only staged files",
+        help="use the in-tree parser as a blocking fallback when mlir-opt is missing",
     )
-    parser.add_argument("files", nargs="*", help="Specific files to validate")
-    args = parser.parse_args()
+    parser.add_argument("files", nargs="*", help="specific files to validate")
+    args = parser.parse_args(argv)
 
-    # Get files to validate
-    if args.staged:
-        files_to_validate = get_staged_files()
-        if not files_to_validate:
-            print("No staged files to validate.")
-            sys.exit(0)
-    elif args.files:
-        files_to_validate = args.files
+    if args.files:
+        files = args.files
+    elif args.staged:
+        files = get_staged_files()
     else:
-        # Default: validate all MLIR and Python test files
-        files_to_validate = []
-        # Add all .mlir files
-        mlir_files = list(Path(".").rglob("*.mlir"))
-        mlir_files = [
-            str(f) for f in mlir_files if ".venv" not in str(f) and "__pycache__" not in str(f)
-        ]
-        files_to_validate.extend(mlir_files)
-        # Add Python test files
-        python_files = [
-            "debugger/tests/test_advanced_dap.py",
-            "debugger/tests/test_debug.py",
-            "debugger/tests/test_integration.py",
-            "debugger/tests/test_interpreter.py",
-            "debugger/tests/test_memory_ops.py",
-            "debugger/tests/test_operations.py",
-            "debugger/tests/test_parser.py",
-        ]
-        files_to_validate.extend([f for f in python_files if os.path.exists(f)])
+        files = [str(p.relative_to(REPO_ROOT)) for p in REPO_ROOT.rglob("*.mlir")]
 
-    # Filter to only MLIR and Python files
-    files_to_validate = [f for f in files_to_validate if f.endswith(".mlir") or f.endswith(".py")]
-
-    if not files_to_validate:
+    files = [f for f in files if f.endswith(".mlir") or f.endswith(".py")]
+    if not files:
         print("No MLIR or Python files to validate.")
-        sys.exit(0)
+        return 0
 
-    print(f"Validating {len(files_to_validate)} files...")
+    tool = find_local_mlir_opt()
+    if tool:
+        print(f"Using local MLIR tool: {tool}")
+    elif not args.strict:
+        print(
+            "No local mlir-opt found. MLIR validation skipped; "
+            "install mlir-opt or pass --strict to use the in-tree parser."
+        )
+        return 0
+    else:
+        print("No local mlir-opt found; strict in-tree parser fallback enabled.")
 
-    problems = []
-    mlir_count = 0
-    python_count = 0
-
-    for file_path in sorted(files_to_validate):
-        if not os.path.exists(file_path):
-            print(f"  [WARN] {file_path} (not found)")
+    problems: List[Dict[str, Any]] = []
+    for raw in sorted(files):
+        path = (REPO_ROOT / raw).resolve()
+        if not path.exists():
+            print(f"  [WARN] {raw} (not found)")
             continue
 
-        if file_path.endswith(".mlir"):
-            mlir_count += 1
-            result = validate_mlir_file(file_path)
-            if result.get("error") or result.get("diagnostics"):
-                problems.append(result)
-                print(f"  [FAIL] {file_path}")
+        if path.suffix == ".mlir":
+            result = validate_mlir_file(path, fallback_to_internal=True)
+            errors = [d for d in result["diagnostics"] if d.get("severity") == "error"]
+            if errors and (result["source"] != "internal" or args.strict):
+                problems.append({"file": raw, "diagnostics": result["diagnostics"]})
+                print(f"  [FAIL] {raw}")
+            elif errors:
+                print(f"  [WARN] {raw} (in-tree parser)")
             else:
-                print(f"  [OK]   {file_path}")
-
-        elif file_path.endswith(".py"):
-            python_count += 1
-            results = validate_python_file(file_path)
-            if results:
-                problems.extend(results)
-                print(f"  [FAIL] {file_path}")
+                print(f"  [OK]   {raw}")
+        elif path.suffix == ".py":
+            file_problems = []
+            for block in _extract_python_blocks(path):
+                result = validate_mlir_text(
+                    block["code"],
+                    f"{raw}:block_line_{block['line']}",
+                    fallback_to_internal=True,
+                )
+                errors = [d for d in result["diagnostics"] if d.get("severity") == "error"]
+                if not errors:
+                    continue
+                record = {
+                    "file": raw,
+                    "line": block["line"],
+                    "diagnostics": result["diagnostics"],
+                }
+                if result["source"] == "internal" and not args.strict:
+                    print(f"  [WARN] {raw}:{block['line']} (in-tree parser)")
+                else:
+                    file_problems.append(record)
+            if file_problems:
+                problems.extend(file_problems)
+                print(f"  [FAIL] {raw}")
             else:
-                print(f"  [OK]   {file_path}")
+                print(f"  [OK]   {raw}")
 
-    # Output results
     if problems:
-        print("\n" + "=" * 80)
-        print("MLIR SYNTAX VALIDATION FAILED")
-        print("=" * 80)
-        print(f"\nSummary: Validated {mlir_count} .mlir files " f"and {python_count} Python files")
-        print(f"Found {len(problems)} files with issues:\n")
-
-        for problem in problems:
-            print(f"File: {problem['file']}")
-            if "line" in problem:
-                print(f"  Line: {problem['line']}")
-            if problem.get("error"):
-                print(f"  Error: {problem['error']}")
-            if problem.get("diagnostics"):
-                for diag in problem["diagnostics"]:
-                    line = diag["range"]["start"]["line"] + 1 if diag.get("range") else "?"
-                    char = diag["range"]["start"]["character"] + 1 if diag.get("range") else "?"
-                    print(f"  - Line {line}, Char {char}: {diag.get('message')}")
-            print()
-
-        print("=" * 80)
-        print("Fix the syntax errors above before committing.")
-        print("=" * 80)
-        sys.exit(1)
-    else:
-        print("\n" + "=" * 80)
-        print("MLIR SYNTAX VALIDATION PASSED")
-        print("=" * 80)
-        print(f"Validated {mlir_count} .mlir files and {python_count} Python files")
-        print("All MLIR files and code blocks are syntactically valid!")
-        print("=" * 80)
-        sys.exit(0)
+        print("\nMLIR SYNTAX VALIDATION FAILED")
+        for record in problems:
+            print(f"\nFile: {record['file']}")
+            if record.get("line"):
+                print(f"  Line: {record['line']}")
+            for diag in record["diagnostics"]:
+                location = f"line {diag['line']}: " if diag.get("line") else ""
+                print(f"  {diag.get('severity', 'error')}: {location}{diag.get('message', '')}")
+        return 1
+    print("\nMLIR syntax validation completed.")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

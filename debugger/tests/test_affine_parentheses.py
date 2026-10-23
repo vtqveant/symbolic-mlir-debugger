@@ -1,7 +1,7 @@
 """Test parentheses generation for affine expressions (issue #36)."""
 
 import pytest
-from parser.astnodes import (
+from debugger.parser.astnodes import (
     AffineDimOrSymbol,
     AffineAdd,
     AffineSub,

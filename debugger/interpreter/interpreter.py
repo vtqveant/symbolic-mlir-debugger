@@ -29,6 +29,11 @@ class SymbolicInterpreter:
         self.solver = z3.Solver()
         self.cf_executor = ControlFlowExecutor()
         self.state_manager = StateManager()
+        # Operations that were parsed but had no symbolic handler. An empty
+        # result here is important: the agent API reports these rather than
+        # silently treating the program as fully understood.
+        self.unsupported_operations: List[Dict[str, Any]] = []
+        self._unsupported_keys = set()
 
     def _convert_to_operation(self, op: Any) -> Operation:
         """Convert op (dict or Operation) to Operation object.
@@ -118,7 +123,7 @@ class SymbolicInterpreter:
                 pass
         except Exception:
             # Registry execution failed, fall back to legacy handler
-            # print(f"Registry execution failed for {op_type}: {e}")  # Debug
+            # logger.warning(f"Registry execution failed for {op_type}: {e}")  # Debug
             pass
         # Operation not handled by registry
         return False
@@ -235,8 +240,17 @@ class SymbolicInterpreter:
             state.pc = None
 
         else:
-            # Unknown operation - treat as no-op
-            print(f"Warning: Unknown operation type {op_type}, skipping")
+            # Unknown operation - treat as no-op, but record it so the agent
+            # API can report that the analysis is incomplete.
+            logger.debug("Unknown operation type %s, skipping", op_type)
+            record = {
+                "operation": op_type,
+                "line": int(getattr(op_obj, "line", 0) or 0),
+            }
+            key = (record["operation"], record["line"])
+            if key not in self._unsupported_keys:
+                self._unsupported_keys.add(key)
+                self.unsupported_operations.append(record)
             # Still need to produce a result if there's a dest
             if hasattr(op_obj, "dest") and op_obj.dest is not None:
                 # Create fresh symbolic value
@@ -265,15 +279,17 @@ class SymbolicInterpreter:
         while self.state_manager.has_states():
             loop_counter += 1
             if loop_counter > 10000:
-                print(f"Warning: Infinite loop detected, breaking after {loop_counter} iterations")
-                print(f"Remaining states: {self.state_manager.get_worklist_size()}")
+                logger.warning(
+                    f"Warning: Infinite loop detected, breaking after {loop_counter} iterations"
+                )
+                logger.warning(f"Remaining states: {self.state_manager.get_worklist_size()}")
                 if self.state_manager.has_states():
                     # Get a state from worklist without removing it
                     states = self.state_manager.worklist
                     if states:
                         state = states[-1]
-                        print(f"Current state pc: {state.pc}")
-                        print(f"Basic block keys: {list(func.basic_blocks.keys())}")
+                        logger.warning(f"Current state pc: {state.pc}")
+                        logger.warning(f"Basic block keys: {list(func.basic_blocks.keys())}")
                 break
 
             state = self.state_manager.get_next_state()
@@ -284,7 +300,7 @@ class SymbolicInterpreter:
             key = (id(state), state.pc)
             state_block_visits[key] = state_block_visits.get(key, 0) + 1
             if state_block_visits[key] > 5:
-                print(f"Warning: Infinite loop in block {state.pc}, terminating state")
+                logger.warning(f"Warning: Infinite loop in block {state.pc}, terminating state")
                 state.pc = None
                 self.state_manager.complete_state(state)
                 continue
@@ -322,6 +338,11 @@ class ConcolicInterpreter(SymbolicInterpreter):
         super().__init__()
         self.explored_paths = []
         self.input_models = []
+        self.last_exploration_info: Dict[str, Any] = {
+            "truncated": False,
+            "reason": None,
+            "iterations": 0,
+        }
 
     def _try_execute_with_registry(self, op: Any, state: SymbolicState, func: MLIRFunction) -> bool:
         """Try to execute operation using dialect registry with concolic support."""
@@ -351,13 +372,11 @@ class ConcolicInterpreter(SymbolicInterpreter):
                 return True
             else:
                 logger.debug("concolic: No handler found for %s", op_obj.full_name)
-        except Exception as e:
-            # Registry execution failed, fall back to legacy handler
-            print(f"Registry execution failed for {op_type}: {e}")
-            import traceback
-
-            traceback.print_exc()
-            pass
+        except Exception:
+            # Registry execution failed, fall back to legacy handler. This is
+            # expected for operations without a handler; the agent API records
+            # unsupported operations as diagnostics.
+            logger.debug("Registry execution failed for %s", op_type, exc_info=True)
 
         return False
 
@@ -367,16 +386,26 @@ class ConcolicInterpreter(SymbolicInterpreter):
         """Execute operation with concolic support."""
         self._execute_operation_concolic(op, state, func)
 
-    def explore_paths(self, func: MLIRFunction, max_paths: int = 10) -> List[Dict[str, Any]]:
-        """Explore multiple execution paths using concolic execution."""
-        # Start with random concrete inputs
+    def explore_paths(
+        self, func: MLIRFunction, max_paths: int = 10, seed: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
+        """Explore multiple execution paths using concolic execution.
+
+        Args:
+            func: Function to explore.
+            max_paths: Maximum number of feasible paths to return.
+            seed: Optional RNG seed for deterministic exploration. When None the
+                historical random behaviour is preserved.
+        """
+        rng = random.Random(seed)
+        limit_reason: Optional[str] = None
 
         # Generate initial random inputs for function arguments
         initial_inputs = {}
-        for arg_name, arg_type in func.args:
+        for arg_name, _arg_type in func.args:
             clean_name = arg_name[1:] if arg_name.startswith("%") else arg_name
             # For i32, generate random value in range [-10, 10]
-            initial_inputs[clean_name] = random.randint(-10, 10)
+            initial_inputs[clean_name] = rng.randint(-10, 10)
 
         paths = []
         queue = [initial_inputs]
@@ -386,8 +415,10 @@ class ConcolicInterpreter(SymbolicInterpreter):
         while queue and len(paths) < max_paths:
             loop_counter += 1
             if loop_counter > 100:
-                print(
-                    f"Warning: explore_paths loop exceeded safety limit after {loop_counter} iterations"
+                limit_reason = "iteration_limit"
+                logger.warning(
+                    "explore_paths loop exceeded safety limit after %s iterations",
+                    loop_counter,
                 )
                 break
             concrete_inputs = queue.pop(0)
@@ -457,9 +488,17 @@ class ConcolicInterpreter(SymbolicInterpreter):
                         if model[z3_var] is not None and isinstance(model[z3_var], z3.IntNumRef):
                             new_inputs[clean_name] = model[z3_var].as_long()  # type: ignore
                         else:
-                            new_inputs[clean_name] = random.randint(-10, 10)
+                            new_inputs[clean_name] = rng.randint(-10, 10)
                     queue.append(new_inputs)
 
+        if limit_reason is None and queue:
+            limit_reason = "max_paths"
+
+        self.last_exploration_info = {
+            "truncated": limit_reason is not None,
+            "reason": limit_reason,
+            "iterations": loop_counter,
+        }
         return paths
 
     def execute_function_with_concrete(
@@ -488,7 +527,7 @@ class ConcolicInterpreter(SymbolicInterpreter):
         while self.state_manager.has_states():
             loop_counter += 1
             if loop_counter > 10000:
-                print(
+                logger.warning(
                     f"Warning: Infinite loop detected in concolic execution, breaking after {loop_counter} iterations"
                 )
                 break
@@ -505,7 +544,7 @@ class ConcolicInterpreter(SymbolicInterpreter):
             key = (id(state), state.pc)
             state_block_visits[key] = state_block_visits.get(key, 0) + 1
             if state_block_visits[key] > 5:
-                print(f"Warning: Infinite loop in block {state.pc}, terminating state")
+                logger.warning(f"Warning: Infinite loop in block {state.pc}, terminating state")
                 state.pc = None
                 self.state_manager.complete_state(state)
                 continue
@@ -545,14 +584,14 @@ class ConcolicInterpreter(SymbolicInterpreter):
     def _get_concrete_operand(self, operand: str, state: SymbolicState) -> Optional[Any]:
         """Get concrete value for an operand if available."""
         # Debug: print what we're looking for
-        # print(f"DEBUG _get_concrete_operand: operand='{operand}'")
+        # logger.warning(f"DEBUG _get_concrete_operand: operand='{operand}'")
 
         # Check if it's an SSA value
         if operand.startswith("%"):
             value_name = operand[1:]
             concrete = state.get_concrete_value(value_name)
             if concrete is not None:
-                # print(f"DEBUG: Found concrete value for {value_name}: {concrete} (type: {type(concrete)})")
+                # logger.warning(f"DEBUG: Found concrete value for {value_name}: {concrete} (type: {type(concrete)})")
                 return concrete
 
             # Check if we have a symbolic value that's actually a constant
@@ -560,7 +599,7 @@ class ConcolicInterpreter(SymbolicInterpreter):
             if mlir_value and mlir_value.expr is not None:
                 # Check if it's a constant integer
                 if isinstance(mlir_value.expr, z3.IntNumRef):
-                    # print(f"DEBUG: Found IntNumRef for {value_name}: {mlir_value.expr.as_long()}")
+                    # logger.warning(f"DEBUG: Found IntNumRef for {value_name}: {mlir_value.expr.as_long()}")
                     return mlir_value.expr.as_long()
                 # Check if it's a constant boolean
                 elif isinstance(mlir_value.expr, z3.BoolRef):
@@ -577,13 +616,13 @@ class ConcolicInterpreter(SymbolicInterpreter):
         # Check if it's an integer constant
         try:
             val = int(operand)
-            # print(f"DEBUG: operand '{operand}' is integer constant: {val}")
+            # logger.warning(f"DEBUG: operand '{operand}' is integer constant: {val}")
             return val
         except ValueError:
             # Check if it's a variable name without '%'
             concrete = state.get_concrete_value(operand)
             if concrete is not None:
-                # print(f"DEBUG: Found concrete value for {operand}: {concrete}")
+                # logger.warning(f"DEBUG: Found concrete value for {operand}: {concrete}")
                 return concrete
 
             mlir_value = state.get_value(operand)
@@ -599,5 +638,5 @@ class ConcolicInterpreter(SymbolicInterpreter):
                     except:
                         pass
 
-        # print(f"DEBUG: No concrete value found for operand '{operand}'")
+        # logger.warning(f"DEBUG: No concrete value found for operand '{operand}'")
         return None

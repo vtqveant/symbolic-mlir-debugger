@@ -9,7 +9,7 @@ representation.
 
 from typing import Optional, Any, List
 
-import parser.astnodes as mast
+from ...parser import astnodes as mast
 
 from .base import BaseDialectParser
 from ..operations import (

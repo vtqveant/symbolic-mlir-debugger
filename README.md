@@ -2,285 +2,96 @@
 
 [![CI](https://github.com/vtqveant/symbolic-mlir-debugger/actions/workflows/ci.yml/badge.svg)](https://github.com/vtqveant/symbolic-mlir-debugger/actions/workflows/ci.yml)
 
-<div align="center">
-  <img src="mlir-debug-icon.jpg" alt="MLIR Debug Logo" width="200" height="200">
-</div>
+A symbolic and concolic execution engine for MLIR with an agent-facing feedback API and
+Debug Adapter Protocol (DAP) support.
 
-A symbolic and concolic execution engine for MLIR (Multi-Level Intermediate Representation) programs 
-with Debug Adapter Protocol (DAP) support for automated human-free debugging.
+## What it does
 
-## Overview
+- Parses an MLIR subset (func, arith, cf, scf, affine, memref, tensor, vector, linalg,
+  shape, bufferization, emitc) into an interpreter model.
+- Executes programs concretely and concolically, explores feasible paths with Z3, and
+  reports inputs, path conditions, and return values.
+- Produces one-shot JSON feedback for automated coding loops, including parse/execution
+  diagnostics, compiler-validation results, and unsupported-operation warnings.
+- Exposes the same engine through a stdio DAP server and a Python DAP client.
 
-The Symbolic MLIR Debugger enables advanced debugging and analysis of MLIR programs through symbolic execution. 
-It transforms MLIR operations into SMT constraints using the Z3 solver, allowing for path exploration, 
-constraint solving, and automated test generation.
+The authoritative plan, decisions, and task history live in the tm epic
+`symbolic-mlir-debugger` (see `AGENTS.md`). Old design/plan files are not kept in the
+repository.
 
-## Rationale
+## Install
 
-This project provides a concrete implementation that bridges symbolic execution, MLIR compilation, and automated debugging for AI-driven code generation workflows. The current codebase delivers:
+Python 3.9+ is required.
 
-### 1. Automated Feedback for Agentic AI Code Generation
-**Current Implementation:**
-- **DAP-based debugging automation**: Full Debug Adapter Protocol implementation (`debugger/dap_server.py`) enables programmatic control of debugging sessions
-- **Test generation and execution**: Automated test case generation (`dap_client/generator/test_case_generator.py`) and execution (`dap_client/runner/orchestrator.py`)
-- **End-to-end workflows**: Complete examples (`dap_client/examples/full_workflow.py`) demonstrating automated testing pipelines
-- **Structured feedback**: JSON-based test scripts with validation against schemas (`dap_client/schema/`)
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pip install -e . --no-deps
+```
 
-**How it helps:** AI coding agents can programmatically launch debugging sessions, generate tests, and receive structured feedback without manual intervention.
+## Quick start
 
-### 2. MLIR-Centric Symbolic Execution Engine
-**Current Implementation:**
-- **MLIR parser and interpreter**: Complete MLIR text parser (`debugger/parser/`) and execution engine (`debugger/interpreter/`)
-- **Symbolic execution core**: Z3-based symbolic execution (`debugger/interpreter/symbolic_evaluator.py`) transforming MLIR operations to SMT constraints
-- **Path exploration**: Automated execution path discovery (`debugger/interpreter/path_explorer.py`)
-- **Concolic execution**: Mixed concrete-symbolic execution with state management
+```bash
+# Structured feedback for an automated coding loop
+smlir analyze debugger/fixtures/conditional_branch.mlir --json
 
-**How it helps:** Provides a working symbolic execution engine specifically designed for MLIR, enabling formal analysis of MLIR programs that can target diverse hardware backends.
+# Human-readable summary
+smlir analyze debugger/fixtures/conditional_branch.mlir
 
-### 3. Extensible DAP Protocol for Debugging Automation
-**Current Implementation:**
-- **Standard DAP compliance**: Full stdin/stdout DAP server with Content-Length headers
-- **Symbolic debugging extensions**: Custom DAP commands (`symbolic/setMode`, `symbolic/evaluate`, `symbolic/explorePaths`, `symbolic/getConstraints`)
-- **Capabilities advertising**: DAP server correctly advertises symbolic debugging features (PR #96)
-- **Client library**: Complete Python DAP client (`dap_client/core/client.py`) for easy integration
+# Explicit inputs and deterministic path exploration
+smlir analyze debugger/fixtures/simple_add.mlir --input a=5 --input b=3 --seed 0
 
-**How it helps:** Enables integration with existing DAP-compatible tools (IDEs, CI systems) while providing specialized symbolic debugging capabilities.
+# Interactive DAP adapter
+python -m debugger dap
 
-### 4. Practical Hardware-Aware Development Foundation
-**Current Implementation:**
-- **Dialect-extensible architecture**: Modular design allowing addition of hardware-specific MLIR dialects
-- **Memory model framework**: Foundation for hardware-specific memory models (`debugger/interpreter/memory.py`)
-- **Constraint propagation**: Symbolic constraints that can incorporate hardware-specific limitations
-- **Fixture-based testing**: Test programs (`debugger/fixtures/`) demonstrating hardware-relevant patterns
+# DAP client example (launches the adapter automatically)
+python dap_client/examples/basic_session.py
+```
 
-**How it helps:** Provides the architectural foundation for incorporating hardware constraints, with working examples that can be extended for specific hardware targets.
+`python -m debugger analyze ...` is equivalent to `smlir analyze ...`. The Python API is
+`debugger.agent.analyze_file()` / `analyze_text()`.
 
-### 5. Production-Ready Integration Points
-**Current Implementation:**
-- **Comprehensive test suite**: Unit and integration tests covering parser, interpreter, and DAP layers
-- **CI/CD pipeline**: GitHub Actions workflow with linting and testing across Python versions
-- **Documentation**: Working examples, API documentation, and now this rationale
-- **Modular packaging**: Well-structured Python packages with clear dependencies
+## Agent feedback contract
 
-**How it helps:** The project is not just a research prototype but a production-ready system that can be integrated into larger toolchains, extended for specific use cases, and maintained over time.
+Reports are JSON-serializable and versioned (`schema_version`). A report contains:
 
-### Current Limitations & Explicit Non-Goals
-- **Not a complete compiler**: Focuses on debugging and analysis, not code generation
-- **Limited dialect support**: Currently handles arithmetic, control flow, and basic memory operations
-- **No hardware-specific backends**: Provides framework but not concrete hardware implementations
-- **Research-oriented**: Prioritizes correctness and extensibility over performance optimization
+- `status`: `ok` or `error`
+- `function` and `summary` (path count, truncation, seed, compiler source,
+  unsupported-operation count)
+- `diagnostics`: parse, execution, path, limit, input, io, or validation issues with
+  severity/line/operation when available
+- `paths`: feasible paths with concrete inputs, path conditions, and return values
 
-This codebase delivers a working, extensible system that addresses real needs in automated code verification while providing clear extension points for future hardware-specific and AI-integration work.
-
-### Key Features
-
-- **Symbolic & Concolic Execution**: Execute MLIR programs with symbolic inputs, exploring multiple execution paths simultaneously
-- **SMT Integration**: Leverages Z3 theorem prover for constraint solving and path feasibility analysis
-- **DAP Integration**: Extended DAP implementation for debugging automation with breakpoints, variable inspection, and step-through execution
-- **Modular Architecture**: Extensible dialect support, memory models, and hardware descriptions
-- **Path Exploration**: Automatically discovers and analyzes all feasible execution paths
-- **Test Generation**: Generates concrete test cases covering different execution paths
+Compiler validation is local-first: `mlir-opt` is used when installed, with an in-tree
+fallback only when requested. No network service is required.
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                       Coding Agent                          │
-│                  (Debug Adapter Protocol)                   │
-└────────────────────────────┬────────────────────────────────┘
-                             │
-┌────────────────────────────▼────────────────────────────────┐
-│                 Symbolic MLIR Debugger                      │
-├─────────────────────────────────────────────────────────────┤
-│  • Parser (MLIR text → AST)                                 │
-│  • Symbolic Interpreter (MLIR → Z3 constraints)             │
-│  • Concolic Engine (Mixed concrete/symbolic execution)      │
-│  • Dialect Registry (Extensible operation handlers)         │
-│  • State Manager (Path forking & merging)                   │
-└─────────────────────────────────────────────────────────────┘
-                             │
-┌────────────────────────────▼────────────────────────────────┐
-│                     Z3 SMT Solver                           │
-│               (Constraint solving & SAT)                    │
-└─────────────────────────────────────────────────────────────┘
+debugger/              parser, interpreter, Z3 paths, DAP adapter, agent API
+dap_client/            Python DAP client, generators, runners, examples
+dap_trace_library/     trace execution/validation adapters (no generation layer)
+scripts/mlir_validation/  hermetic CI/pre-commit validation helpers
 ```
 
-## Applications
-
-### Execution Path Exploration
-Automatically explore all feasible execution paths through MLIR programs, identifying edge cases and boundary conditions.
-
-### Automated Test Generation
-Generate concrete test inputs that exercise different execution paths, improving test coverage.
-
-### Bug Detection & Verification
-Detect potential bugs through symbolic execution and verify program properties using SMT solving.
-
-### MLIR Dialect Development
-Test new MLIR dialects and operations with symbolic execution to ensure correctness.
-
-## Getting Started
-
-### Prerequisites
-- Python 3.8+
-- Z3 theorem prover (`pip install z3-solver`)
-- MLIR text files to debug
-
-### Installation
-```bash
-# Clone repository
-git clone https://github.com/vtqveant/symbolic-mlir-debugger.git
-cd symbolic-mlir-debugger
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### Running Tests
+## Tests
 
 ```bash
-cd debugger
-python -m pytest                         # Run all tests
-python -m pytest tests/test_parser.py    # Run parser tests
-python -m pytest -m interpreter          # Run interpreter tests
+python -m pytest
 ```
 
-## DAP Client Architecture
+The suite is configured in `pyproject.toml` and includes `debugger/tests`,
+`dap_client/tests`, and `dap_trace_library/tests`.
 
-The Symbolic MLIR Debugger uses the Debug Adapter Protocol (DAP) for communication between the debugger and clients. The DAP client connects directly to the DAP server via stdio (stdin/stdout), following the standard DAP protocol.
+## Limitations
 
-### **Architecture:**
-
-```
-┌─────────────────┐    stdin/stdout    ┌─────────────────┐
-│   DAP Client    │ ◄────────────────► │  DAP Server     │
-│  (dap_client/)  │   (DAP Protocol)   │ (dap_server.py) │
-└─────────────────┘                    └─────────────────┘
-```
-
-### **Key Components:**
-
-1. **DAP Server** (`debugger/dap_server.py`):
-   - Uses **stdin/stdout** (standard DAP protocol with Content-Length headers)
-   - Processes DAP requests and sends responses
-   - Implements symbolic debugging capabilities
-   - Automatically launched as a subprocess by the DAP client
-
-2. **DAP Client** (`dap_client/`):
-   - Uses **stdio connection** (stdin/stdout pipes) to communicate with DAP server
-   - Automatically launches the DAP server as a subprocess
-   - Manages the complete lifecycle of the debug session
-
-### **Using the DAP Client:**
-
-The DAP client automatically launches the DAP server and manages the connection:
-
-```python
-from dap_client.core.client import DAPClient
-
-# Client automatically launches DAP server as subprocess
-with DAPClient() as client:
-    client.initialize(adapter_id="mlir-debugger")
-    client.launch(program="example.mlir")
-    # ... rest of debugging session
-```
-
-### **Configuration Options:**
-
-You can customize the DAP client behavior:
-
-```python
-# Custom DAP server path or timeout settings
-client = DAPClient(
-    debugger_path="/custom/path/dap_server.py",  # Default: auto-detected
-    timeout=30,      # Connection timeout in seconds
-    read_timeout=10  # Read timeout in seconds
-)
-```
-
-### **Testing the Setup:**
-
-```bash
-# Run basic example (automatically starts DAP server)
-python dap_client/examples/basic_session.py
-
-# Run full workflow demonstration
-python dap_client/examples/full_workflow.py --program debugger/fixtures/conditional_branch.mlir
-```
-
-See [`dap_client/README.md`](dap_client/README.md) for detailed documentation on using the DAP client.
-
-## Extending the Debugger
-
-### Adding New Dialects
-Register new MLIR dialects by extending the dialect registry and implementing operation handlers.
-
-### Custom Memory Models
-Implement custom memory models for specialized hardware or memory architectures.
-
-### Hardware-Specific Extensions
-Add hardware-specific constraints and operation semantics for target architectures.
+- This is not a complete MLIR/LLVM compiler; it interprets a supported subset.
+- Dialect coverage is intentionally incremental. Unsupported operations are reported as
+  warnings, and results may be incomplete.
+- Remote MCP/LSP validation is opt-in and never on the default path.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-**Third-Party Components:**
-- pymlir parser (BSD 3-Clause License) - see [LICENSE-PYMLIR.txt](LICENSE-PYMLIR.txt)
-
-Full attribution details in [NOTICE.txt](NOTICE.txt).
-
-## Acknowledgments
-
-- Based on pymlir from ETH Zurich's Scalable Parallel Computing Lab
-- Relies on Debug Adapter Protocol from Microsoft
-- Built with Z3 theorem prover from Microsoft Research
-- MLIR community for the intermediate representation framework
-
-## Contributing
-
-Contributions are welcome! Please see the [AGENTS.md](AGENTS.md) file for development guidelines and code style conventions.
-
-
-## 📊 Repository Status (Last Updated: 2026-02-27)
-
-### 📈 Current Metrics
-- **Total Files**: 207
-- **MLIR Files**: 21
-- **Python Files**: 152
-- **Build System**: has requirements.txt, pyproject.toml
-- **CI/CD**: has 2 workflow(s)
-
-### 🔑 Key Features
-- Dynamic symbolic (concolic) debugger
-- MLIR syntax validation
-- MCP server integration
-- Web interface available
-
-### 📝 Recent Activity
-- `5a23b9bc` Merge pull request #127 from vtqveant/mcp-migration-2025-version (Tue Feb 24)
-- `98787473` migrate to mcp ver. 2025 (Tue Feb 24)
-- `a369f647` Merge pull request #125 from vtqveant/issue-123-migrate-to-mcp-eventflow (Mon Feb 23)
-- `228d59be` Merge branch 'main' into issue-123-migrate-to-mcp-eventflow (Mon Feb 23)
-- `054b12ab` Address issue #123: Migrate MLIR validation to MCP server at mcp.eventflow.ru (Mon Feb 23)
-
-### 🚀 Quick Start
-```bash
-# Clone the repository
-git clone https://github.com/vtqveant/symbolic-mlir-debugger.git
-cd symbolic-mlir-debugger
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run tests
-python -m pytest
-
-# Validate MLIR files
-python scripts/mlir_validation/validate_mlir_ci.py
-```
-
----
-
-*This status section is automatically updated every 12 hours by the README maintenance bot.*
-*Last bot run: 2026-02-27 22:05:10 UTC*
+MIT. See [LICENSE](LICENSE) and [NOTICE.txt](NOTICE.txt). The vendored parser is based on
+pymlir; see [LICENSE-PYMLIR.txt](LICENSE-PYMLIR.txt).

@@ -13,7 +13,7 @@ import sys
 debugger_dir = os.path.join(os.path.dirname(__file__), "..", "debugger")
 sys.path.insert(0, debugger_dir)
 
-from interpreter.models import SymbolicState, MLIRValue
+from debugger.interpreter.models import SymbolicState, MLIRValue
 
 
 def test_mlirvalue_concrete_value():

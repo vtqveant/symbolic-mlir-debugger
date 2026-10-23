@@ -8,12 +8,10 @@ functionality from trace_testing scripts.
 
 import json
 import logging
-import subprocess
-import tempfile
 import time
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Union
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -47,121 +45,83 @@ class TraceExecutor:
     def execute_trace(
         self, trace_data: Dict[str, Any], trace_name: str = "unknown"
     ) -> Dict[str, Any]:
-        """Execute a single DAP trace.
+        """Execute one DAP trace through the supported DAP client stack.
 
-        Args:
-            trace_data: DAP trace dictionary
-            trace_name: Name for reporting
-
-        Returns:
-            Execution results dictionary
+        The trace library must not invent a second execution path. A trace is
+        a sequence of DAP commands; ``dap_client.runner.test_runner.TestRunner``
+        owns command dispatch, session lifecycle, and expectation checks.
         """
         start_time = time.time()
+        trace_name = trace_data.get("name", trace_name)
 
-        # Create temporary trace file
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-            json.dump(trace_data, f, indent=2)
-            trace_file = f.name
-
+        # Import lazily so a missing/broken client installation is reported as
+        # a normal execution failure instead of an import-time crash.
         try:
-            # Build command
-            if self.debugger_path:
-                cmd = [self.debugger_path, "--trace", trace_file]
-            else:
-                # Try to find debugger
-                cmd = ["python3", "-m", "debugger", "--trace", trace_file]
+            from dap_client.runner.test_runner import TestRunner
+        except Exception as exc:  # noqa: BLE001 - reported in the result
+            return self._failure_result(
+                trace_name,
+                start_time,
+                f"dap_client is unavailable: {exc}",
+            )
 
-            # Execute
-            logger.info(f"Executing trace: {trace_name}")
-
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=self.timeout)
-
-            # Parse results
-            execution_time = time.time() - start_time
-
-            success = result.returncode == 0
-
-            # Check stdout for success indicators
-            stdout = result.stdout
-            stderr = result.stderr
-
-            # Look for expected success messages
-            expected_success = True
-            if "expect" in trace_data:
-                # Check if any session item expects success
-                for item in trace_data.get("session", []):
-                    expect = item.get("expect", {})
-                    if expect.get("success", True) and not success:
-                        expected_success = False
-                        break
-
-            # Create result
-            execution_result = {
-                "trace_name": trace_name,
-                "success": success,
-                "expected_success": expected_success,
-                "returncode": result.returncode,
-                "execution_time": execution_time,
-                "stdout": stdout,
-                "stderr": stderr,
-                "command": " ".join(cmd),
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-            }
-
-            # Check for specific errors
-            if "error" in stderr.lower() or "exception" in stderr.lower():
-                execution_result["errors_detected"] = True
-                execution_result["error_messages"] = [
-                    line
-                    for line in stderr.split("\n")
-                    if "error" in line.lower() or "exception" in line.lower()
-                ]
-
-            # Check for timeout
-            if execution_time >= self.timeout:
-                execution_result["timeout"] = True
-                execution_result["success"] = False
-
-            return execution_result
-
-        except subprocess.TimeoutExpired:
-            execution_time = time.time() - start_time
-
-            return {
-                "trace_name": trace_name,
-                "success": False,
-                "expected_success": False,
-                "returncode": -1,
-                "execution_time": execution_time,
-                "stdout": "",
-                "stderr": f"Timeout after {self.timeout} seconds",
-                "timeout": True,
-                "command": " ".join(cmd) if "cmd" in locals() else "unknown",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-            }
-
-        except Exception as e:
-            execution_time = time.time() - start_time
-
-            return {
-                "trace_name": trace_name,
-                "success": False,
-                "expected_success": False,
-                "returncode": -1,
-                "execution_time": execution_time,
-                "stdout": "",
-                "stderr": f"Execution error: {e}",
-                "exception": str(e),
-                "command": " ".join(cmd) if "cmd" in locals() else "unknown",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-            }
-
+        runner = TestRunner(debugger_path=self.debugger_path, timeout=self.timeout)
+        try:
+            if not runner.connect():
+                return self._failure_result(
+                    trace_name,
+                    start_time,
+                    "could not connect to the DAP server",
+                )
+            result = runner.run_test_script(trace_data, script_path=trace_name)
+        except Exception as exc:  # noqa: BLE001 - reported in the result
+            return self._failure_result(trace_name, start_time, str(exc), returncode=1)
         finally:
-            # Clean up temp file
             try:
-                Path(trace_file).unlink(missing_ok=True)
-            except:
-                pass
+                runner.disconnect()
+            except Exception:  # noqa: BLE001 - cleanup must not mask results
+                logger.debug("Failed to disconnect DAP client", exc_info=True)
+
+        execution_time = time.time() - start_time
+        steps = result.get("steps", []) or []
+        step_errors = [step.get("error") for step in steps if step.get("error")]
+        success = bool(result.get("success", False))
+        execution_result = {
+            "trace_name": trace_name,
+            "success": success,
+            "expected_success": True,
+            "returncode": 0 if success else 1,
+            "execution_time": result.get("duration", execution_time),
+            "stdout": "",
+            "stderr": "\n".join(step_errors),
+            "command": "dap_client.runner.test_runner.TestRunner",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "steps": steps,
+            "errors_detected": bool(step_errors),
+            "error_messages": step_errors,
+        }
+        if not success and not step_errors:
+            execution_result["error_messages"] = [result.get("error", "trace failed")]
+        return execution_result
+
+    def _failure_result(
+        self, trace_name: str, start_time: float, message: str, returncode: int = -1
+    ) -> Dict[str, Any]:
+        """Build the legacy result shape for an execution failure."""
+        return {
+            "trace_name": trace_name,
+            "success": False,
+            "expected_success": True,
+            "returncode": returncode,
+            "execution_time": time.time() - start_time,
+            "stdout": "",
+            "stderr": message,
+            "command": "dap_client.runner.test_runner.TestRunner",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "exception": message,
+            "errors_detected": True,
+            "error_messages": [message],
+        }
 
     def execute_file(self, trace_file: Union[str, Path]) -> Dict[str, Any]:
         """Execute a DAP trace from file.
@@ -231,7 +191,7 @@ class TraceExecutor:
             "failed_traces": 0,
             "timeout_traces": 0,
             "total_duration": 0.0,
-            "start_time": datetime.utcnow().isoformat() + "Z",
+            "start_time": datetime.now(timezone.utc).isoformat(),
             "end_time": None,
         }
 
@@ -270,7 +230,7 @@ class TraceExecutor:
                 )
 
         # Finalize statistics
-        self.statistics["end_time"] = datetime.utcnow().isoformat() + "Z"
+        self.statistics["end_time"] = datetime.now(timezone.utc).isoformat()
 
         # Calculate success rate
         if self.statistics["executed_traces"] > 0:
@@ -421,7 +381,7 @@ class TraceExecutor:
             "trace_groups": trace_groups,
             "common_errors": common_errors,
             "execution_details": results,
-            "generated_at": datetime.utcnow().isoformat() + "Z",
+            "generated_at": datetime.now(timezone.utc).isoformat(),
         }
 
         return report

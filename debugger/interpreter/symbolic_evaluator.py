@@ -10,6 +10,8 @@ from typing import Any
 
 import z3
 
+from .safe_eval import ExpressionError, safe_eval
+
 logger = logging.getLogger(__name__)
 
 
@@ -98,30 +100,17 @@ class SymbolicExpressionEvaluator:
                 # Fallback to symbolic expression
                 return str(var_expr)
 
-            # Try to evaluate as arithmetic expression with current variables
-            # Simple safe evaluation: only allow basic arithmetic with integers
-            # This is a temporary implementation - should be replaced with proper parser
+            # Evaluate with Z3 expressions where available. The safe evaluator
+            # supports only arithmetic/comparison/boolean operations and a small
+            # function allow-list; it never executes arbitrary Python.
+            env = dict(concrete_values)
+            env.update(z3_vars)
             try:
-                # Build a safe evaluation environment
-                safe_dict = {}
-                # Add concrete values
-                for name, val in concrete_values.items():
-                    safe_dict[name] = val
-                # Add Z3 variables as integers (will fail if used in eval)
-                # Instead, create a simple expression evaluator using Z3
-                # For now, just try to evaluate with Python eval (limited safety)
-                # WARNING: eval is unsafe - only use with trusted input
-                # In production, implement proper expression parser
-                allowed_names = {}
-                for name in variables.keys():
-                    # Use concrete value if available, else use 0 as placeholder
-                    allowed_names[name] = concrete_values.get(name, 0)
-
-                # Try simple evaluation with concrete values only
-                result = eval(expression, {"__builtins__": {}}, allowed_names)
+                result = safe_eval(expression, env)
+                if isinstance(result, z3.ExprRef):
+                    result = z3.simplify(result)
                 return str(result)
-            except Exception as eval_err:
-                # If eval fails, return symbolic representation
+            except ExpressionError:
                 return f"Expression '{expression}' (symbolic)"
 
         except Exception as e:

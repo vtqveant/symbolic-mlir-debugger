@@ -3,13 +3,14 @@
 import sys
 from pathlib import Path
 
-# Add project root to Python path
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
+# Add repository root to Python path when pytest is invoked from elsewhere.
+repo_root = Path(__file__).resolve().parents[2]
+debugger_root = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(repo_root))
 
 import pytest
-from interpreter.parser import MLIRParser
-from interpreter.interpreter import SymbolicInterpreter, ConcolicInterpreter
+from debugger.interpreter.parser import MLIRParser
+from debugger.interpreter.interpreter import SymbolicInterpreter, ConcolicInterpreter
 
 
 @pytest.fixture
@@ -33,13 +34,13 @@ def concolic_interpreter() -> ConcolicInterpreter:
 @pytest.fixture
 def test_data_dir() -> Path:
     """Fixture providing path to test data directory."""
-    return project_root / "fixtures"
+    return debugger_root / "fixtures"
 
 
 @pytest.fixture
 def dialect_examples_dir() -> Path:
     """Fixture providing path to dialect examples directory."""
-    return project_root / "fixtures"
+    return debugger_root / "fixtures"
 
 
 def load_mlir_file(path: Path) -> str:

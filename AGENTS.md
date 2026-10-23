@@ -2,29 +2,114 @@
 
 This document provides guidelines for AI agents working on the Symbolic MLIR Debugger project. It includes build commands, testing instructions, and code style conventions.
 
+## Task tracking and knowledge base (tm)
+
+This project is tracked in the shared `tm` CLI, not in ad-hoc TODO files.
+
+- Tracker: set `TM_HOME` to the directory containing the `tm` executable.
+- Executable: `$TM_HOME/tm`
+- Epic: `symbolic-mlir-debugger` (key `SMD`)
+- Milestones: `m1-refactor-and-re-plan`, `m2-harden-the-feedback-loop`
+- Process: use `TM_USER=agent` for agent work.
+
+Start every session with:
+
+```bash
+export TM_HOME=<path-to-tm-checkout>
+export TM_USER=agent
+$TM_HOME/tm task list --epic symbolic-mlir-debugger
+$TM_HOME/tm doc symbolic-mlir-debugger-current-state-audit show
+$TM_HOME/tm doc symbolic-mlir-debugger-milestone-1-plan show
+```
+
+Create work as tasks, record analysis/decisions as notes or documents, and link them:
+
+```bash
+$TM_HOME/tm new --kind task --epic symbolic-mlir-debugger --title "..."
+$TM_HOME/tm task SMD-XX note "..."
+$TM_HOME/tm doc <DOC_ID> show
+$TM_HOME/tm task SMD-XX link add <DOC_ID>
+$TM_HOME/tm task SMD-XX status in_progress
+$TM_HOME/tm task SMD-XX status done
+```
+
+The authoritative records live in tm:
+- `symbolic-mlir-debugger-usage-and-scope`
+- `symbolic-mlir-debugger-current-state-audit`
+- `symbolic-mlir-debugger-target-architecture`
+- `symbolic-mlir-debugger-milestone-1-plan`
+- `symbolic-mlir-debugger-agent-feedback-api-contract`
+- `adr-001-consolidate-trace-execution-and-add-agent-feedback-api`
+
+Old repository design/plan files were removed. Their critical review, rejected options,
+current architecture, and active plan are preserved in the tm records above. Do not
+hand-edit the tm database or its config. If the CLI cannot express a needed change,
+create a task for the tooling gap first.
+
+### Current entry points
+
+```bash
+# Install once (editable); provides the `smlir` console entry point
+pip install -e . --no-deps
+
+# One-shot structured feedback for automated coding loops
+smlir analyze debugger/fixtures/conditional_branch.mlir --json
+# Equivalent module form:
+python -m debugger analyze debugger/fixtures/conditional_branch.mlir --json
+
+# Interactive stdio DAP adapter
+python -m debugger dap
+
+# Existing Python DAP client
+python dap_client/examples/basic_session.py
+```
+
+`debugger.agent.analyze_file` / `analyze_text` is the stable agent API. `smlir analyze`
+is its console wrapper. The API runs local compiler validation via `mlir-opt` when
+available and never requires a network service; `summary.compiler` records which adapter
+was used. `dap_client` owns DAP automation. `dap_trace_library` now contains only the
+batch trace execution and trace-validation adapters over `dap_client`; it must not spawn
+a separate debugger CLI. The Jinja2-first experiment was shelved; its old repository
+design/plan files were removed and the critical review is preserved in tm (audit +
+ADR-001). Do not resurrect it without a concrete need and a new accepted decision.
+
+### Milestone rules
+
+- Fix the feedback loop before expanding dialects or templating.
+- Keep compiler validation local-first; remote MCP/LSP is optional and opt-in.
+- Add tests for new entry points and include `dap_trace_library/tests` in pytest.
+- Do not delete working modules merely to match an old plan.
+- Record every non-trivial decision in tm, including rejected options.
+
+Current milestone: `m2-harden-the-feedback-loop`. M1 delivered the stable API, deterministic
+exploration, fixed trace execution, packaging/CLI, DAP inspection, shared trace schema,
+local compiler adapter, safe expression evaluation, and hermetic CI.
+
 ## Project Structure
 
-- `debugger/`: Python symbolic debugger and DAP server
-  - `interpreter/`: Core symbolic execution engine
+- `debugger/`: Python symbolic debugger, agent API, compiler adapter, and DAP server
+  - `interpreter/`: Core symbolic/concolic execution engine
   - `parser/`: MLIR parser and dialect definitions
   - `tests/`: Python unit tests
   - `fixtures/`: Test MLIR files
+- `dap_client/`: Python DAP client, generators, runners, and examples
+- `dap_trace_library/`: batch trace execution and trace validation
+- `scripts/mlir_validation/`: hermetic local MLIR validation helpers
 
 ## Build and Test Commands
 
 ### Python Debugger
 
-All commands should be run from the `debugger/` directory unless otherwise noted.
+All commands should be run from the repository root unless otherwise noted.
 
 **Install dependencies:**
 ```bash
-cd debugger
 pip install -r requirements.txt
 ```
 
-**Running tests:**
+**Running tests (configured in `pyproject.toml`):**
 ```bash
-python -m pytest                         # Run all tests
+python -m pytest                         # debugger, dap_client, and dap_trace_library tests
 python -m pytest -v                      # Verbose output
 python -m pytest -m parser               # Run tests with marker 'parser'
 python -m pytest --cov                   # Run with coverage
@@ -33,8 +118,8 @@ python -m pytest --cov-report=html       # Generate HTML coverage report
 
 **Running a single test:**
 ```bash
-python -m pytest tests/test_parser.py::test_cmpi_parsing
-python -m pytest tests/test_parser.py -k "test_cmpi_parsing"
+python -m pytest debugger/tests/test_parser.py::test_cmpi_parsing
+python -m pytest debugger/tests/test_parser.py -k "test_cmpi_parsing"
 ```
 
 **Test markers** (defined in `pyproject.toml`):
@@ -89,7 +174,7 @@ python -m flake8 .
 
 ## Common Pitfalls
 
-- **Python path issues:** Ensure `sys.path` includes project root when running scripts.
+- **Imports:** use package-qualified imports (`debugger.*`, `dap_client.*`); install with `pip install -e . --no-deps` for console scripts.
 - **Z3 version:** Requires `z3-solver>=4.12.0`.
 - **MLIR parsing:** The parser uses Lark grammar; dialect definitions are in `parser/dialects/`.
 - **DAP server:** The debug adapter uses stdin/stdout JSON‑RPC; see `dap_server.py`.

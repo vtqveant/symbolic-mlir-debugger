@@ -262,15 +262,15 @@ test_scripts = generator.generate_basic_tests(
 )
 ```
 
-### 3.2 PathAwareTestCaseGenerator Class
+### 3.2 PathAwareGenerator Class
 
-**Location:** `dap_client.generator.path_aware_generator.PathAwareTestCaseGenerator`
+**Location:** `dap_client.generator.path_aware_generator.PathAwareGenerator`
 
 **Description:** Generate path-aware test cases using Z3.
 
 **Constructor:**
 ```python
-PathAwareTestCaseGenerator(debugger_path=None, timeout=30.0, read_timeout=10.0)
+PathAwareGenerator(debugger_path=None, timeout=30.0, read_timeout=10.0)
 ```
 
 **Methods:**
@@ -466,12 +466,12 @@ is_valid = validate_test_script(test_script)
 
 ### 6.3 Connection Management
 
-**Location:** `dap_client.core.connection`
+**Location:** `dap_client.core.stdio_connection`
 
 **Description:** Stdio connection management.
 
 **Classes:**
-- `DAPConnection`: Managed DAP connection
+- `StdioConnection`: Managed DAP connection
 - `ConnectionError`: Connection error exception
 
 ## 🎯 Usage Examples

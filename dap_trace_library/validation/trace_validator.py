@@ -18,86 +18,8 @@ logger = logging.getLogger(__name__)
 class TraceValidator:
     """DAP trace format validator."""
 
-    # JSON schema for DAP trace validation
-    DAP_TRACE_SCHEMA = {
-        "type": "object",
-        "required": ["name", "program", "session"],
-        "properties": {
-            "name": {"type": "string"},
-            "program": {"type": "string"},
-            "description": {"type": "string"},
-            "dialect": {"type": "string"},
-            "operation": {"type": "string"},
-            "concrete_inputs": {"type": "object"},
-            "constraints": {"type": "array", "items": {"type": "string"}},
-            "z3_generated": {"type": "boolean"},
-            "session": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "required": ["command", "expect"],
-                    "properties": {
-                        "command": {"type": "string"},
-                        "arguments": {"type": "object"},
-                        "expect": {"type": "object"},
-                    },
-                },
-            },
-        },
-    }
-
-    # Valid DAP commands (based on DAP specification and extensions)
-    VALID_COMMANDS = {
-        # Standard DAP commands
-        "initialize",
-        "launch",
-        "attach",
-        "disconnect",
-        "terminate",
-        "restart",
-        "setBreakpoints",
-        "setFunctionBreakpoints",
-        "setExceptionBreakpoints",
-        "configurationDone",
-        "continue",
-        "next",
-        "stepIn",
-        "stepOut",
-        "stepBack",
-        "reverseContinue",
-        "restartFrame",
-        "goto",
-        "pause",
-        "stackTrace",
-        "scopes",
-        "variables",
-        "setVariable",
-        "source",
-        "threads",
-        "terminateThreads",
-        "modules",
-        "loadedSources",
-        "evaluate",
-        "setExpression",
-        "stepInTargets",
-        "gotoTargets",
-        "completions",
-        "exceptionInfo",
-        "readMemory",
-        "writeMemory",
-        "disassemble",
-        # Custom symbolic debugging extensions
-        "symbolic/setMode",
-        "symbolic/setInput",
-        "symbolic/explorePaths",
-        "symbolic/getPath",
-        "symbolic/getConstraints",
-        "symbolic/solve",
-        "symbolic/stepSymbolic",
-        "symbolic/getModel",
-        "symbolic/reset",
-    }
-
+    # The structural schema is owned by dap_client. The trace library only adds
+    # semantic checks and never maintains a second schema copy.
     def __init__(self, strict: bool = False):
         """Initialize trace validator.
 
@@ -105,7 +27,18 @@ class TraceValidator:
             strict: Whether to use strict validation (all commands must be valid)
         """
         self.strict = strict
-        self.schema_validator = jsonschema.Draft7Validator(self.DAP_TRACE_SCHEMA)
+        from dap_client.schema.validation import load_test_script_schema
+
+        self.schema = load_test_script_schema()
+        self.schema_validator = jsonschema.Draft7Validator(self.schema)
+        command_schema = (
+            self.schema.get("properties", {})
+            .get("session", {})
+            .get("items", {})
+            .get("properties", {})
+            .get("command", {})
+        )
+        self.valid_commands = set(command_schema.get("enum", []))
 
     def validate_file(self, filepath: Union[str, Path]) -> Dict[str, Any]:
         """Validate a single DAP trace file.
@@ -176,18 +109,22 @@ class TraceValidator:
                     continue
 
                 if "expect" not in session_item:
-                    errors.append(f"Session item {i}: Missing 'expect' field")
-                    continue
+                    warnings.append(
+                        f"Session item {i}: missing 'expect'; the runner treats it as success=true"
+                    )
 
                 command = session_item["command"]
 
                 # Check if command is valid
-                if self.strict and command not in self.VALID_COMMANDS:
-                    warnings.append(f"Session item {i}: Unknown command '{command}'")
+                if self.strict and self.valid_commands and command not in self.valid_commands:
+                    warnings.append(f"Session item {i}: command outside the shared schema: '{command}'")
 
                 # Validate command-specific requirements
-                command_errors = self._validate_command(command, session_item, i)
+                command_errors, command_warnings = self._validate_command(
+                    command, session_item, i
+                )
                 errors.extend(command_errors)
+                warnings.extend(command_warnings)
 
         # 3. Check program file exists (if path is relative)
         if "program" in trace_data:
@@ -219,18 +156,14 @@ class TraceValidator:
 
     def _validate_command(
         self, command: str, session_item: Dict[str, Any], index: int
-    ) -> List[str]:
+    ) -> tuple:
         """Validate a specific DAP command.
 
-        Args:
-            command: Command name
-            session_item: Session item dictionary
-            index: Session item index
-
         Returns:
-            List of error messages
+            (errors, warnings)
         """
         errors = []
+        warnings = []
 
         # Command-specific validation
         if command == "initialize":
@@ -238,8 +171,10 @@ class TraceValidator:
                 errors.append(f"Session item {index}: 'initialize' requires arguments")
             else:
                 args = session_item["arguments"]
-                if "adapterID" not in args:
-                    errors.append(f"Session item {index}: 'initialize' requires adapterID")
+                if "adapterID" not in args and "adapter_id" not in args:
+                    errors.append(
+                        f"Session item {index}: 'initialize' requires adapterID/adapter_id"
+                    )
 
         elif command == "launch":
             if "arguments" not in session_item:
@@ -277,7 +212,7 @@ class TraceValidator:
             elif "success" not in expect:
                 warnings.append(f"Session item {index}: 'expect' should contain 'success' field")
 
-        return errors
+        return errors, warnings
 
     def validate_directory(
         self, directory: Union[str, Path], recursive: bool = True

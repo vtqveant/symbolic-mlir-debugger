@@ -6,7 +6,7 @@ Explores all possible execution paths through symbolic execution.
 """
 
 import logging
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,16 +23,19 @@ class PathExplorer:
         """
         self.stepper = stepper
         self.paths = []
+        self.last_info: Dict[str, Any] = {}
+        self.last_error: Optional[str] = None
 
     def set_stepper(self, stepper):
         """Set the execution stepper for path exploration."""
         self.stepper = stepper
 
-    def explore(self, max_paths: int = 10) -> List[Dict[str, Any]]:
+    def explore(self, max_paths: int = 10, seed: Optional[int] = None) -> List[Dict[str, Any]]:
         """Explore execution paths using concolic execution.
 
         Args:
             max_paths: Maximum number of paths to explore
+            seed: Optional RNG seed for deterministic exploration
 
         Returns:
             List of paths with their details, formatted for DAP response.
@@ -58,9 +61,11 @@ class PathExplorer:
             logger.error("PathExplorer: Interpreter does not have explore_paths method")
             return []
 
+        self.last_error = None
         try:
             # Get real paths from concolic interpreter
-            real_paths = interpreter.explore_paths(func, max_paths)
+            real_paths = interpreter.explore_paths(func, max_paths, seed=seed)
+            self.last_info = dict(getattr(interpreter, "last_exploration_info", {}) or {})
 
             # Transform to DAP-friendly format (compatible with mock format)
             self.paths = []
@@ -90,7 +95,8 @@ class PathExplorer:
             return self.paths[:max_paths]
 
         except Exception as e:
-            logger.error(f"Path exploration failed: {e}")
+            self.last_error = str(e)
+            logger.exception("Path exploration failed")
             return []
 
     def _extract_branches_from_conditions(self, conditions: List[str]) -> List[Dict[str, Any]]:

@@ -3,7 +3,7 @@
 import os
 
 import pytest
-from interpreter.stepper import ExecutionStepper
+from debugger.interpreter.stepper import ExecutionStepper
 
 
 @pytest.mark.integration

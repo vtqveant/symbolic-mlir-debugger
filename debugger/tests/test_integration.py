@@ -6,7 +6,7 @@ Integration tests for multi-dialect debugging with DAP server.
 import os
 
 import pytest
-from dap_server import MLIRDebugSession
+from debugger.dap_server import MLIRDebugSession
 
 
 @pytest.mark.integration

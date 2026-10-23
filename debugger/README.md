@@ -1,49 +1,31 @@
-# Symbolic MLIR Debugger
+# Symbolic MLIR Debugger Engine
 
-A symbolic execution engine for MLIR programs with Debug Adapter Protocol (DAP) support.
+This package contains the MLIR parser, concrete/concolic interpreter, Z3 path
+exploration, and the stdio DAP adapter.
 
-## Phase 1: Foundation
+## Layout
 
-### Goals
+- `parser/`: vendored pymlir fork and dialect definitions.
+- `interpreter/`: parser adapter, operation handlers, state model, stepper, concolic
+  interpreter, path exploration, and memory models.
+- `tests/`: unit, parser, interpreter, concolic, memory, and DAP tests.
+- `fixtures/`: MLIR programs used by tests and examples.
+- `dap_server.py`: stdio DAP server used by `dap_client`.
 
-1. Implement basic symbolic interpreter for MLIR core dialects (func, arith, scf, cf)
-2. Map MLIR operations to Z3 expressions
-3. Handle control flow with path forking
-4. Support simple arithmetic and branching
+The old `src/` and `tests/` command examples in earlier revisions are obsolete.
 
-### Directory Structure
+## Entry points
 
-- `tests/`: MLIR test programs
-- `src/`: Python implementation
-- `results/`: Execution results and logs
-
-### Test Programs
-
-1. `simple_add.mlir`: Basic arithmetic addition
-2. `conditional_branch.mlir`: Conditional branching (max function)
-3. `simple_loop.mlir`: Simple loop (sum of first n numbers)
-
-### Dependencies
-
-- Python 3.8+
-- Z3 Python bindings (`z3-solver`)
-- (Optional) MLIR Python bindings
-
-### Usage
+From the repository root (activate `.venv` first):
 
 ```bash
-cd symbolic_mlir_debugger
-python src/symbolic_interpreter.py tests/simple_add.mlir
+# Structured, actionable feedback for automated coding
+python -m debugger analyze debugger/fixtures/conditional_branch.mlir --json
+
+# Interactive DAP server over stdio
+python -m debugger dap
 ```
 
-### Next Steps
-
-- Implement MLIR parser for text format
-- Create symbolic execution engine with Z3 integration
-- Add support for more MLIR dialects
-- Integrate with MLIR Python bindings when available
-- Implement DAP server for debugging interface
-
-### Documentation
-
-- Z3 Programming: https://z3prover.github.io/papers/programmingz3.html
+The Python API is `debugger.agent.analyze_file()` / `analyze_text()`. The DAP client
+remains the supported automation path for interactive sessions. See the repository
+`AGENTS.md` for the tm workflow and the authoritative milestone plan.

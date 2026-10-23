@@ -1,7 +1,7 @@
 """Parser tests for symbolic MLIR debugger."""
 
 import pytest
-from interpreter.operations import CompareOperation
+from debugger.interpreter.operations import CompareOperation
 
 
 @pytest.mark.parser

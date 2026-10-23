@@ -3,21 +3,16 @@
 MLIR parser using pymlir as backend.
 """
 
-import os
-import sys
 from typing import Dict, Optional, Any, List, Tuple
 
-# Add project root to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-import parser
-import parser.astnodes as mast
-from parser.parser import Parser
+from .. import parser
+from ..parser import astnodes as mast
+from ..parser.parser import Parser
 from lark import Tree
 from .operations import Operation
 
 # Import dialect modules
-from parser.dialects import (
+from ..parser.dialects import (
     affine,
     func,
     linalg,

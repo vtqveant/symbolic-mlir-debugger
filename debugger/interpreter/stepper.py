@@ -191,7 +191,7 @@ class ExecutionStepper:
                 state.set_value(iter_arg_name, z3.Int(iter_arg_name), result_type)
                 state.set_concrete_value(iter_arg_name, init_val)
 
-        print(
+        logger.debug(
             f"STEPPER entered loop: {iv_name} = {lb} to {ub} step {step}, {len(body_ops)} body ops"
         )
         return True
@@ -202,7 +202,7 @@ class ExecutionStepper:
             return
         loop = self.loop_stack.pop()
         self.current_loop = self.loop_stack[-1] if self.loop_stack else None
-        print(f"STEPPER exited loop: {loop.iv_name} = {loop.iv_value}")
+        logger.debug(f"STEPPER exited loop: {loop.iv_name} = {loop.iv_value}")
 
     def _step_in_loop(self) -> Dict[str, Any]:
         """Execute next step within current loop.
@@ -223,7 +223,7 @@ class ExecutionStepper:
             loop.body_op_index = 0
 
         # Check if loop iteration is complete (iv reached or exceeded ub)
-        print(
+        logger.debug(
             f"STEPPER loop check: iv={loop.iv_value}, ub={loop.ub}, step={loop.step}, iter={loop.current_iteration}, body_idx={loop.body_op_index}"
         )
         if (loop.step > 0 and loop.iv_value >= loop.ub) or (
@@ -248,7 +248,7 @@ class ExecutionStepper:
 
         # Check if we're at the start of a new iteration
         if loop.body_op_index == 0:
-            print(
+            logger.debug(
                 f"STEPPER loop iteration {loop.current_iteration}: {loop.iv_name} = {loop.iv_value}"
             )
 
@@ -724,20 +724,20 @@ class ExecutionStepper:
         old_pc = state.pc
 
         # Execute the operation using concolic interpreter
-        print(f"STEPPER executing op: {op.full_name}")
+        logger.debug(f"STEPPER executing op: {op.full_name}")
         self.interpreter._execute_operation_concolic(op, state, self.func)
 
         # Post-processing: ensure concrete values for return operation
         if isinstance(op, ReturnOperation):
             # Try to get concrete value for the return operand
             operand = op.value
-            print(f"STEPPER return op, operand={operand}")
+            logger.debug(f"STEPPER return op, operand={operand}")
             if operand:
                 concrete_val = self.interpreter._get_concrete_operand(operand, state)
-                print(f"STEPPER concrete_val={concrete_val}")
+                logger.debug(f"STEPPER concrete_val={concrete_val}")
                 if concrete_val is not None:
                     state.set_concrete_value("return", concrete_val)
-                    print(f"STEPPER set concrete return value {concrete_val}")
+                    logger.debug(f"STEPPER set concrete return value {concrete_val}")
 
         # Check if this operation caused a block transition
         if state.pc != old_pc:
@@ -772,11 +772,11 @@ class ExecutionStepper:
                 self.branch_history.append(branch_info)
                 # Log branch decision
                 if op.name == "cond_br":
-                    print(
+                    logger.debug(
                         f"STEPPER conditional branch: {old_pc} -> {state.pc} (condition={branch_info.get('condition_value', 'unknown')})"
                     )
                 else:
-                    print(f"STEPPER unconditional branch: {old_pc} -> {state.pc}")
+                    logger.debug(f"STEPPER unconditional branch: {old_pc} -> {state.pc}")
                 # Limit history size
                 if len(self.branch_history) > 100:
                     self.branch_history.pop(0)

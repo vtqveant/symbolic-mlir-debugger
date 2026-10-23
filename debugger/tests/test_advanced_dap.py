@@ -7,7 +7,7 @@ import os
 import tempfile
 
 import pytest
-from dap_server import MLIRDebugSession
+from debugger.dap_server import MLIRDebugSession
 
 
 @pytest.mark.integration

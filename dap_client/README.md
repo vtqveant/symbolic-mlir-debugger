@@ -1,394 +1,67 @@
-# Symbolic MLIR DAP Client
+# DAP Client
 
-A Python DAP (Debug Adapter Protocol) client for automated testing of the Symbolic MLIR Debugger.
+A Python client for the Symbolic MLIR Debugger's stdio Debug Adapter Protocol (DAP)
+server. It launches the adapter as a subprocess, manages the session lifecycle, and
+exposes standard plus symbolic debugging commands.
 
-## Overview
-
-This module provides a comprehensive DAP client implementation that can communicate with the MLIR debugger DAP server.
-It serves as the foundation for automated testing and programmable debugging workflows.
-
-## Communication Protocol
-
-The DAP client uses **stdio communication** (stdin/stdout pipes) to connect directly to the DAP server, following the standard Debug Adapter Protocol. The client automatically launches the DAP server as a subprocess and manages the complete lifecycle.
-
-### Protocol Overview
-
-1. **DAP Server** (`debugger/dap_server.py`):
-   - Reads DAP messages from `stdin`
-   - Sends responses via `stdout`
-   - Uses standard DAP protocol with Content-Length headers
-   - Implements symbolic debugging capabilities
-
-2. **DAP Client** (`dap_client/core/client.py`):
-   - Automatically launches the DAP server as a subprocess
-   - Communicates via **stdio pipes** (stdin/stdout)
-   - Manages the complete debug session lifecycle
-   - Implements all DAP commands
-   - Direct stdio communication, no network ports required
-
-**Simplified Architecture**: The DAP client directly connects to the DAP server using stdio, simplifying deployment.
-
-## Features
-
-- **Complete DAP Protocol Support**: Implements all core DAP commands
-- **Modular Architecture**: Clear separation of concerns with dedicated modules
-- **Stdio Communication**: Direct stdio (stdin/stdout) connection to DAP server
-- **Session Management**: Full debug session lifecycle support
-- **Event Handling**: Support for DAP events
-- **Test Script Validation**: JSON schema validation for test scripts
-- **Automatic Server Management**: Launches and manages DAP server subprocess
-
- ## Architecture
+## Architecture
 
 ```
-dap_client/
-├── core/
-│   ├── client.py          # Main DAP client class
-│   ├── stdio_connection.py # Stdio connection (active)
-│   └── session.py         # Debug session management
-├── protocol/
-│   ├── protocol.py        # DAP protocol definitions
-│   ├── messages.py        # Request/response/event classes
-│   └── constants.py       # DAP constants
-├── schema/
-│   ├── validation.py      # JSON schema validation
-│   └── test_script_schema.json
-├── generator/             # Automated test case generation
-│   ├── test_case_generator.py       # Basic test case generator
-│   ├── path_aware_generator.py      # Z3-based path-aware generator
-│   └── __init__.py
-├── runner/                # Test execution and orchestration
-│   ├── test_runner.py     # Test script runner
-│   ├── orchestrator.py    # Parallel test orchestration
-│   └── __init__.py
-├── examples/
-│   ├── basic_session.py           # Basic usage example
-│   ├── test_script.json           # Example test script
-│   ├── symbolic_test_script.json  # Symbolic debugging example
-│   ├── path_exploration_test.json # Path exploration example
-│   ├── constraint_generation_test.json # Constraint extraction example
-│   └── full_workflow.py           # Complete workflow demonstration
-└── tests/                # Test suite
-    ├── integration/      # Integration testing
-    │   ├── test_pipe_integration.py  # Pipe integration tests
-    │   └── __init__.py
-    ├── test_client.py     # Unit tests for client
-    ├── test_stdio_connection.py # Unit tests for stdio connection
-    └── test_protocol.py   # Unit tests for protocol
+DAPClient (dap_client/core)
+  -> StdioConnection (subprocess stdin/stdout, Content-Length framing)
+  -> DAPSession (lifecycle, breakpoints, inspection, symbolic requests)
+  -> debugger/dap_server.py
 ```
 
-## Connection Architecture
+No network ports are used.
 
-The DAP client uses direct **stdio communication** (stdin/stdout pipes) to connect to the DAP server, simplifying the architecture and improving reliability.
+## Install
 
-### **Current Architecture:**
-
-```
-┌─────────────────┐    stdin/stdout    ┌─────────────────┐
-│   DAP Client    │ ◄────────────────► │  DAP Server     │
-│  (dap_client/)  │   (DAP Protocol)   │ (dap_server.py) │
-└─────────────────┘                    └─────────────────┘
-```
-
-### **How It Works:**
-
-1. **Automatic Server Launch**: The DAP client automatically starts the DAP server (`debugger/dap_server.py`) as a subprocess
-2. **Stdio Communication**: The client communicates via stdin/stdout pipes using standard DAP protocol with Content-Length headers
-3. **Lifecycle Management**: The client manages the complete lifecycle of the DAP server subprocess
-
-### **Configuration Options:**
-
-```python
-from dap_client.core.client import DAPClient
-
-# Customize connection settings
-client = DAPClient(
-    debugger_path="/custom/path/dap_server.py",  # Default: auto-detected
-    timeout=30,      # Connection timeout in seconds
-    read_timeout=10  # Read timeout in seconds
-)
-```
-
-
-
- ## Core DAP Commands
-
-Implemented commands:
-
-### Basic Debugging Commands
-- `initialize` - Initialize debug session
-- `launch` - Launch MLIR program
-- `setBreakpoints` - Set breakpoints in source
-- `configurationDone` - Signal configuration complete
-- `continue` - Continue execution (requires threadId)
-- `disconnect` - Disconnect from debug server
-
-### Symbolic Debugging Commands
-- `symbolic/setMode` - Enable/disable symbolic debugging mode
-- `symbolic/evaluate` - Evaluate symbolic expression
-- `symbolic/explorePaths` - Explore execution paths symbolically
-- `symbolic/getConstraints` - Retrieve current path constraints
-
-## Installation
+From the repository root:
 
 ```bash
-cd dap_client
-pip install -e .
+pip install -r requirements.txt
+pip install -e . --no-deps
 ```
 
-## Connection Setup
-
-The DAP client uses direct **stdio communication** and automatically launches the DAP server as a subprocess.
-
-### **Using the DAP Client:**
-
-```python
-from dap_client.core.client import DAPClient
-
-# The client automatically starts the DAP server
-with DAPClient() as client:
-    # Initialize session
-    client.initialize(adapter_id="mlir-debugger", client_id="automated-test")
-    
-    # Launch program
-    client.launch(program="example.mlir", no_debug=False)
-    
-    # ... rest of debugging session
-```
-
-### **Configuration Options:**
-
-```python
-# Customize connection settings
-client = DAPClient(
-    debugger_path="/custom/path/dap_server.py",  # Default: auto-detected
-    timeout=30,      # Connection timeout in seconds
-    read_timeout=10  # Read timeout in seconds
-)
-```
-
-
-
-## Usage
-
-The DAP client automatically launches the DAP server as a subprocess and communicates via stdio (stdin/stdout).
-
-#### Basic Session
+## Basic usage
 
 ```python
 from dap_client.core.client import DAPClient
 
 with DAPClient() as client:
-    # Initialize session
-    client.initialize(adapter_id="mlir-debugger", client_id="automated-test")
-
-    # Launch program
-    client.launch(program="example.mlir", no_debug=False)
-
-    # Set breakpoints
+    client.initialize(adapter_id="mlir-debugger", client_id="example")
+    client.launch(program="debugger/fixtures/conditional_branch.mlir")
     client.set_breakpoints(
-        source={"path": "example.mlir"},
-        breakpoints=[{"line": 10}]
+        source={"path": "debugger/fixtures/conditional_branch.mlir"},
+        breakpoints=[{"line": 4}],
     )
-
-    # Configuration done
     client.configuration_done()
-
-    # Continue execution
     client.continue_execution(thread_id=1)
+    threads = client.get_threads()
+    stack = client.get_stacktrace(thread_id=1)
+    variables = client.get_variables(1)
+    client.disconnect()
 ```
 
- ### Test Script Example
+The client also exposes symbolic commands:
 
-```python
-from dap_client.schema import load_test_script
+- `symbolic_set_mode(enabled=True)`
+- `symbolic_evaluate(expression, frame_id=0)`
+- `symbolic_explore_paths(max_paths=10)`
+- `symbolic_get_constraints()`
 
-test_script = load_test_script("examples/test_script.json")
-```
-
-### Symbolic Debugging Example
-
-```python
-from dap_client.core.client import DAPClient
-
-with DAPClient() as client:
-    # Initialize and launch program
-    client.initialize(adapter_id="mlir-debugger", client_id="symbolic-test")
-    client.launch(program="conditional_branch.mlir", no_debug=False)
-    
-    # Enable symbolic debugging
-    client.symbolic_set_mode(enabled=True)
-    
-    # Evaluate symbolic expression
-    result = client.symbolic_evaluate(expression="%a < %b", frame_id=0)
-    
-    # Explore execution paths
-    paths = client.symbolic_explore_paths(max_paths=10)
-    
-    # Get constraints
-    constraints = client.symbolic_get_constraints()
-    
-    # Disable symbolic mode
-    client.symbolic_set_mode(enabled=False)
-```
-
-### Automated Test Generation
-
-The DAP client includes powerful test case generators:
-
-```python
-from generator.test_case_generator import TestCaseGenerator
-from generator.path_aware_generator import PathAwareGenerator
-
-# Basic generator
-generator = TestCaseGenerator()
-generator.connect()
-test_scripts = generator.generate_from_program(
-    program_path="conditional_branch.mlir",
-    max_paths=5
-)
-
-# Path-aware generator (requires Z3)
-path_aware = PathAwareGenerator()
-path_aware.connect()
-targeted_tests = path_aware.generate_from_program(
-    program_path="nested_conditional.mlir",
-    max_paths=3
-)
-
-# Memory model tests
-memory_tests = path_aware.generate_memory_model_tests(
-    program_path="memref_basic.mlir"
-)
-```
-
-### Test Execution and Orchestration
-
-```python
-from runner.test_runner import TestRunner
-from runner.orchestrator import TestOrchestrator
-
-# Single test runner
-runner = TestRunner()
-result = runner.run_test_file("test_script.json")
-
-# Parallel test orchestration
-orchestrator = TestOrchestrator(max_workers=3)
-
-results = orchestrator.run_test_files([
-    "test1.json",
-    "test2.json",
-    "test3.json"
-])
-
-report = orchestrator.get_summary()
-```
-
-### Full Workflow Demonstration
-
-See `examples/full_workflow.py` for a complete demonstration:
+## Examples
 
 ```bash
-python examples/full_workflow.py --program conditional_branch.mlir
+python dap_client/examples/basic_session.py
+python dap_client/examples/full_workflow.py --program debugger/fixtures/conditional_branch.mlir
 ```
 
-This script:
-1. Generates test cases from an MLIR program using symbolic execution
-2. Saves generated test scripts to JSON files
-3. Executes the generated test scripts using the test runner
-4. Generates a comprehensive test report in JSON format
-
-### Quick Start Example
-
-Run the basic session example directly:
+## Tests
 
 ```bash
-cd dap_client
-python examples/basic_session.py
+python -m pytest dap_client/tests
 ```
 
-The example script:
-1. Automatically launches the DAP server as a subprocess
-2. Initializes a debug session
-3. Launches an MLIR program
-4. Sets and hits a breakpoint
-5. Inspects variables
-6. Cleanly shuts down the DAP server
-
-For more examples, see the `examples/` directory.
-
-## Running Tests
-
-```bash
-cd dap_client
-python -m pytest tests/ -v
-```
-
-### Arithmetic Workflow Testing
-
-The DAP client includes comprehensive testing for arithmetic operations through the DAP protocol:
-
-#### Test Files:
-- `tests/test_arith_workflow.py` - DAP-based workflow tests for arithmetic operations
-- `examples/arith_workflow.py` - Example usage of arithmetic testing via DAP
-- `run_arith_workflow_tests.py` - Automated test runner with reporting
-
-#### Running Arithmetic Tests:
-
-```bash
-# Run all arithmetic workflow tests
-cd dap_client
-python run_arith_workflow_tests.py
-
-# Run specific test categories
-python run_arith_workflow_tests.py --basic      # Basic arithmetic operations
-python run_arith_workflow_tests.py --complex    # Complex expressions
-python run_arith_workflow_tests.py --edge       # Edge cases
-python run_arith_workflow_tests.py --symbolic   # Symbolic execution
-python run_arith_workflow_tests.py --concolic   # Concolic testing
-
-# Run example workflow
-python examples/arith_workflow.py --all
-```
-
-#### Test Coverage:
-- **Basic Operations**: addi, subi, muli, divsi, remsi, cmpi, etc.
-- **Complex Expressions**: Chained arithmetic operations
-- **Edge Cases**: Zero, negative numbers, overflow conditions
-- **Symbolic Execution**: Path exploration and constraint solving
-- **Concolic Testing**: Parameter variation and execution path tracking
-
-#### Generated Reports:
-Tests generate detailed reports in the `test_reports/` directory:
-- JSON reports with full test results
-- Markdown summaries with statistics
-- Execution path tracking data
-
-## API Documentation
-
-See the inline docstrings in each module for detailed API documentation.
-
- ## Requirements
-
-- Python 3.8+
-- jsonschema >= 4.0.0
-- pytest (for testing)
-
-### Optional Dependencies
-- **z3-solver** >= 4.12.0: Required for path-aware test generation and memory model tests
-  - Install with: `pip install z3-solver`
-
-### Installation with All Dependencies
-
-```bash
-cd dap_client
-pip install -e .[all]
-```
-
-## License
-
-MIT License
-
-## Contributing
-
-Contributions are welcome! Please ensure all tests pass before submitting PRs.
+The root `README.md` and `AGENTS.md` describe the current architecture and task tracking.

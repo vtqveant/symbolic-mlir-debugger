@@ -3,7 +3,7 @@
 
 import os
 import pytest
-from dap_server import MLIRDebugSession, DAPRequest
+from debugger.dap_server import MLIRDebugSession, DAPRequest
 
 
 @pytest.mark.integration

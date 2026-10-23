@@ -8,8 +8,11 @@ representation.
 """
 
 from typing import Optional, Any, List
+import logging
 
-import parser.astnodes as mast
+logger = logging.getLogger(__name__)
+
+from ...parser import astnodes as mast
 
 from .base import BaseDialectParser
 from ..operations import (
@@ -31,12 +34,7 @@ class LinalgDialectParser(BaseDialectParser):
             parser_context: Reference to the main MLIRParser instance
                            for accessing shared utilities and state.
         """
-        import sys
-
-        print(
-            f"[LinalgDialectParser] Initializing with context={parser_context}",
-            file=sys.stderr,
-        )
+        logger.debug("Initializing linalg dialect parser with context=%s", parser_context)
         super().__init__(parser_context)
 
     def parse_operation(self, op_node: mast.Operation) -> Optional[Operation]:
@@ -44,19 +42,13 @@ class LinalgDialectParser(BaseDialectParser):
 
         Dispatches to appropriate parser based on operation class.
         """
-        import sys
-
-        print(
-            f"[LinalgDialectParser] parse_operation called for {op_node}",
-            file=sys.stderr,
-        )
+        logger.debug("linalg parse_operation called for %s", op_node)
         op_obj = op_node.op
 
         # Check operation class and dispatch
         if hasattr(op_obj, "__class__"):
             class_name = op_obj.__class__.__name__
-            # Debug
-            print(f"[LinalgDialectParser] Trying to parse {class_name}", file=sys.stderr)
+            logger.debug("Trying to parse linalg operation %s", class_name)
 
             # Map operation class names to parser methods
             if class_name == "LinalgGeneric":
@@ -79,30 +71,22 @@ class LinalgDialectParser(BaseDialectParser):
     # Methods for base class's parse_operation fallback (pattern: parse_{Classname})
     def parse_LinalgGeneric(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse LinalgGeneric operation (called by base class pattern)."""
-        import sys
-
-        print(f"[LinalgDialectParser] parse_LinalgGeneric called", file=sys.stderr)
+        logger.debug("parse_LinalgGeneric called")
         return self._parse_linalg_generic_operation(op_node)
 
     def parse_LinalgMatmul(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse LinalgMatmul operation (called by base class pattern)."""
-        import sys
-
-        print(f"[LinalgDialectParser] parse_LinalgMatmul called", file=sys.stderr)
+        logger.debug("parse_LinalgMatmul called")
         return self._parse_linalg_matmul_operation(op_node)
 
     def parse_LinalgBatchMatmul(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse LinalgBatchMatmul operation (called by base class pattern)."""
-        import sys
-
-        print(f"[LinalgDialectParser] parse_LinalgBatchMatmul called", file=sys.stderr)
+        logger.debug("parse_LinalgBatchMatmul called")
         return self._parse_linalg_batch_matmul_operation(op_node)
 
     def parse_LinalgYield(self, op_node: mast.Operation) -> Optional[Operation]:
         """Parse LinalgYield operation (called by base class pattern)."""
-        import sys
-
-        print(f"[LinalgDialectParser] parse_LinalgYield called", file=sys.stderr)
+        logger.debug("parse_LinalgYield called")
         return self._parse_linalg_yield_operation(op_node)
 
     # Individual operation parsers
