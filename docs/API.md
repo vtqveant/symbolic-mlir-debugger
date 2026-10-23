@@ -1,548 +1,416 @@
 # Symbolic MLIR Debugger - API Documentation
 
-Complete API reference for the Symbolic MLIR Debugger.
+Reference for the agent feedback API, DAP client, test automation helpers, and trace
+adapters. The tm records listed in `AGENTS.md` remain authoritative for scope and
+decisions; this file documents the current code.
 
-## 📋 Table of Contents
-1. [DAP Client API](#dap-client-api)
-2. [Test Generation API](#test-generation-api)
-3. [Test Runner API](#test-runner-api)
-4. [Core Debugger API](#core-debugger-api)
-5. [Utility Functions](#utility-functions)
+## Contents
 
-## 1. DAP Client API
+1. [Agent feedback API](#1-agent-feedback-api)
+2. [DAP client API](#2-dap-client-api)
+3. [Test generation API](#3-test-generation-api)
+4. [Test runner and orchestration API](#4-test-runner-and-orchestration-api)
+5. [Trace execution and validation API](#5-trace-execution-and-validation-api)
+6. [Core debugger API](#6-core-debugger-api)
+7. [Protocol and connection utilities](#7-protocol-and-connection-utilities)
+8. [Examples](#8-examples)
 
-The DAP client provides a Python interface to communicate with the MLIR debugger DAP server.
+## 1. Agent feedback API
 
-### 1.1 DAPClient Class
+`debugger.agent` is the stable interface for automated coding loops. It returns
+JSON-serializable dictionaries and never prints analysis output to stdout.
 
-**Location:** `dap_client.core.client.DAPClient`
+### `analyze_file(path, inputs=None, max_paths=10, seed=0)`
 
-**Description:** Main client class for DAP communication.
-
-**Constructor:**
-```python
-DAPClient(debugger_path=None, timeout=30.0, read_timeout=10.0)
-```
-
-**Parameters:**
-- `debugger_path` (str, optional): Path to DAP server script (`debugger/dap_server.py`). If None, auto-detected.
-- `timeout` (float): Connection timeout in seconds (default: 30.0)
-- `read_timeout` (float): Read timeout in seconds (default: 10.0)
-
-**Context Manager Usage:**
-```python
-with DAPClient() as client:
-    # Use client here
-    # Connection automatically closed on exit
-```
-
-### 1.2 Basic Debugging Commands
-
-#### `initialize()`
-Initialize a debug session.
+Analyze an MLIR file.
 
 ```python
-response = client.initialize(
-    adapter_id="mlir-debugger",
-    client_id="your-client-id",
-    client_name="Your Client Name",
-    locale="en-US"
-)
-```
+from debugger.agent import analyze_file
 
-**Parameters:**
-- `adapter_id` (str): Debug adapter identifier
-- `client_id` (str): Client identifier
-- `client_name` (str, optional): Human-readable client name
-- `locale` (str, optional): Locale for messages
-
-**Returns:** Dictionary with initialization response
-
-#### `launch()`
-Launch an MLIR program for debugging.
-
-```python
-response = client.launch(
-    program="path/to/program.mlir",
-    no_debug=False,
-    stop_on_entry=True,
-    args=None
-)
-```
-
-**Parameters:**
-- `program` (str): Path to MLIR program file
-- `no_debug` (bool): If True, run without debugging
-- `stop_on_entry` (bool): If True, stop at program entry
-- `args` (list, optional): Command-line arguments for program
-
-**Returns:** Dictionary with launch response
-
-#### `set_breakpoints()`
-Set breakpoints in source code.
-
-```python
-response = client.set_breakpoints(
-    source={"path": "path/to/program.mlir"},
-    breakpoints=[{"line": 10}, {"line": 20}],
-    source_modified=False
-)
-```
-
-**Parameters:**
-- `source` (dict): Source file information
-- `breakpoints` (list): List of breakpoint specifications
-- `source_modified` (bool): If True, source has been modified
-
-**Returns:** Dictionary with breakpoints response
-
-#### `configuration_done()`
-Signal that configuration is complete.
-
-```python
-response = client.configuration_done()
-```
-
-**Returns:** Dictionary with configuration done response
-
-#### `continue_execution()`
-Continue execution from current state.
-
-```python
-response = client.continue_execution(thread_id=1)
-```
-
-**Parameters:**
-- `thread_id` (int): Thread ID to continue
-
-**Returns:** Dictionary with continue response
-
-#### `disconnect()`
-Disconnect from debug server.
-
-```python
-response = client.disconnect(terminate_debuggee=False, restart=False)
-```
-
-**Parameters:**
-- `terminate_debuggee` (bool): If True, terminate debuggee
-- `restart` (bool): If True, restart debuggee
-
-**Returns:** Dictionary with disconnect response
-
-### 1.3 Symbolic Debugging Commands
-
-#### `symbolic_set_mode()`
-Enable or disable symbolic debugging mode.
-
-```python
-response = client.symbolic_set_mode(enabled=True)
-```
-
-**Parameters:**
-- `enabled` (bool): Enable (True) or disable (False) symbolic mode
-
-**Returns:** Dictionary with mode setting response
-
-#### `symbolic_evaluate()`
-Evaluate a symbolic expression.
-
-```python
-response = client.symbolic_evaluate(
-    expression="%a + %b",
-    frame_id=0,
-    context="hover"
-)
-```
-
-**Parameters:**
-- `expression` (str): Expression to evaluate
-- `frame_id` (int): Stack frame ID
-- `context` (str): Evaluation context ("hover", "watch", "repl", "clipboard")
-
-**Returns:** Dictionary with evaluation result
-
-#### `symbolic_explore_paths()`
-Explore execution paths symbolically.
-
-```python
-response = client.symbolic_explore_paths(
+report = analyze_file(
+    "debugger/fixtures/conditional_branch.mlir",
+    inputs={"a": 5, "b": 3},
     max_paths=10,
-    depth_limit=100
+    seed=0,
 )
 ```
 
-**Parameters:**
-- `max_paths` (int): Maximum number of paths to explore
-- `depth_limit` (int): Maximum exploration depth
+Arguments:
 
-**Returns:** Dictionary with path exploration results
+- `path` (`str | pathlib.Path`): MLIR file to analyze.
+- `inputs` (`Mapping[str, Any]`, optional): concrete integer values for function
+  arguments. A leading `%` in a name is stripped.
+- `max_paths` (`int`): maximum number of feasible paths to explore (default `10`).
+  Negative values produce a `limit` diagnostic.
+- `seed` (`int | None`): deterministic path-exploration seed (default `0`).
 
-#### `symbolic_get_constraints()`
-Get current path constraints.
+A missing or unreadable file is returned as an `io` diagnostic, not an exception.
 
-```python
-response = client.symbolic_get_constraints()
+### `analyze_text(text, source_name="<memory>", inputs=None, max_paths=10, seed=0)`
+
+Analyze MLIR source held in memory. The text is written to a temporary file so the
+same parser and stepper path is used.
+
+### Report shape
+
+```json
+{
+  "schema_version": "1.0",
+  "status": "ok",
+  "program": "path/to/program.mlir",
+  "function": "max",
+  "diagnostics": [],
+  "paths": [
+    {
+      "index": 0,
+      "inputs": {"a": 2, "b": 3},
+      "path_condition": ["a < b"],
+      "return_value": "b",
+      "depth": 1
+    }
+  ],
+  "summary": {
+    "path_count": 1,
+    "function_count": 1,
+    "truncated": false,
+    "limit_reason": null,
+    "seed": 0,
+    "duration_ms": 12.34,
+    "compiler": {
+      "source": "mlir-opt",
+      "available": true,
+      "tool": "/usr/bin/mlir-opt"
+    },
+    "unsupported_operations": 0
+  }
+}
 ```
 
-**Returns:** Dictionary with current constraints
+Fields:
 
-### 1.4 Event Handling
+- `status`: `ok` or `error`. It is `error` when any diagnostic has severity `error`.
+- `function`: analyzed function name, or `null`.
+- `diagnostics`: objects with `severity` (`error`, `warning`, `info`), `kind`, `message`,
+  `line`, and `operation`. Kinds include `parse`, `execution`, `path`, `limit`, `input`,
+  `io`, and `validation`.
+- `paths`: feasible paths with concrete `inputs`, symbolic `path_condition`, optional
+  `return_value`, and exploration `depth`.
+- `summary.compiler.source`: `mlir-opt`, `internal`, `remote`, or `unavailable`.
+  Validation is local-first; remote validation is opt-in through
+  `debugger.compiler.validate_mlir_text(..., endpoint=...)`.
+- `summary.truncated` / `summary.limit_reason`: report exploration limits instead of
+  silently dropping work.
+- `summary.unsupported_operations`: number of unsupported-operation warnings.
 
-#### Event Callbacks
-The client supports event callbacks for asynchronous DAP events:
+### Command line
 
-```python
-def on_stopped(event):
-    print(f"Program stopped: {event}")
-
-def on_output(event):
-    print(f"Output: {event['body']['output']}")
-
-client = DAPClient()
-client.register_callback("stopped", on_stopped)
-client.register_callback("output", on_output)
-```
-
-**Supported Events:**
-- `"stopped"`: Program execution stopped
-- `"continued"`: Program execution continued
-- `"output"`: Output produced
-- `"breakpoint"`: Breakpoint hit
-- `"exited"`: Program exited
-- `"terminated"`: Debug session terminated
-
-## 3. Test Generation API
-
-### 3.1 TestCaseGenerator Class
-
-**Location:** `dap_client.generator.test_case_generator.TestCaseGenerator`
-
-**Description:** Generate test cases from MLIR programs.
-
-**Constructor:**
-```python
-TestCaseGenerator(debugger_path=None, timeout=30.0, read_timeout=10.0)
-```
-
-**Methods:**
-
-#### `connect()`
-Connect to DAP server.
-
-```python
-generator.connect()
-```
-
-#### `generate_from_program()`
-Generate test cases from MLIR program.
-
-```python
-test_scripts = generator.generate_from_program(
-    program_path="path/to/program.mlir",
-    max_paths=5,
-    include_symbolic=True
-)
-```
-
-**Parameters:**
-- `program_path` (str): Path to MLIR program
-- `max_paths` (int): Maximum paths to explore
-- `include_symbolic` (bool): Include symbolic debugging tests
-
-**Returns:** list - Generated test scripts
-
-#### `generate_basic_tests()`
-Generate basic test cases.
-
-```python
-test_scripts = generator.generate_basic_tests(
-    program_path="path/to/program.mlir",
-    num_tests=3
-)
-```
-
-### 3.2 PathAwareGenerator Class
-
-**Location:** `dap_client.generator.path_aware_generator.PathAwareGenerator`
-
-**Description:** Generate path-aware test cases using Z3.
-
-**Constructor:**
-```python
-PathAwareGenerator(debugger_path=None, timeout=30.0, read_timeout=10.0)
-```
-
-**Methods:**
-
-#### `generate_targeted_tests()`
-Generate tests targeting specific paths.
-
-```python
-tests = generator.generate_targeted_tests(
-    program_path="path/to/program.mlir",
-    target_path_ids=[0, 1, 2]
-)
-```
-
-#### `generate_memory_model_tests()`
-Generate memory model tests.
-
-```python
-tests = generator.generate_memory_model_tests(
-    program_path="path/to/program.mlir"
-)
-```
-
-#### `generate_coverage_tests()`
-Generate tests for path coverage.
-
-```python
-tests = generator.generate_coverage_tests(
-    program_path="path/to/program.mlir",
-    coverage_goal=0.8  # 80% path coverage
-)
-```
-
-## 4. Test Runner API
-
-### 4.1 TestRunner Class
-
-**Location:** `dap_client.runner.test_runner.TestRunner`
-
-**Description:** Run test scripts against DAP server.
-
-**Constructor:**
-```python
-TestRunner(debugger_path=None, timeout=30.0, read_timeout=10.0)
-```
-
-**Methods:**
-
-#### `run_test()`
-Run a single test script.
-
-```python
-result = runner.run_test(
-    test_script_path="test.json",
-    timeout=60.0
-)
-```
-
-**Parameters:**
-- `test_script_path` (str): Path to test script JSON file
-- `timeout` (float): Test timeout in seconds
-
-**Returns:** dict - Test result including:
-- `success`: Test passed (bool)
-- `duration`: Execution time in seconds
-- `output`: Test output
-- `errors`: Any errors encountered
-
-#### `run_tests()`
-Run multiple test scripts.
-
-```python
-results = runner.run_tests(
-    test_script_paths=["test1.json", "test2.json"],
-    parallel=False
-)
-```
-
-### 4.2 TestOrchestrator Class
-
-**Location:** `dap_client.runner.orchestrator.TestOrchestrator`
-
-**Description:** Orchestrate parallel test execution.
-
-**Constructor:**
-```python
-TestOrchestrator(
-    debugger_path=None,
-    timeout=30.0,
-    read_timeout=10.0,
-    max_parallel_sessions=3
-)
-```
-
-**Methods:**
-
-#### `run_tests()`
-Run tests in parallel.
-
-```python
-results = orchestrator.run_tests([
-    "test1.json",
-    "test2.json",
-    "test3.json"
-])
-```
-
-#### `generate_report()`
-Generate test execution report.
-
-```python
-report = orchestrator.generate_report(results)
-```
-
-**Returns:** dict - Report including:
-- `total_tests`: Number of tests run
-- `passed`: Number of tests passed
-- `failed`: Number of tests failed
-- `duration`: Total execution time
-- `details`: Detailed results per test
-
-## 5. Core Debugger API
-
-### 5.1 DAP Server
-
-**Location:** `debugger.dap_server`
-
-**Description:** Main DAP server implementation.
-
-**Usage:**
 ```bash
-# Start DAP server directly (stdin/stdout)
-python debugger/dap_server.py
+smlir analyze program.mlir --json
+python -m debugger analyze program.mlir --json
 
-# The server expects DAP protocol messages via stdin
-# and sends responses via stdout
+python -m debugger analyze program.mlir \
+  --input a=5 --input b=3 \
+  --max-paths 5 --seed 0 --json
 ```
 
-### 5.2 Symbolic Interpreter
+Options:
 
-**Location:** `debugger.interpreter`
+- `--input NAME=VALUE`: concrete integer input (repeatable).
+- `--max-paths N`: maximum feasible paths (default `10`).
+- `--seed N`: deterministic exploration seed (default `0`).
+- `--json`: emit the complete report. Without it, a human summary is printed.
 
-**Description:** Symbolic execution engine.
+Exit codes: `0` when `status == "ok"`, `1` for analysis errors, `2` for CLI usage errors.
 
-**Key Components:**
-- `SymbolicInterpreter`: Main interpreter class
-- `SymbolicState`: Symbolic execution state
-- `ConstraintSolver`: Z3-based constraint solver
-
-### 5.3 Parser
-
-**Location:** `debugger.parser`
-
-**Description:** MLIR text parser.
-
-**Usage:**
-```python
-from debugger.parser import parse_mlir
-
-ast = parse_mlir("func.func @main() { return }")
-```
-
-## 6. Utility Functions
-
-### 6.1 Schema Validation
-
-**Location:** `dap_client.schema`
-
-**Description:** JSON schema validation for test scripts.
-
-**Usage:**
-```python
-from dap_client.schema import load_test_script, validate_test_script
-
-# Load and validate test script
-test_script = load_test_script("test.json")
-
-# Validate manually
-is_valid = validate_test_script(test_script)
-```
-
-### 6.2 Protocol Definitions
-
-**Location:** `dap_client.protocol`
-
-**Description:** DAP protocol message definitions.
-
-**Classes:**
-- `Request`: DAP request message
-- `Response`: DAP response message
-- `Event`: DAP event message
-- `ProtocolError`: Protocol error exception
-
-### 6.3 Connection Management
-
-**Location:** `dap_client.core.stdio_connection`
-
-**Description:** Stdio connection management.
-
-**Classes:**
-- `StdioConnection`: Managed DAP connection
-- `ConnectionError`: Connection error exception
-
-## 🎯 Usage Examples
-
-### Complete Workflow Example
+### Compiler validation
 
 ```python
-from dap_client.generator.test_case_generator import TestCaseGenerator
-from dap_client.runner.test_runner import TestRunner
+from debugger.compiler import validate_mlir_file, validate_mlir_text
 
-# Generate test cases
-generator = TestCaseGenerator()
-test_scripts = generator.generate_from_program(
-    program_path="example.mlir",
-    max_paths=3
-)
-
-# Run tests
-runner = TestRunner()
-results = []
-for i, test_script in enumerate(test_scripts):
-    # Save test script
-    with open(f"test_{i}.json", "w") as f:
-        import json
-        json.dump(test_script, f, indent=2)
-    
-    # Run test
-    result = runner.run_test(f"test_{i}.json")
-    results.append(result)
-
-# Report results
-print(f"Tests run: {len(results)}")
-print(f"Tests passed: {sum(1 for r in results if r['success'])}")
+result = validate_mlir_text("func.func @main() { return }")
+result = validate_mlir_file("program.mlir", fallback_to_internal=True)
 ```
 
-### Advanced Symbolic Debugging
+`validate_mlir_text(text, filename="<memory>", *, local_tool=None, endpoint=None,
+fallback_to_internal=False, timeout=30)` and `validate_mlir_file(path, *, ...)` try a
+local `mlir-opt` first, then an explicitly configured remote endpoint, then the in-tree
+parser only when `fallback_to_internal=True`. The result carries `valid`, `source`,
+`available`, `tool`, and `diagnostics`.
+
+## 2. DAP client API
+
+`dap_client.core.client.DAPClient` launches the stdio DAP server as a subprocess and
+manages the session lifecycle.
+
+### Constructor
+
+```python
+DAPClient(debugger_path=None, timeout=30, read_timeout=10)
+```
+
+- `debugger_path` (`str`, optional): DAP server script. Auto-detected when omitted.
+- `timeout` (`int`): connection timeout in seconds.
+- `read_timeout` (`int`): response read timeout in seconds.
+
+Use as a context manager or call `connect()` / `close()` explicitly:
 
 ```python
 from dap_client.core.client import DAPClient
 
 with DAPClient() as client:
-    # Initialize and launch
-    client.initialize(adapter_id="mlir-debugger")
-    client.launch(program="complex.mlir")
-    
-    # Enable symbolic mode
-    client.symbolic_set_mode(enabled=True)
-    
-    # Explore paths with custom constraints
+    client.initialize(adapter_id="mlir-debugger", client_id="example")
+    client.launch(program="debugger/fixtures/conditional_branch.mlir")
     client.set_breakpoints(
-        source={"path": "complex.mlir"},
-        breakpoints=[{"line": 42}]
+        source={"path": "debugger/fixtures/conditional_branch.mlir"},
+        breakpoints=[{"line": 6}],
     )
-    
     client.configuration_done()
-    
-    # Get symbolic information at breakpoint
-    # (requires breakpoint to be hit first)
-    
-    # Disable symbolic mode
-    client.symbolic_set_mode(enabled=False)
-    
+    client.continue_execution(thread_id=1)
+    threads = client.get_threads()
+    stack = client.get_stacktrace(thread_id=1)
+    scopes = client.get_scopes(frame_id=1)
+    variables = client.get_variables(variable_reference=1)
     client.disconnect()
 ```
 
-## 📚 Additional Resources
+### Session lifecycle
 
-- [Debug Adapter Protocol Specification](https://microsoft.github.io/debug-adapter-protocol/)
+- `connect() -> bool`: start the adapter subprocess and connect.
+- `initialize(adapter_id="mlir-debugger", client_id="automated-test-client") -> dict`
+- `launch(program, no_debug=True, **kwargs) -> dict`: `kwargs` are forwarded to the
+  launch request arguments.
+- `set_breakpoints(source, breakpoints, line_breakpoints=None, column_breakpoints=None)
+  -> dict`
+- `configuration_done() -> dict`
+- `continue_execution(thread_id) -> dict`
+- `disconnect(terminate_debuggee=True) -> dict`
+- `close() -> None`: disconnect the session and close the subprocess connection.
+
+### Inspection and evaluation
+
+- `get_threads() -> dict`
+- `get_stacktrace(thread_id) -> dict`
+- `get_scopes(frame_id) -> dict`
+- `get_variables(variable_reference) -> dict`
+- `evaluate(expression, frame_id=None) -> dict`
+
+### Symbolic commands
+
+- `symbolic_set_mode(enabled=True) -> dict`
+- `symbolic_evaluate(expression, frame_id=0) -> dict`
+- `symbolic_explore_paths(max_paths=10) -> dict`
+- `symbolic_get_constraints() -> dict`
+
+### Events
+
+Register a handler per event type:
+
+```python
+def on_stopped(event):
+    print(f"stopped: {event}")
+
+client.register_event_handler("stopped", on_stopped)
+client.register_event_handler("output", on_output)
+```
+
+Common events are `stopped`, `continued`, `output`, `breakpoint`, `exited`, and
+`terminated`.
+
+## 3. Test generation API
+
+Both generators live in `dap_client.generator` and use `DAPClient` internally.
+
+### `TestCaseGenerator`
+
+```python
+TestCaseGenerator(debugger_path=None, timeout=30, read_timeout=10)
+```
+
+- `connect() -> bool`
+- `disconnect() -> None`
+- `generate_from_program(program_path, max_paths=10, test_name=None)
+  -> list[dict]`
+- `save_test_scripts(test_scripts, output_dir="generated_tests") -> list[str]`
+
+The generator enables symbolic mode, launches the program without debugging, calls
+`symbolic_explore_paths`, and builds one test script per feasible path.
+
+### `PathAwareGenerator`
+
+Subclasses `TestCaseGenerator`:
+
+```python
+PathAwareGenerator(debugger_path=None, timeout=30, read_timeout=10)
+```
+
+- `generate_for_branch_condition(program_path, condition_expr, test_name=None,
+  max_attempts=5) -> list[dict]`
+- `generate_edge_cases(program_path, variable_ranges, test_name=None, num_cases=5)
+  -> list[dict]`
+- `generate_memory_model_tests(program_path, test_name=None) -> list[dict]`
+- Inherits `generate_from_program` and `save_test_scripts`.
+
+`variable_ranges` maps variable names to `(min, max)` tuples. Methods return an empty
+list when Z3 is unavailable or generation fails.
+
+## 4. Test runner and orchestration API
+
+### `TestRunner`
+
+```python
+TestRunner(debugger_path=None, timeout=30, read_timeout=10)
+```
+
+- `connect() -> bool`
+- `disconnect() -> None`
+- `run_test_script(test_script_data, script_path=None) -> dict`
+- `run_test_file(test_script_path) -> dict`
+- `get_summary() -> dict`
+- `save_results(output_path="test_results.json") -> str`
+
+`run_test_script` executes the `session` steps and returns a result with `success`,
+`steps`, `duration`, and any step-level errors. `get_summary` aggregates
+`total_tests`, `passed_tests`, `failed_tests`, `success_rate`, `total_duration`, and
+`results`.
+
+### `TestOrchestrator`
+
+```python
+TestOrchestrator(debugger_path=None, timeout=30, read_timeout=10, max_workers=None)
+```
+
+- `run_test_files(test_files, parallel=True) -> dict`
+- `generate_and_run(program_path, max_paths=5, output_dir="generated_tests",
+  run_tests=True, clean_generated=False) -> dict`
+- `run_memory_model_tests(program_path, output_dir="memory_model_tests",
+  run_tests=True) -> dict`
+- `save_report(results, output_path="test_report.json") -> str`
+- `print_summary(results) -> None`
+
+Aggregated reports include `total_tests`, `passed_tests`, `failed_tests`,
+`success_rate`, step counts, timing, and per-test results.
+
+## 5. Trace execution and validation API
+
+`dap_trace_library` is a thin batch adapter over `dap_client`; it does not implement a
+second execution stack.
+
+### `TraceExecutor`
+
+```python
+from dap_trace_library.execution.trace_executor import TraceExecutor
+
+executor = TraceExecutor(debugger_path=None, timeout=30)
+result = executor.execute_file("trace.json")
+```
+
+- `execute_trace(trace_data, trace_name="unknown") -> dict`
+- `execute_file(trace_file) -> dict`
+- `execute_directory(directory, recursive=True) -> dict`
+- `execute_with_validation(trace_data, validator=None) -> dict`
+- `generate_report(results=None) -> dict`
+
+Execution delegates to `dap_client.runner.test_runner.TestRunner`.
+
+### `TraceValidator`
+
+```python
+from dap_trace_library.validation.trace_validator import TraceValidator
+
+validator = TraceValidator(strict=False)
+result = validator.validate_file("trace.json")
+```
+
+- `validate_file(filepath) -> dict`
+- `validate_trace(trace_data, source="unknown") -> dict`
+- `validate_directory(directory, recursive=True) -> dict`
+- `validate_trace_execution(trace_data, execution_result) -> dict`
+
+The structural schema is owned by `dap_client/schema/test_script_schema.json`; the
+validator adds semantic checks only.
+
+## 6. Core debugger API
+
+### DAP server
+
+```bash
+python -m debugger dap
+python debugger/dap_server.py
+```
+
+The server speaks DAP over stdin/stdout with `Content-Length` framing. It is normally
+launched by `dap_client`.
+
+### Interpreter
+
+`debugger.interpreter` exports `MLIRValue`, `BasicBlock`, `MLIRFunction`, `SymbolicState`,
+`MLIRParser`, `SymbolicInterpreter`, `ConcolicInterpreter`, `ExecutionStepper`,
+`SymbolicExpressionEvaluator`, `PathExplorer`, and `SymbolicVariableTracker`.
+
+### Parser
+
+```python
+from debugger.parser import parse_string, parse_file
+
+module = parse_string("func.func @main() { return }")
+module = parse_file("program.mlir")
+```
+
+The parser is a vendored pymlir fork with dialect definitions under
+`debugger/parser/dialects/`.
+
+## 7. Protocol and connection utilities
+
+### Schema validation
+
+```python
+from dap_client.schema import load_test_script, validate_test_script, TestScript
+
+script = load_test_script("trace.json")
+error = validate_test_script(script)
+```
+
+`load_test_script` raises `FileNotFoundError` or a jsonschema `ValidationError`.
+`SCHEMA_PATH` points at the bundled schema.
+
+### Protocol messages
+
+`dap_client.protocol` exports `DAPRequest`, `DAPResponse`, `DAPEvent`, and the request
+classes (`InitializeRequest`, `LaunchRequest`, `SetBreakpointsRequest`,
+`ConfigurationDoneRequest`, `ContinueRequest`, `DisconnectRequest`,
+`SymbolicSetModeRequest`, `SymbolicEvaluateRequest`, `SymbolicExplorePathsRequest`,
+`SymbolicGetConstraintsRequest`). Message constants are exported from the same package.
+
+### Stdio connection
+
+`dap_client.core.stdio_connection` provides `StdioConnection` and
+`DAPConnectionError`. `StdioConnection(debugger_path=None, timeout=30, read_timeout=10)`
+manages the subprocess pipes and DAP framing. It is normally used through `DAPClient`.
+
+## 8. Examples
+
+```bash
+python dap_client/examples/basic_session.py
+python dap_client/examples/full_workflow.py --program debugger/fixtures/conditional_branch.mlir
+```
+
+Minimal agent loop:
+
+```python
+from debugger.agent import analyze_file
+
+report = analyze_file("program.mlir", seed=0)
+if report["status"] != "ok":
+    for diagnostic in report["diagnostics"]:
+        if diagnostic["severity"] == "error":
+            print(diagnostic["kind"], diagnostic.get("line"), diagnostic["message"])
+else:
+    for path in report["paths"]:
+        print(path["inputs"], "->", path["return_value"])
+```
+
+## Resources
+
+- [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/)
 - [MLIR Documentation](https://mlir.llvm.org/)
 - [Z3 Python API](https://z3prover.github.io/api/html/namespacez3py.html)
-
----
-
-**Note:** This API documentation is automatically generated from code docstrings. For the most up-to-date information, check the inline documentation in the source code files.

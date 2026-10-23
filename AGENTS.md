@@ -9,7 +9,8 @@ This project is tracked in the shared `tm` CLI, not in ad-hoc TODO files.
 - Tracker: set `TM_HOME` to the directory containing the `tm` executable.
 - Executable: `$TM_HOME/tm`
 - Epic: `symbolic-mlir-debugger` (key `SMD`)
-- Milestones: `m1-refactor-and-re-plan`, `m2-harden-the-feedback-loop`
+- Milestones: `m1-refactor-and-re-plan` and `m2-harden-the-feedback-loop` are closed.
+  No successor milestone is defined yet.
 - Process: use `TM_USER=agent` for agent work.
 
 Start every session with:
@@ -18,9 +19,14 @@ Start every session with:
 export TM_HOME=<path-to-tm-checkout>
 export TM_USER=agent
 $TM_HOME/tm task list --epic symbolic-mlir-debugger
-$TM_HOME/tm doc symbolic-mlir-debugger-current-state-audit show
-$TM_HOME/tm doc symbolic-mlir-debugger-milestone-1-plan show
+$TM_HOME/tm milestone list --epic symbolic-mlir-debugger
+$TM_HOME/tm doc symbolic-mlir-debugger-usage-and-scope show
+$TM_HOME/tm doc symbolic-mlir-debugger-target-architecture show
+$TM_HOME/tm doc symbolic-mlir-debugger-agent-feedback-api-contract show
 ```
+
+The current-state audit and milestone-1 plan are historical snapshots. Read them for
+context, not for current status.
 
 Create work as tasks, record analysis/decisions as notes or documents, and link them:
 
@@ -35,9 +41,9 @@ $TM_HOME/tm task SMD-XX status done
 
 The authoritative records live in tm:
 - `symbolic-mlir-debugger-usage-and-scope`
-- `symbolic-mlir-debugger-current-state-audit`
+- `symbolic-mlir-debugger-current-state-audit` (historical snapshot)
 - `symbolic-mlir-debugger-target-architecture`
-- `symbolic-mlir-debugger-milestone-1-plan`
+- `symbolic-mlir-debugger-milestone-1-plan` (historical snapshot, M1 complete)
 - `symbolic-mlir-debugger-agent-feedback-api-contract`
 - `adr-001-consolidate-trace-execution-and-add-agent-feedback-api`
 
@@ -81,9 +87,11 @@ ADR-001). Do not resurrect it without a concrete need and a new accepted decisio
 - Do not delete working modules merely to match an old plan.
 - Record every non-trivial decision in tm, including rejected options.
 
-Current milestone: `m2-harden-the-feedback-loop`. M1 delivered the stable API, deterministic
-exploration, fixed trace execution, packaging/CLI, DAP inspection, shared trace schema,
-local compiler adapter, safe expression evaluation, and hermetic CI.
+Current milestone: none. M1 delivered the stable agent API, deterministic exploration,
+fixed trace execution, packaging/CLI, DAP inspection, shared trace schema, local compiler
+adapter, safe expression evaluation, and hermetic CI. M2 closed the remaining hardening
+tasks. Before substantial new work, create and accept a successor milestone plan in tm,
+then create tasks against it.
 
 ## Project Structure
 
@@ -95,12 +103,17 @@ local compiler adapter, safe expression evaluation, and hermetic CI.
 - `dap_client/`: Python DAP client, generators, runners, and examples
 - `dap_trace_library/`: batch trace execution and trace validation
 - `scripts/mlir_validation/`: hermetic local MLIR validation helpers
+- `docs/`: agent API, testing, and MLIR validation reference (`API.md` is the detailed API
+  reference; the tm records remain authoritative for scope and decisions)
+- `reference/`: local, gitignored vendored MLIR/Triton documentation snapshot; not
+  project docs and not part of CI
 
 ## Build and Test Commands
 
 ### Python Debugger
 
-All commands should be run from the repository root unless otherwise noted.
+All commands should be run from the repository root unless otherwise noted. Activate the
+project virtualenv first so `python`, `pytest`, and `smlir` resolve to Python 3.9+.
 
 **Install dependencies:**
 ```bash
@@ -132,17 +145,17 @@ python -m pytest debugger/tests/test_parser.py -k "test_cmpi_parsing"
 
 **Linting and formatting:**
 ```bash
-# Run black formatting
-python -m black .
-
-# Check formatting without applying changes
-python -m black --check .
-
-# Run flake8 linting
-python -m flake8 .
+# Format the Python files you changed
+python -m black <changed-python-files>
 ```
 
-**Note:** The project uses black (line-length=100) for formatting and flake8 for linting. Always run black before committing to ensure consistent formatting.
+CI does not run `black --check .` or `flake8 .` across the whole repository. It runs
+black and flake8 on a curated scope (agent/CLI, safe evaluation, trace executor, related
+tests) defined in `.github/workflows/ci.yml`; flake8 there selects `E9,F63,F7,F82`.
+Do not assume unrelated pre-existing files are clean. Match the CI scope for files you
+touch and always format changed Python files with black before committing.
+
+**Note:** The project uses black (line-length=100) for formatting and flake8 for linting.
 
 
 
@@ -162,14 +175,14 @@ python -m flake8 .
 
 **Docstrings:** Use triple double quotes (`"""`). First line summary, blank line, detailed description. Include `Args:` and `Returns:` sections for functions/methods. Use Google style docstrings (as seen in existing code).
 
-**Formatting:** Indent with 4 spaces (no tabs). Line length: aim for 79-99 characters (no strict limit). Use double quotes for strings (consistent with existing code). Use f-strings for string interpolation.
+**Formatting:** Indent with 4 spaces (no tabs). Line length: 100 (enforced by black). Use double quotes for strings (consistent with existing code). Use f-strings for string interpolation.
 
 **Testing:** Write unit tests in `tests/` directory. Use `pytest` fixtures defined in `conftest.py`. Use descriptive test function names prefixed with `test_`. Use `@pytest.mark.*` decorators for test markers. Provide docstrings explaining test purpose.
 
 ## Development Workflow
 
-1. **Before making changes:** Ensure tests pass (`python -m pytest` / `npm run test`). Run linting if available (`npm run lint` for TypeScript). For Python, run `python -m black --check .` and `python -m flake8 .` (see Linting and formatting section).
-2. **After making changes:** Run relevant unit tests. Verify linting and type checking. Update/add tests as needed. For Python, run `python -m black .` to format code before committing.
+1. **Before making changes:** Ensure tests pass (`python -m pytest`). Run the lint scope from `.github/workflows/ci.yml` on the files you plan to touch.
+2. **After making changes:** Run relevant unit tests. Format changed Python files with `python -m black <files>` and verify the CI lint scope. Update/add tests as needed.
 3. **Commit messages:** Use present tense imperative ("Add feature", "Fix bug"). Reference issue numbers if applicable. Keep first line under 50 characters, body lines under 72.
 
 ## Common Pitfalls

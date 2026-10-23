@@ -42,9 +42,16 @@ python -m pytest \
   --cov=debugger.agent --cov=debugger.compiler \
   --cov=debugger.interpreter.safe_eval \
   --cov-report=term-missing --cov-fail-under=60
-black --check .
-flake8 .
+
+# Lint the files you changed the same way CI does
+python -m black --check <changed-python-files>
+python -m flake8 <changed-python-files> \
+  --max-line-length=100 --extend-ignore=E203,W503 --select=E9,F63,F7,F82
 ```
+
+CI applies black and flake8 to a curated file list (agent/CLI, safe evaluation, trace
+executor, and related tests) in `.github/workflows/ci.yml`, not to the whole repository.
+Pre-existing files outside that scope may not be clean.
 
 ## CI
 
