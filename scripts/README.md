@@ -19,4 +19,4 @@ The active agent feedback path is `smlir analyze`. Trace execution/validation li
 `dap_trace_library`; old trace-generation, trace-testing, and coding-subagent scripts were
 removed as dead/duplicate code.
 
-See `AGENTS.md` and tm epic `SMD` for current work.
+See `AGENTS.md` and the hosted tm tracker at https://www.eventflow.ru for current work.

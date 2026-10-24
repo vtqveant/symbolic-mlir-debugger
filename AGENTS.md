@@ -2,44 +2,69 @@
 
 This document provides guidelines for AI agents working on the Symbolic MLIR Debugger project. It includes build commands, testing instructions, and code style conventions.
 
-## Task tracking and knowledge base (tm)
+## Project tracking and knowledge base (tm)
 
-This project is tracked in the shared `tm` CLI, not in ad-hoc TODO files.
+This project is tracked in the hosted `tm` service at https://www.eventflow.ru, not in
+ad-hoc TODO files. Do not depend on a local `tm` checkout or a `TM_HOME` environment
+variable.
 
-- Tracker: set `TM_HOME` to the directory containing the `tm` executable.
-- Executable: `$TM_HOME/tm`
-- Epic: `symbolic-mlir-debugger` (key `SMD`)
+- Tracker UI: https://www.eventflow.ru
+- API base: https://tm.eventflow.ru/api/v1
+- Discovery: https://tm.eventflow.ru/.well-known/tm-agent.json
+- OpenAPI (authenticated): https://tm.eventflow.ru/api/v1/openapi.json
+- Project epic: `symbolic-mlir-debugger` (historical task key `SMD`) in the shared
+  project tenant. Agents that are not members of that tenant work in the private epic
+  returned by registration (`space.epic`, with key `space.key`) and record project
+  documentation there.
 - Milestones: `m1-refactor-and-re-plan` and `m2-harden-the-feedback-loop` are closed.
   No successor milestone is defined yet.
-- Process: use `TM_USER=agent` for agent work.
 
-Start every session with:
+Get access and start every session with:
 
 ```bash
-export TM_HOME=<path-to-tm-checkout>
-export TM_USER=agent
-$TM_HOME/tm task list --epic symbolic-mlir-debugger
-$TM_HOME/tm milestone list --epic symbolic-mlir-debugger
-$TM_HOME/tm doc symbolic-mlir-debugger-usage-and-scope show
-$TM_HOME/tm doc symbolic-mlir-debugger-target-architecture show
-$TM_HOME/tm doc symbolic-mlir-debugger-agent-feedback-api-contract show
-```
+# One-time bootstrap: register an agent tenant. Save the returned token securely
+# (for example, chmod 600 ~/.config/tm/token) and never commit it.
+curl -sS -X POST https://tm.eventflow.ru/api/v1/agent/register \
+  -H 'Content-Type: application/json' -d '{}'
 
-The current-state audit and milestone-1 plan are historical snapshots. Read them for
-context, not for current status.
+export TM_API_URL="https://tm.eventflow.ru"
+export TM_TOKEN="<token returned once by registration>"
+export TM_TEAM="<team id returned by registration>"
+export TM_EPIC="<space.epic returned by registration, or symbolic-mlir-debugger>"
+
+# Every request selects the tenant and authenticates with the bearer token.
+TM=(-H "Authorization: Bearer $TM_TOKEN" -H "X-TM-Team: $TM_TEAM")
+
+curl -fsS "${TM[@]}" "$TM_API_URL/api/v1/whoami"
+curl -fsS "${TM[@]}" "$TM_API_URL/api/v1/tasks?epic=$TM_EPIC"
+curl -fsS "${TM[@]}" "$TM_API_URL/api/v1/docs?epic=$TM_EPIC"
+curl -fsS "${TM[@]}" "$TM_API_URL/api/v1/milestones?epic=$TM_EPIC"
+curl -fsS "${TM[@]}" "$TM_API_URL/api/v1/doc/<DOC_ID>"
+```
 
 Create work as tasks, record analysis/decisions as notes or documents, and link them:
 
 ```bash
-$TM_HOME/tm new --kind task --epic symbolic-mlir-debugger --title "..."
-$TM_HOME/tm task SMD-XX note "..."
-$TM_HOME/tm doc <DOC_ID> show
-$TM_HOME/tm task SMD-XX link add <DOC_ID>
-$TM_HOME/tm task SMD-XX status in_progress
-$TM_HOME/tm task SMD-XX status done
+# Create a task or document
+curl -fsS -X POST "${TM[@]}" -H 'Content-Type: application/json' \
+  -d "{\"kind\":\"task\",\"title\":\"...\",\"epic\":\"$TM_EPIC\"}" \
+  "$TM_API_URL/api/v1/new"
+
+# Append a note, change status, or replace a document body
+curl -fsS -X POST "${TM[@]}" -H 'Content-Type: application/json' \
+  -d '{"text":"..."}' "$TM_API_URL/api/v1/task/<TASK_ID>/note"
+curl -fsS -X POST "${TM[@]}" -H 'Content-Type: application/json' \
+  -d '{"status":"in_progress"}' "$TM_API_URL/api/v1/task/<TASK_ID>/status"
+curl -fsS -X POST "${TM[@]}" -H 'Content-Type: application/json' \
+  -d '{"text":"# ..."}' "$TM_API_URL/api/v1/doc/<DOC_ID>/body"
+
+# Link a document to a task
+curl -fsS -X POST "${TM[@]}" -H 'Content-Type: application/json' \
+  -d '{"op":"add","target":"<DOC_ID>"}' \
+  "$TM_API_URL/api/v1/task/<TASK_ID>/link"
 ```
 
-The authoritative records live in tm:
+The shared project records, when the tenant exposes them, are:
 - `symbolic-mlir-debugger-usage-and-scope`
 - `symbolic-mlir-debugger-current-state-audit` (historical snapshot)
 - `symbolic-mlir-debugger-target-architecture`
@@ -47,9 +72,16 @@ The authoritative records live in tm:
 - `symbolic-mlir-debugger-agent-feedback-api-contract`
 - `adr-001-consolidate-trace-execution-and-add-agent-feedback-api`
 
+The project documentation set maintained in the agent workspace is:
+- `symbolic-mlir-debugger-overview`
+- `symbolic-mlir-debugger-architecture`
+- `symbolic-mlir-debugger-agent-api`
+- `symbolic-mlir-debugger-dap-and-traces`
+- `symbolic-mlir-debugger-development`
+
 Old repository design/plan files were removed. Their critical review, rejected options,
 current architecture, and active plan are preserved in the tm records above. Do not
-hand-edit the tm database or its config. If the CLI cannot express a needed change,
+hand-edit tm data or configuration. If the HTTP API cannot express a needed change,
 create a task for the tooling gap first.
 
 ### Current entry points

@@ -15,8 +15,8 @@ Debug Adapter Protocol (DAP) support.
   diagnostics, compiler-validation results, and unsupported-operation warnings.
 - Exposes the same engine through a stdio DAP server and a Python DAP client.
 
-The authoritative plan, decisions, and task history live in the tm epic
-`symbolic-mlir-debugger` (see `AGENTS.md`). Old design/plan files are not kept in the
+The authoritative plan, decisions, and task history live in the hosted tm service at
+https://www.eventflow.ru (see `AGENTS.md`). Old design/plan files are not kept in the
 repository.
 
 ## Install

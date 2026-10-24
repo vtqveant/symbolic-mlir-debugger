@@ -52,4 +52,4 @@ python -m pytest
 ```
 
 For architecture, the feedback contract, and current work, see `README.md`, `AGENTS.md`,
-and tm epic `SMD`.
+and the hosted tm tracker at https://www.eventflow.ru.
